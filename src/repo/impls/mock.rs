@@ -1,4 +1,4 @@
-use super::{AccountRepo, AccountRepoTransaction, RepoResult};
+use super::super::{AccountRepo, AccountRepoTransaction, RepoResult};
 use crate::{dto, entity};
 use async_trait::async_trait;
 use chrono::Utc;
@@ -6,27 +6,26 @@ use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{Mutex, MutexGuard, OwnedMutexGuard};
 
 /// Mock account repository implementatoin
-pub struct AccountRepoImpl {
+#[derive(Default)]
+pub struct MockAccountRepoImpl {
     state: Arc<Mutex<State>>,
 }
 
-/// Create a new mock repository.
-pub fn new_mock() -> Box<dyn AccountRepo> {
-    Box::new(AccountRepoImpl {
-        state: Arc::new(Mutex::new(State::default())),
-    })
-}
+impl MockAccountRepoImpl {
+    /// Create a new mock repository.
+    pub fn boxed_new() -> Box<Self> {
+        Box::new(Self::default())
+    }
 
-impl AccountRepoImpl {
     async fn lock_state(&self) -> MutexGuard<'_, State> {
         self.state.lock().await
     }
 }
 
 #[async_trait]
-impl AccountRepo for AccountRepoImpl {
+impl AccountRepo for MockAccountRepoImpl {
     async fn begin_transaction(&self) -> RepoResult<Box<dyn AccountRepoTransaction>> {
-        Ok(Box::new(AccountRepoTransactionImpl {
+        Ok(Box::new(MockAccountRepoTransactionImpl {
             state: Arc::clone(&self.state).lock_owned().await,
         }))
     }
@@ -61,27 +60,73 @@ impl AccountRepo for AccountRepoImpl {
         }
     }
 
-    async fn get_primary_username(&self, _id: entity::AccountId) -> RepoResult<Option<String>> {
-        todo!()
+    async fn get_primary_username(&self, id: entity::AccountId) -> RepoResult<Option<String>> {
+        let state = self.lock_state().await;
+
+        for username_entity in state.usernames.values() {
+            if username_entity.is_primary && username_entity.account_id == id {
+                return Ok(Some(username_entity.username.clone()));
+            }
+        }
+
+        Ok(None)
     }
 
     async fn get_nonexpiring_username_aliases(
         &self,
-        _id: entity::AccountId,
+        id: entity::AccountId,
     ) -> RepoResult<Vec<String>> {
-        todo!()
+        let state = self.lock_state().await;
+
+        let mut nonexpiring_usernames = Vec::new();
+
+        for username_entity in state.usernames.values() {
+            if username_entity.expires_at.is_none() && username_entity.account_id == id {
+                nonexpiring_usernames.push(username_entity.username.clone());
+            }
+        }
+
+        Ok(nonexpiring_usernames)
     }
 
-    async fn get_primary_email(&self, _id: entity::AccountId) -> RepoResult<Option<String>> {
-        todo!()
+    async fn get_primary_email(&self, id: entity::AccountId) -> RepoResult<Option<String>> {
+        let state = self.lock_state().await;
+
+        for email_entity in state.emails.values() {
+            if email_entity.is_primary && email_entity.account_id == id {
+                return Ok(Some(email_entity.email.clone()));
+            }
+        }
+
+        Ok(None)
     }
 
-    async fn get_secondary_emails(&self, _id: entity::AccountId) -> RepoResult<Vec<String>> {
-        todo!()
+    async fn get_secondary_emails(&self, id: entity::AccountId) -> RepoResult<Vec<String>> {
+        let state = self.lock_state().await;
+
+        let mut secondary_emails = Vec::new();
+
+        for email_entity in state.usernames.values() {
+            if email_entity.account_id == id {
+                secondary_emails.push(email_entity.username.clone());
+            }
+        }
+
+        Ok(secondary_emails)
     }
 
-    async fn get_keys(&self, _id: entity::AccountId) -> RepoResult<Option<dto::repo::Keys>> {
-        todo!()
+    async fn get_keys(&self, id: entity::AccountId) -> RepoResult<Option<dto::repo::Keys>> {
+        let state = self.lock_state().await;
+
+        if let Some(account_entity) = state.accounts.get(&id) {
+            Ok(Some(dto::repo::Keys {
+                identity_key: account_entity.identity_key.clone(),
+                encrypted_private_key: account_entity.encrpyted_private_key.clone(),
+                encrypted_master_key: account_entity.encrpyted_master_key.clone(),
+            }))
+        } else {
+            Ok(None)
+        }
     }
 }
 
@@ -92,12 +137,12 @@ struct State {
     usernames: HashMap<String, entity::Username>,
 }
 
-struct AccountRepoTransactionImpl {
+struct MockAccountRepoTransactionImpl {
     state: OwnedMutexGuard<State>,
 }
 
 #[async_trait]
-impl AccountRepoTransaction for AccountRepoTransactionImpl {
+impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
     async fn commit(self: Box<Self>) -> RepoResult<()> {
         Ok(())
     }

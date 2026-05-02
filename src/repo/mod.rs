@@ -3,8 +3,8 @@ use async_trait::async_trait;
 
 mod error;
 
-/// Mock repository implementation.
-pub mod mock;
+/// Repository implementations.
+pub mod impls;
 
 pub use error::RepoError;
 

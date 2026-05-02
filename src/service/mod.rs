@@ -23,7 +23,10 @@ impl AccountService {
     }
 
     /// Signup a new account
-    pub async fn signup(&self, signup_dto: dto::request::Signup) -> ServiceResult<()> {
+    pub async fn signup(
+        &self,
+        signup_dto: dto::request::Signup,
+    ) -> ServiceResult<entity::AccountId> {
         let mut transaction = self.repo.begin_transaction().await?;
 
         let keys = dto::repo::Keys {
@@ -58,6 +61,6 @@ impl AccountService {
 
         transaction.commit().await?;
 
-        Ok(())
+        Ok(account_id)
     }
 }
