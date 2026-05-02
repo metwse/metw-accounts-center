@@ -33,14 +33,14 @@ pub enum TokenScope {
 impl Token {
     /// Create a new token.
     pub fn new(id: entity::AccountId, scopes: Vec<TokenScope>, valid_for: Duration) -> Self {
-        let iat = Utc::now().timestamp_millis() as usize;
-        let exp = iat + (valid_for.as_millis() as usize);
+        let iat = Utc::now().timestamp() as usize;
+        let exp = iat + (valid_for.as_secs() as usize);
 
         Token {
             id,
             scopes,
             exp,
-            nbf: iat - 10000,
+            nbf: iat,
             iat,
         }
     }

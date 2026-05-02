@@ -35,7 +35,7 @@ impl TokenService {
     /// Validate and decode the token.
     pub async fn verify(&self, base64_encoded_token: &str) -> ServiceResult<Token> {
         let mut it = base64_encoded_token.split(".");
-        let protected = it.next().ok_or(ServiceError::InvalidJwt)?;
+        let protected = it.next().ok_or(ServiceError::InvalidJwt).unwrap();
         let payload = it.next().ok_or(ServiceError::InvalidJwt)?;
         let signature = it.next().ok_or(ServiceError::InvalidJwt)?;
 
@@ -66,17 +66,16 @@ impl TokenService {
     pub async fn revoke(&self, base64_encoded_token: &str) -> ServiceResult<()> {
         let token = self.verify(base64_encoded_token).await?;
 
-        let now = Utc::now().timestamp_millis() as u64;
+        let now = Utc::now().timestamp() as u64;
         let exp = token.exp as u64;
 
-        if now > exp {
-            return Ok(());
-        }
+        // Revoke already expired tokens if they are already expired.
+        let duration = if now > exp - 60 { 60 } else { exp - now };
 
         let signature = base64_encoded_token.split(".").nth(2).unwrap();
 
         self.repo
-            .revoke(signature.as_bytes(), Duration::from_millis(exp - now))
+            .revoke(signature.as_bytes(), Duration::from_secs(duration))
             .await?;
 
         Ok(())

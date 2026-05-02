@@ -1,5 +1,12 @@
 use super::{AccountService, ServiceResult};
-use crate::{dto, repo::impls::MockAccountRepoImpl, util::check_password};
+use crate::{
+    dto, entity,
+    repo::impls::{MockAccountRepoImpl, MockTokenRepoImpl},
+    service::{ServiceError, TokenService},
+    token::{Token, TokenScope},
+    util::check_password,
+};
+use std::time::Duration;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn account_creation_mock_mt() -> ServiceResult<()> {
@@ -63,6 +70,63 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
                 encrypted_master_key: vec![3],
             }
     );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn token_service() -> ServiceResult<()> {
+    let repo = MockTokenRepoImpl::boxed_new();
+
+    let token_service = TokenService::new(repo, b"supersecret1234");
+
+    let token1 = Token::new(
+        entity::AccountId(0),
+        vec![TokenScope::Authenticate],
+        Duration::from_secs(1000),
+    );
+
+    let token2 = Token::new(
+        entity::AccountId(0),
+        vec![TokenScope::Authenticate],
+        Duration::from_secs(0),
+    );
+
+    let token3 = Token::new(
+        entity::AccountId(0),
+        vec![TokenScope::Authenticate],
+        Duration::from_secs(101),
+    );
+
+    let signed1 = token_service.sign(&token1);
+    let signed2 = token_service.sign(&token2);
+    let signed3 = token_service.sign(&token3);
+
+    token_service.verify(&signed1).await?;
+
+    token_service.revoke(&signed1).await?;
+
+    assert!(matches!(
+        token_service.verify(&signed1).await,
+        Err(ServiceError::TokenRevoked)
+    ));
+
+    assert!(matches!(
+        token_service.revoke(&signed1).await,
+        Err(ServiceError::TokenRevoked)
+    ));
+
+    token_service.verify(&signed2).await?;
+    token_service.revoke(&signed2).await?;
+
+    token_service.verify(&signed3).await?;
+
+    for invalid_jwt in ["invalid", "", "invalid.invalid", "invalid.invalid.invalid"] {
+        assert!(matches!(
+            token_service.revoke(invalid_jwt).await,
+            Err(ServiceError::InvalidJwt)
+        ));
+    }
 
     Ok(())
 }
