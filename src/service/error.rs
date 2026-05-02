@@ -1,7 +1,7 @@
 use crate::repo::RepoError;
 use thiserror::Error;
 
-/// Service error reporting
+/// Service error reporting.
 #[derive(Error, Debug)]
 #[allow(missing_docs)]
 pub enum ServiceError {
