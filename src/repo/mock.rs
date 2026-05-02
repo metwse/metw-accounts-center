@@ -1,9 +1,9 @@
 use super::{AccountRepo, AccountRepoTransaction, RepoResult};
 use crate::{dto, entity};
 use async_trait::async_trait;
-use sqlx::types::chrono;
+use chrono::Utc;
 use std::{collections::HashMap, sync::Arc};
-use tokio::sync::{Mutex, OwnedMutexGuard};
+use tokio::sync::{Mutex, MutexGuard, OwnedMutexGuard};
 
 /// Mock account repository implementatoin
 pub struct AccountRepoImpl {
@@ -17,12 +17,71 @@ pub fn new_mock() -> Box<dyn AccountRepo> {
     })
 }
 
+impl AccountRepoImpl {
+    async fn lock_state(&self) -> MutexGuard<'_, State> {
+        self.state.lock().await
+    }
+}
+
 #[async_trait]
 impl AccountRepo for AccountRepoImpl {
-    async fn begin(&self) -> Box<dyn AccountRepoTransaction> {
-        Box::new(AccountRepoTransactionImpl {
+    async fn begin_transaction(&self) -> RepoResult<Box<dyn AccountRepoTransaction>> {
+        Ok(Box::new(AccountRepoTransactionImpl {
             state: Arc::clone(&self.state).lock_owned().await,
-        })
+        }))
+    }
+
+    async fn get_login_by_email(&self, email: &str) -> RepoResult<Option<dto::repo::Login>> {
+        let state = self.lock_state().await;
+
+        if let Some(email_entity) = state.emails.get(email) {
+            Ok(Some(dto::repo::Login {
+                id: email_entity.account_id,
+                password_hash: state.accounts[&email_entity.account_id]
+                    .password_hash
+                    .clone(),
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
+    async fn get_login_by_username(&self, username: &str) -> RepoResult<Option<dto::repo::Login>> {
+        let state = self.lock_state().await;
+
+        if let Some(username_entity) = state.usernames.get(username) {
+            Ok(Some(dto::repo::Login {
+                id: username_entity.account_id,
+                password_hash: state.accounts[&username_entity.account_id]
+                    .password_hash
+                    .clone(),
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
+    async fn get_primary_username(&self, _id: entity::AccountId) -> RepoResult<Option<String>> {
+        todo!()
+    }
+
+    async fn get_nonexpiring_username_aliases(
+        &self,
+        _id: entity::AccountId,
+    ) -> RepoResult<Vec<String>> {
+        todo!()
+    }
+
+    async fn get_primary_email(&self, _id: entity::AccountId) -> RepoResult<Option<String>> {
+        todo!()
+    }
+
+    async fn get_secondary_emails(&self, _id: entity::AccountId) -> RepoResult<Vec<String>> {
+        todo!()
+    }
+
+    async fn get_keys(&self, _id: entity::AccountId) -> RepoResult<Option<dto::repo::Keys>> {
+        todo!()
     }
 }
 
@@ -61,58 +120,6 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl {
         Ok(())
     }
 
-    async fn get_login_by_email(&mut self, email: &str) -> RepoResult<Option<dto::repo::Login>> {
-        if let Some(email_entity) = self.state.emails.get(email) {
-            Ok(Some(dto::repo::Login {
-                id: email_entity.account_id,
-                password_hash: self.state.accounts[&email_entity.account_id]
-                    .password_hash
-                    .clone(),
-            }))
-        } else {
-            Ok(None)
-        }
-    }
-
-    async fn get_login_by_username(
-        &mut self,
-        username: &str,
-    ) -> RepoResult<Option<dto::repo::Login>> {
-        if let Some(username_entity) = self.state.usernames.get(username) {
-            Ok(Some(dto::repo::Login {
-                id: username_entity.account_id,
-                password_hash: self.state.accounts[&username_entity.account_id]
-                    .password_hash
-                    .clone(),
-            }))
-        } else {
-            Ok(None)
-        }
-    }
-
-    async fn get_primary_username(&mut self, _id: entity::AccountId) -> RepoResult<Option<String>> {
-        todo!()
-    }
-
-    async fn get_nonexpiring_username_aliases(
-        &mut self,
-        _id: entity::AccountId,
-    ) -> RepoResult<Vec<String>> {
-        todo!()
-    }
-
-    async fn get_primary_email(&mut self, _id: entity::AccountId) -> RepoResult<Option<String>> {
-        todo!()
-    }
-
-    async fn get_secondary_emails(&mut self, _id: entity::AccountId) -> RepoResult<Vec<String>> {
-        todo!()
-    }
-
-    async fn get_keys(&mut self, _id: entity::AccountId) -> RepoResult<Option<dto::repo::Keys>> {
-        todo!()
-    }
-
     async fn add_email(&mut self, id: entity::AccountId, email: &str) -> RepoResult<bool> {
         if self.state.emails.contains_key(email) {
             Ok(false)
@@ -123,7 +130,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl {
                     email: email.to_string(),
                     account_id: id,
                     is_primary: false,
-                    created_at: chrono::Utc::now(),
+                    created_at: Utc::now(),
                 },
             );
 
@@ -141,7 +148,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl {
                     username: username.to_string(),
                     account_id: id,
                     is_primary: false,
-                    created_at: chrono::Utc::now(),
+                    created_at: Utc::now(),
                     expires_at: None,
                 },
             );

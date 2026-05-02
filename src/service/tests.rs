@@ -18,16 +18,12 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
         },
     };
 
-    account_service
-        .signup(signup_dto.clone())
-        .await?;
+    account_service.signup(signup_dto.clone()).await?;
 
     signup_dto.email += "test";
     signup_dto.username += "test";
 
-    account_service
-        .signup(signup_dto)
-        .await?;
+    account_service.signup(signup_dto).await?;
 
     Ok(())
 }

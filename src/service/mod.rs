@@ -1,4 +1,4 @@
-use crate::{dto, entity, repo::AccountRepo};
+use crate::{dto, entity, repo::AccountRepo, snowflake};
 use std::sync::Arc;
 
 mod error;
@@ -24,7 +24,7 @@ impl AccountService {
 
     /// Signup a new account
     pub async fn signup(&self, signup_dto: dto::request::Signup) -> ServiceResult<()> {
-        let mut transaction = self.repo.begin().await;
+        let mut transaction = self.repo.begin_transaction().await?;
 
         let keys = dto::repo::Keys {
             identity_key: signup_dto.keys.identity_key,
@@ -32,28 +32,29 @@ impl AccountService {
             encrypted_master_key: signup_dto.keys.encrypted_master_key,
         };
 
-        /// TODO: snowflake ID generator
-        let account_id = entity::AccountId(0);
+        let account_id = entity::AccountId(snowflake());
 
         transaction
             .upsert_account(account_id, &signup_dto.password_hash, &keys)
             .await?;
 
-        transaction
-            .add_email(account_id, &signup_dto.email)
-            .await?;
-
-        transaction
+        if !transaction
             .add_username(account_id, &signup_dto.username)
-            .await?;
+            .await?
+        {
+            return Err(ServiceError::UsernameTaken);
+        }
 
-        transaction
-            .set_primary_email(&signup_dto.email, true)
-            .await?;
-
-        transaction
+        if !transaction
             .set_primary_username(&signup_dto.username, true)
-            .await?;
+            .await?
+        {
+            // I cannot imagine in which conditions this branch is executed.
+            // Most probably this is unreachable.
+            return Err(ServiceError::UnexceptedError("could not take username"));
+        }
+
+        // TODO: send verification emails
 
         transaction.commit().await?;
 

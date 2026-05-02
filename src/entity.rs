@@ -1,7 +1,5 @@
-use sqlx::{
-    prelude::FromRow,
-    types::chrono::{DateTime, Utc},
-};
+use chrono::{DateTime, Utc};
+use sqlx::prelude::FromRow;
 
 /// Account id
 #[derive(FromRow, Clone, Copy, Default, Hash, PartialEq, Eq)]
