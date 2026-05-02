@@ -5,3 +5,9 @@
 
 /// Database entities.
 pub mod entity;
+
+/// Persistent storage.
+pub mod repo;
+
+/// Data transfer objects.
+pub mod dto;
