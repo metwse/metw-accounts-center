@@ -62,6 +62,19 @@ pub trait AccountRepo: Send + Sync {
         &self,
         id: entity::AccountId,
     ) -> RepoResult<Option<entity::AccountFlags>>;
+
+    /// Set the email primary for the account.
+    ///
+    /// Although `email`s are unique, the `id` parameter is also required to
+    /// prevent race conditions. It is highly unlikely that the owner of an
+    /// email would change at the exact moment the one's email is set as the
+    /// primary key, but it is still an unsafety that must still be prevented.
+    async fn set_primary_email_if_current_is(
+        &self,
+        id: entity::AccountId,
+        current_primary_email: &str,
+        new_primary_email: &str,
+    ) -> RepoResult<()>;
 }
 
 /// Transactional repository access wrapper.
@@ -83,34 +96,16 @@ pub trait AccountRepoTransaction: Send + Sync {
 
     /// Add a secondary email to the account. Returns true if the operation
     /// succeed.
-    async fn add_email(&mut self, id: entity::AccountId, email: &str) -> RepoResult<()>;
-
-    /// Add username alias to the account. Returns true if the operation
-    /// succeed.
-    async fn add_username(&mut self, id: entity::AccountId, username: &str) -> RepoResult<()>;
-
-    /// Set the email primary for the account.
-    ///
-    /// Although `email`s are unique, the `id` parameter is also required to
-    /// prevent race conditions. It is highly unlikely that the owner of an
-    /// email would change at the exact moment the one's email is set as the
-    /// primary key, but it is still an unsafety that must still be prevented.
-    async fn set_primary_email(
+    async fn add_email(
         &mut self,
         id: entity::AccountId,
         email: &str,
         is_primary: bool,
     ) -> RepoResult<()>;
 
-    /// Set the username primary for the account.
-    ///
-    /// See [`AccountRepoTransaction::set_primary_email`]
-    async fn set_primary_username(
-        &mut self,
-        id: entity::AccountId,
-        username: &str,
-        is_primary: bool,
-    ) -> RepoResult<()>;
+    /// Add username alias to the account. Returns true if the operation
+    /// succeed.
+    async fn add_username(&mut self, id: entity::AccountId, username: &str, is_primary: bool) -> RepoResult<()>;
 
     /// Set the verified flag of account.
     async fn set_verified_flag(

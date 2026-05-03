@@ -39,13 +39,7 @@ impl AccountService {
 
         transaction.insert_default_flags(id).await?;
 
-        transaction.add_username(id, &signup_dto.username).await?;
-
-        // I cannot imagine in which conditions this branch is executed. Most
-        // probably this is unreachable.
-        transaction
-            .set_primary_username(id, &signup_dto.username, true)
-            .await?;
+        transaction.add_username(id, &signup_dto.username, true).await?;
 
         transaction.commit().await?;
 

@@ -146,6 +146,42 @@ impl AccountRepo for MockAccountRepoImpl {
             Ok(None)
         }
     }
+
+    async fn set_primary_email_if_current_is(
+        &self,
+        id: entity::AccountId,
+        current_primary_email: &str,
+        new_primary_email: &str,
+    ) -> RepoResult<()> {
+        let mut state = self.lock_state().await;
+
+        {
+            let current_primary_email_entity = state
+                .emails
+                .get(current_primary_email)
+                .ok_or(RepoError::Internal("mail not found"))?;
+            let new_primary_email_entity = state
+                .emails
+                .get(new_primary_email)
+                .ok_or(RepoError::Internal("mail not found"))?;
+
+            if !(current_primary_email_entity.is_primary
+                && current_primary_email_entity.account_id == id
+                && new_primary_email_entity.account_id == id)
+            {
+                return Err(RepoError::Internal("invalid email"));
+            }
+        }
+
+        state
+            .emails
+            .get_mut(current_primary_email)
+            .unwrap()
+            .is_primary = false;
+        state.emails.get_mut(new_primary_email).unwrap().is_primary = true;
+
+        Ok(())
+    }
 }
 
 #[derive(Default)]
@@ -196,7 +232,12 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         Ok(())
     }
 
-    async fn add_email(&mut self, id: entity::AccountId, email: &str) -> RepoResult<()> {
+    async fn add_email(
+        &mut self,
+        id: entity::AccountId,
+        email: &str,
+        is_primary: bool,
+    ) -> RepoResult<()> {
         if self.state.emails.contains_key(email) {
             Err(RepoError::Internal("email does not exists"))
         } else {
@@ -205,7 +246,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
                 entity::Email {
                     email: email.to_string(),
                     account_id: id,
-                    is_primary: false,
+                    is_primary,
                     created_at: Utc::now(),
                 },
             );
@@ -214,7 +255,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         }
     }
 
-    async fn add_username(&mut self, id: entity::AccountId, username: &str) -> RepoResult<()> {
+    async fn add_username(&mut self, id: entity::AccountId, username: &str, is_primary: bool) -> RepoResult<()> {
         if self.state.usernames.contains_key(username) {
             Err(RepoError::Internal("username does not exists"))
         } else {
@@ -223,47 +264,13 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
                 entity::Username {
                     username: username.to_string(),
                     account_id: id,
-                    is_primary: false,
+                    is_primary,
                     created_at: Utc::now(),
                     expires_at: None,
                 },
             );
 
             Ok(())
-        }
-    }
-
-    async fn set_primary_email(
-        &mut self,
-        id: entity::AccountId,
-        email: &str,
-        is_primary: bool,
-    ) -> RepoResult<()> {
-        if let Some(email_entity) = self.state.emails.get_mut(email)
-            && id == email_entity.account_id
-        {
-            email_entity.is_primary = is_primary;
-
-            Ok(())
-        } else {
-            Err(RepoError::Internal("email does not exists"))
-        }
-    }
-
-    async fn set_primary_username(
-        &mut self,
-        id: entity::AccountId,
-        username: &str,
-        is_primary: bool,
-    ) -> RepoResult<()> {
-        if let Some(username_entity) = self.state.usernames.get_mut(username)
-            && id == username_entity.account_id
-        {
-            username_entity.is_primary = is_primary;
-
-            Ok(())
-        } else {
-            Err(RepoError::Internal("username does not exists"))
         }
     }
 

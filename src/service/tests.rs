@@ -95,10 +95,7 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
     // again.
     let mut transaction = repo.begin_transaction().await?;
     transaction
-        .add_email(user1_account_id, "user1@example.com")
-        .await?;
-    transaction
-        .set_primary_email(user1_account_id, "user1@example.com", true)
+        .add_email(user1_account_id, "user1@example.com", true)
         .await?;
     transaction
         .set_verified_flag(user1_account_id, true)
