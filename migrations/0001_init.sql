@@ -13,8 +13,21 @@ CREATE TABLE accounts
         PRIMARY KEY (id)
 );
 
+-- 2 "account_flags" table
+-- ---------------------------------------------------------------------------
+-- Boolean flags for accounts.
+CREATE TABLE account_flags
+(
+    id bigint NOT NULL,
+    is_verified bool NOT NULL,
 
--- 2 "usernames" table
+    CONSTRAINT account_flags_id_fk
+        FOREIGN KEY (id) REFERENCES accounts (id)
+        ON DELETE CASCADE
+);
+
+
+-- 3 "usernames" table
 -- ---------------------------------------------------------------------------
 -- One or more usernames may be associated to the account, or none. (usually
 -- account deletion is pending if no username exists)
@@ -47,7 +60,7 @@ CREATE UNIQUE INDEX usernames_at_most_one_primary_username_per_account_check
     WHERE is_primary;
 
 
--- 3 "emails" table
+-- 4 "emails" table
 -- ---------------------------------------------------------------------------
 -- Verified emails addresses of accounts.
 CREATE TABLE emails (

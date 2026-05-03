@@ -1,5 +1,5 @@
 use super::super::{AccountRepo, AccountRepoTransaction, RepoResult, TokenRepo};
-use crate::{dto, entity};
+use crate::{dto, entity, repo::RepoError};
 use async_trait::async_trait;
 use chrono::Utc;
 use std::{
@@ -133,6 +133,19 @@ impl AccountRepo for MockAccountRepoImpl {
             Ok(None)
         }
     }
+
+    async fn get_account_flags(
+        &self,
+        id: entity::AccountId,
+    ) -> RepoResult<Option<entity::AccountFlags>> {
+        let state = self.lock_state().await;
+
+        if let Some(flags_entity) = state.account_flags.get(&id) {
+            Ok(Some(flags_entity.clone()))
+        } else {
+            Ok(None)
+        }
+    }
 }
 
 #[derive(Default)]
@@ -140,6 +153,7 @@ struct AccountRepoState {
     accounts: HashMap<entity::AccountId, entity::Account>,
     emails: HashMap<String, entity::Email>,
     usernames: HashMap<String, entity::Username>,
+    account_flags: HashMap<entity::AccountId, entity::AccountFlags>,
 }
 
 struct MockAccountRepoTransactionImpl {
@@ -170,9 +184,21 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         Ok(())
     }
 
-    async fn add_email(&mut self, id: entity::AccountId, email: &str) -> RepoResult<bool> {
+    async fn insert_default_flags(&mut self, id: entity::AccountId) -> RepoResult<()> {
+        self.state.account_flags.insert(
+            id,
+            entity::AccountFlags {
+                id,
+                is_verified: false,
+            },
+        );
+
+        Ok(())
+    }
+
+    async fn add_email(&mut self, id: entity::AccountId, email: &str) -> RepoResult<()> {
         if self.state.emails.contains_key(email) {
-            Ok(false)
+            Err(RepoError::Internal("email does not exists"))
         } else {
             self.state.emails.insert(
                 email.to_string(),
@@ -184,13 +210,13 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
                 },
             );
 
-            Ok(true)
+            Ok(())
         }
     }
 
-    async fn add_username(&mut self, id: entity::AccountId, username: &str) -> RepoResult<bool> {
+    async fn add_username(&mut self, id: entity::AccountId, username: &str) -> RepoResult<()> {
         if self.state.usernames.contains_key(username) {
-            Ok(false)
+            Err(RepoError::Internal("username does not exists"))
         } else {
             self.state.usernames.insert(
                 username.to_string(),
@@ -203,7 +229,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
                 },
             );
 
-            Ok(true)
+            Ok(())
         }
     }
 
@@ -212,15 +238,15 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         id: entity::AccountId,
         email: &str,
         is_primary: bool,
-    ) -> RepoResult<bool> {
+    ) -> RepoResult<()> {
         if let Some(email_entity) = self.state.emails.get_mut(email)
             && id == email_entity.account_id
         {
             email_entity.is_primary = is_primary;
 
-            Ok(true)
+            Ok(())
         } else {
-            Ok(false)
+            Err(RepoError::Internal("email does not exists"))
         }
     }
 
@@ -229,15 +255,29 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         id: entity::AccountId,
         username: &str,
         is_primary: bool,
-    ) -> RepoResult<bool> {
+    ) -> RepoResult<()> {
         if let Some(username_entity) = self.state.usernames.get_mut(username)
             && id == username_entity.account_id
         {
             username_entity.is_primary = is_primary;
 
-            Ok(true)
+            Ok(())
         } else {
-            Ok(false)
+            Err(RepoError::Internal("username does not exists"))
+        }
+    }
+
+    async fn set_verified_flag(
+        &mut self,
+        id: entity::AccountId,
+        is_verified: bool,
+    ) -> RepoResult<()> {
+        if let Some(account_flags_entity) = self.state.account_flags.get_mut(&id) {
+            account_flags_entity.is_verified = is_verified;
+
+            Ok(())
+        } else {
+            Err(RepoError::Internal("account does not exists"))
         }
     }
 }

@@ -8,14 +8,14 @@ pub enum ServiceError {
     #[error("repo: {0}")]
     Repo(#[from] RepoError),
 
-    #[error("username taken")]
-    UsernameTaken,
-
     #[error("email taken")]
     EmailTaken,
 
     #[error("account not found")]
     AccountNotFound,
+
+    #[error("account not verified")]
+    AccountNotVerified,
 
     #[error("invalid credentials")]
     InvalidCredentials,

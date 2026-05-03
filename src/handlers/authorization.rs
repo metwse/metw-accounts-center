@@ -6,7 +6,22 @@ use std::sync::Arc;
 
 /// Account handlers that **does require** escalated privileges.
 pub struct AuthorizationHandler {
-    _account_service: Arc<AccountService>,
-    _token_service: Arc<TokenService>,
-    _email_client: Arc<dyn MailClient>,
+    account_service: Arc<AccountService>,
+    token_service: Arc<TokenService>,
+    email_client: Arc<dyn MailClient>,
+}
+
+impl AuthorizationHandler {
+    /// Creates a new authentication hander.
+    pub fn new(
+        account_service: Arc<AccountService>,
+        token_service: Arc<TokenService>,
+        email_client: Arc<dyn MailClient>,
+    ) -> Self {
+        Self {
+            account_service,
+            token_service,
+            email_client,
+        }
+    }
 }

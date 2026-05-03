@@ -37,37 +37,18 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
     // Try to register an account with already-taken username.
     assert!(matches!(
         account_service.signup(signup_dto).await,
-        Err(ServiceError::UsernameTaken)
+        Err(..) // ServiceError::UsernameTaken
     ));
 
-    // Log into user2 account.
-    let user2_account_id_login = account_service
-        .login_with_username(dto::request::LoginWithUsername {
-            username: "user2".to_string(),
-            password_hash: "paswd2".to_string(),
-        })
-        .await?;
-    // Is id returned from login same with sign up?
-    assert!(user2_account_id_login == user2_account_id);
-
-    // Try logging with invalid credentials.
-    assert!(matches!(
-        account_service
-            .login_with_username(dto::request::LoginWithUsername {
-                username: "invalid_username".to_string(),
-                password_hash: "paswd2".to_string(),
-            })
-            .await,
-        Err(ServiceError::InvalidCredentials)
-    ));
+    // Try to log into user2 account, but it is not verified.
     assert!(matches!(
         account_service
             .login_with_username(dto::request::LoginWithUsername {
                 username: "user2".to_string(),
-                password_hash: "invalid_password".to_string(),
+                password_hash: "paswd2".to_string(),
             })
             .await,
-        Err(ServiceError::InvalidCredentials)
+        Err(ServiceError::AccountNotVerified)
     ));
 
     // Get /me.
@@ -119,6 +100,9 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
     transaction
         .set_primary_email(user1_account_id, "user1@example.com", true)
         .await?;
+    transaction
+        .set_verified_flag(user1_account_id, true)
+        .await?;
     transaction.commit().await?;
 
     let account_service = AccountService::new(repo);
@@ -132,6 +116,26 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
         .await?;
     // Is id returned from login same with sign up?
     assert!(user1_account_id_login == user1_account_id);
+
+    // Try logging with invalid credentials.
+    assert!(matches!(
+        account_service
+            .login_with_username(dto::request::LoginWithUsername {
+                username: "invalid_username".to_string(),
+                password_hash: "paswd2".to_string(),
+            })
+            .await,
+        Err(ServiceError::InvalidCredentials)
+    ));
+    assert!(matches!(
+        account_service
+            .login_with_username(dto::request::LoginWithUsername {
+                username: "user1".to_string(),
+                password_hash: "invalid_password".to_string(),
+            })
+            .await,
+        Err(ServiceError::InvalidCredentials)
+    ));
 
     // Also try invalid emails.
     assert!(matches!(

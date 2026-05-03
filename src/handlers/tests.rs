@@ -2,9 +2,9 @@ use super::HandlerResult;
 use crate::{
     client::impls::MockMailClientImpl,
     dto, entity,
-    handlers::{AccountHandler, AuthenticationHandler},
+    handlers::{AccountHandler, AuthenticationHandler, HandlerError},
     repo::impls::{MockAccountRepoImpl, MockTokenRepoImpl},
-    service::{AccountService, TokenService},
+    service::{AccountService, ServiceError, TokenService},
     token::TokenScope,
     util::templated_mails,
 };
@@ -46,11 +46,11 @@ async fn account_creation() -> HandlerResult<()> {
         })
         .await?;
 
-    account_handler.get_me(account_id).await?;
+    account_handler.me(account_id).await?;
 
     // Try to get non-existent user.
     assert!(matches!(
-        account_handler.get_me(entity::AccountId(0)).await,
+        account_handler.me(entity::AccountId(0)).await,
         Err(..)
     ));
 
@@ -71,6 +71,17 @@ async fn account_creation() -> HandlerResult<()> {
         assert!(matches!(signup_token.scopes[0], TokenScope::Signup { .. }));
     }
 
+    assert!(matches!(
+        authentication_handler
+            .login_by_username(dto::request::LoginWithUsername {
+                username: "user".to_string(),
+                password_hash: "passwd".to_string(),
+            })
+            .await,
+        Err(HandlerError::Service(ServiceError::AccountNotVerified))
+    ));
+
+    /* TODO: add account verification
     // Try to log in with username & password.
     token_service
         .verify(
@@ -82,6 +93,7 @@ async fn account_creation() -> HandlerResult<()> {
                 .await?,
         )
         .await?;
+    */
 
     Ok(())
 }

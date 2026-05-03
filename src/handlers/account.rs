@@ -34,7 +34,7 @@ impl AccountHandler {
     }
 
     /// GET `/me`
-    pub async fn get_me(&self, id: entity::AccountId) -> HandlerResult<dto::response::Account> {
+    pub async fn me(&self, id: entity::AccountId) -> HandlerResult<dto::response::Account> {
         Ok(self.account_service.me(id).await?)
     }
 }

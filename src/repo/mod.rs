@@ -56,6 +56,12 @@ pub trait AccountRepo: Send + Sync {
 
     /// Get account keys - the key bundle of the account.
     async fn get_keys(&self, id: entity::AccountId) -> RepoResult<Option<dto::repo::Keys>>;
+
+    /// Get account flags.
+    async fn get_account_flags(
+        &self,
+        id: entity::AccountId,
+    ) -> RepoResult<Option<entity::AccountFlags>>;
 }
 
 /// Transactional repository access wrapper.
@@ -72,13 +78,16 @@ pub trait AccountRepoTransaction: Send + Sync {
         keys: &dto::repo::Keys,
     ) -> RepoResult<()>;
 
+    /// Load default flags to user.
+    async fn insert_default_flags(&mut self, id: entity::AccountId) -> RepoResult<()>;
+
     /// Add a secondary email to the account. Returns true if the operation
     /// succeed.
-    async fn add_email(&mut self, id: entity::AccountId, email: &str) -> RepoResult<bool>;
+    async fn add_email(&mut self, id: entity::AccountId, email: &str) -> RepoResult<()>;
 
     /// Add username alias to the account. Returns true if the operation
     /// succeed.
-    async fn add_username(&mut self, id: entity::AccountId, username: &str) -> RepoResult<bool>;
+    async fn add_username(&mut self, id: entity::AccountId, username: &str) -> RepoResult<()>;
 
     /// Set the email primary for the account.
     ///
@@ -91,7 +100,7 @@ pub trait AccountRepoTransaction: Send + Sync {
         id: entity::AccountId,
         email: &str,
         is_primary: bool,
-    ) -> RepoResult<bool>;
+    ) -> RepoResult<()>;
 
     /// Set the username primary for the account.
     ///
@@ -101,7 +110,14 @@ pub trait AccountRepoTransaction: Send + Sync {
         id: entity::AccountId,
         username: &str,
         is_primary: bool,
-    ) -> RepoResult<bool>;
+    ) -> RepoResult<()>;
+
+    /// Set the verified flag of account.
+    async fn set_verified_flag(
+        &mut self,
+        id: entity::AccountId,
+        is_verified: bool,
+    ) -> RepoResult<()>;
 }
 
 /// Token provider holds data temporarily.

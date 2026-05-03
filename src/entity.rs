@@ -33,6 +33,16 @@ pub struct Account {
     pub encrpyted_master_key: Vec<u8>,
 }
 
+/// Account flags entity.
+#[derive(FromRow, Clone)]
+pub struct AccountFlags {
+    /// Accounts associated with the flags entity.
+    pub id: AccountId,
+
+    /// Whether or not the account has been verified.
+    pub is_verified: bool,
+}
+
 /// Usernames or username aliases assigned to an account.
 #[derive(FromRow, Default)]
 pub struct Username {

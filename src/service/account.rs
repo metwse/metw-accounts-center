@@ -37,22 +37,38 @@ impl AccountService {
             .upsert_account(id, &password_hash, &keys)
             .await?;
 
-        if !transaction.add_username(id, &signup_dto.username).await? {
-            return Err(ServiceError::UsernameTaken);
-        }
+        transaction.insert_default_flags(id).await?;
 
-        if !transaction
+        transaction.add_username(id, &signup_dto.username).await?;
+
+        // I cannot imagine in which conditions this branch is executed. Most
+        // probably this is unreachable.
+        transaction
             .set_primary_username(id, &signup_dto.username, true)
-            .await?
-        {
-            // I cannot imagine in which conditions this branch is executed.
-            // Most probably this is unreachable.
-            return Err(ServiceError::UnexceptedError("could not take username"));
-        }
+            .await?;
 
         transaction.commit().await?;
 
         Ok(id)
+    }
+
+    /// For use with login.
+    async fn login(
+        &self,
+        password_hash: String,
+        login: dto::repo::Login,
+    ) -> ServiceResult<entity::AccountId> {
+        if let Some(flags) = self.repo.get_account_flags(login.id).await?
+            && flags.is_verified
+        {
+            if password::check(password_hash, login.password_hash).await {
+                Ok(login.id)
+            } else {
+                Err(ServiceError::InvalidCredentials)
+            }
+        } else {
+            Err(ServiceError::AccountNotVerified)
+        }
     }
 
     /// Log into the account
@@ -66,11 +82,7 @@ impl AccountService {
             return Err(ServiceError::InvalidCredentials);
         };
 
-        if password::check(credentials.password_hash, login.password_hash).await {
-            Ok(login.id)
-        } else {
-            Err(ServiceError::InvalidCredentials)
-        }
+        self.login(credentials.password_hash, login).await
     }
 
     /// Log into the account
@@ -88,11 +100,7 @@ impl AccountService {
             return Err(ServiceError::InvalidCredentials);
         };
 
-        if password::check(credentials.password_hash, login.password_hash).await {
-            Ok(login.id)
-        } else {
-            Err(ServiceError::InvalidCredentials)
-        }
+        self.login(credentials.password_hash, login).await
     }
 
     /// Fetch the account details.

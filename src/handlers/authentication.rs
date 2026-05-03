@@ -72,7 +72,7 @@ impl AuthenticationHandler {
         Ok(self.login(account_id))
     }
 
-    /// POST `/login` (with `username`)
+    /// POST `/login` (with `email`)
     pub async fn login_by_email(
         &self,
         login_dto: dto::request::LoginWithEmail,
