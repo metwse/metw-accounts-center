@@ -207,9 +207,16 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         }
     }
 
-    async fn set_primary_email(&mut self, email: &str, is_primary: bool) -> RepoResult<bool> {
-        if let Some(email) = self.state.emails.get_mut(email) {
-            email.is_primary = is_primary;
+    async fn set_primary_email(
+        &mut self,
+        id: entity::AccountId,
+        email: &str,
+        is_primary: bool,
+    ) -> RepoResult<bool> {
+        if let Some(email_entity) = self.state.emails.get_mut(email)
+            && id == email_entity.account_id
+        {
+            email_entity.is_primary = is_primary;
 
             Ok(true)
         } else {
@@ -217,9 +224,16 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         }
     }
 
-    async fn set_primary_username(&mut self, username: &str, is_primary: bool) -> RepoResult<bool> {
-        if let Some(username) = self.state.usernames.get_mut(username) {
-            username.is_primary = is_primary;
+    async fn set_primary_username(
+        &mut self,
+        id: entity::AccountId,
+        username: &str,
+        is_primary: bool,
+    ) -> RepoResult<bool> {
+        if let Some(username_entity) = self.state.usernames.get_mut(username)
+            && id == username_entity.account_id
+        {
+            username_entity.is_primary = is_primary;
 
             Ok(true)
         } else {

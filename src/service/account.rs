@@ -43,7 +43,7 @@ impl AccountService {
         }
 
         if !transaction
-            .set_primary_username(&signup_dto.username, true)
+            .set_primary_username(id, &signup_dto.username, true)
             .await?
         {
             // I cannot imagine in which conditions this branch is executed.

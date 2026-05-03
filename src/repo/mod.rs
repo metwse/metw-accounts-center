@@ -81,10 +81,27 @@ pub trait AccountRepoTransaction {
     async fn add_username(&mut self, id: entity::AccountId, username: &str) -> RepoResult<bool>;
 
     /// Set the email primary for the account.
-    async fn set_primary_email(&mut self, email: &str, is_primary: bool) -> RepoResult<bool>;
+    ///
+    /// Although `email`s are unique, the `id` parameter is also required to
+    /// prevent race conditions. It is highly unlikely that the owner of an
+    /// email would change at the exact moment the one's email is set as the
+    /// primary key, but it is still an unsafety that must still be prevented.
+    async fn set_primary_email(
+        &mut self,
+        id: entity::AccountId,
+        email: &str,
+        is_primary: bool,
+    ) -> RepoResult<bool>;
 
     /// Set the username primary for the account.
-    async fn set_primary_username(&mut self, username: &str, is_primary: bool) -> RepoResult<bool>;
+    ///
+    /// See [`AccountRepoTransaction::set_primary_email`]
+    async fn set_primary_username(
+        &mut self,
+        id: entity::AccountId,
+        username: &str,
+        is_primary: bool,
+    ) -> RepoResult<bool>;
 }
 
 /// Token provider holds data temporarily.

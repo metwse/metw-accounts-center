@@ -8,7 +8,7 @@ use crate::{
 };
 use std::time::Duration;
 
-#[tokio::test(flavor = "multi_thread")]  // multi_thread used to test Send+Sync
+#[tokio::test(flavor = "multi_thread")] // multi_thread used to test Send+Sync
 async fn account_creation_mock_mt() -> ServiceResult<()> {
     let repo = MockAccountRepoImpl::boxed_new();
 
@@ -113,8 +113,12 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
     // Add email to the account, and elaborate abstraction to account_service
     // again.
     let mut transaction = repo.begin_transaction().await?;
-    transaction.add_email(user1_account_id, "user1@example.com").await?;
-    transaction.set_primary_email("user1@example.com", true).await?;
+    transaction
+        .add_email(user1_account_id, "user1@example.com")
+        .await?;
+    transaction
+        .set_primary_email(user1_account_id, "user1@example.com", true)
+        .await?;
     transaction.commit().await?;
 
     let account_service = AccountService::new(repo);
