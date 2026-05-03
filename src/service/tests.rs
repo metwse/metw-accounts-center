@@ -3,6 +3,7 @@ use crate::{
     dto, entity,
     repo::impls::{MockAccountRepoImpl, MockTokenRepoImpl},
     service::{ServiceError, TokenService},
+    testutil::{random_email, random_username},
     token::{Token, TokenScope},
     util::password,
 };
@@ -14,10 +15,15 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
 
     let account_service = AccountService::new(repo);
 
+    let acc1_username = random_username();
+    let acc1_email = random_email();
+    let acc2_username = random_username();
+    let acc2_email = random_email();
+
     // This basic sign up request will be used for all accounts.
     let signup_dto = dto::request::Signup {
-        username: "user1".to_string(),
-        email: "user1@example.com".to_string(),
+        username: acc1_username.to_string(),
+        email: acc1_email.to_string(),
         password_hash: "paswd1".to_string(),
         keys: dto::request::Keys {
             identity_key: vec![1],
@@ -26,14 +32,14 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
         },
     };
 
-    let user1_account_id = account_service.signup(signup_dto.clone()).await?;
+    let acc1_id = account_service.signup(signup_dto.clone()).await?;
 
     let mut signup_dto2 = signup_dto.clone();
-    signup_dto2.username = "user2".to_string();
-    signup_dto2.email = "user2@example.com".to_string();
+    signup_dto2.username = acc2_username.to_string();
+    signup_dto2.email = acc2_email.to_string();
     signup_dto2.password_hash = "paswd2".to_string();
 
-    let user2_account_id = account_service.signup(signup_dto2.clone()).await?;
+    let acc2_id = account_service.signup(signup_dto2.clone()).await?;
 
     // Try to register an account with already-taken username.
     let mut already_taken_username = signup_dto.clone();
@@ -47,7 +53,7 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
     assert!(matches!(
         account_service
             .login_with_username(dto::request::LoginWithUsername {
-                username: "user2".to_string(),
+                username: acc2_username.to_string(),
                 password_hash: "paswd2".to_string(),
             })
             .await,
@@ -55,7 +61,7 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
     ));
 
     // Get /me.
-    account_service.me(user2_account_id).await?;
+    account_service.me(acc2_id).await?;
 
     // Get /me from non-existent account.
     assert!(matches!(
@@ -67,11 +73,11 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
     let repo = account_service.repo;
 
     // Validate account creation.
-    assert!(repo.get_primary_username(user1_account_id).await?.unwrap() == "user1");
+    assert!(repo.get_primary_username(acc1_id).await?.unwrap() == acc1_username);
     assert!(
         password::check(
             "paswd1".to_string(),
-            repo.get_login_by_username("user1")
+            repo.get_login_by_username(acc1_username)
                 .await?
                 .unwrap()
                 .password_hash
@@ -79,14 +85,10 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
         .await
     );
     // Email should not be added as we did not verified it.
+    assert!(repo.get_login_by_email(acc1_email).await?.is_none());
+    assert!(repo.get_primary_username(acc2_id).await?.unwrap() == acc2_username);
     assert!(
-        repo.get_login_by_email("user1@example.com")
-            .await?
-            .is_none()
-    );
-    assert!(repo.get_primary_username(user2_account_id).await?.unwrap() == "user2");
-    assert!(
-        repo.get_keys(user2_account_id).await?.unwrap()
+        repo.get_keys(acc2_id).await?.unwrap()
             == dto::repo::Keys {
                 identity_key: vec![1],
                 encrypted_private_key: vec![2],
@@ -97,33 +99,29 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
     // Add email to the account, and elaborate abstraction to account_service
     // again.
     let mut transaction = repo.begin_transaction().await?;
-    transaction
-        .add_email(user1_account_id, "user1@example.com", true)
-        .await?;
-    transaction
-        .set_verified_flag(user1_account_id, true)
-        .await?;
+    transaction.add_email(acc1_id, acc1_email, true).await?;
+    transaction.set_verified_flag(acc1_id, true).await?;
     transaction.commit().await?;
 
     let account_service = AccountService::new(repo);
 
     // Try to register an account with already-taken email.
     let mut already_taken_email = signup_dto.clone();
-    already_taken_email.username = "...".to_string();
+    already_taken_email.username = random_username().to_string();
     assert!(matches!(
         account_service.signup(already_taken_email).await,
         Err(ServiceError::EmailTaken)
     ));
 
     // Log into user1 account.
-    let user1_account_id_login = account_service
+    let acc1_id_from_login = account_service
         .login_with_email(dto::request::LoginWithEmail {
-            email: "user1@example.com".to_string(),
+            email: acc1_email.to_string(),
             password_hash: "paswd1".to_string(),
         })
         .await?;
     // Is id returned from login same with sign up?
-    assert!(user1_account_id_login == user1_account_id);
+    assert!(acc1_id_from_login == acc1_id);
 
     // Try logging with invalid credentials.
     assert!(matches!(
@@ -138,7 +136,7 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
     assert!(matches!(
         account_service
             .login_with_username(dto::request::LoginWithUsername {
-                username: "user1".to_string(),
+                username: acc1_username.to_string(),
                 password_hash: "invalid_password".to_string(),
             })
             .await,
@@ -158,7 +156,7 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
     assert!(matches!(
         account_service
             .login_with_email(dto::request::LoginWithEmail {
-                email: "user1@example.com".to_string(),
+                email: acc1_email.to_string(),
                 password_hash: "invalid_password".to_string(),
             })
             .await,

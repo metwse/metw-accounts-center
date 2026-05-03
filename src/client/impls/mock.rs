@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 
-type Mails = HashMap<entity::AccountId, Vec<templated_mails::Template>>;
+pub(crate) type Mails = HashMap<entity::AccountId, Vec<templated_mails::Template>>;
 
 /// Mock mail client implementation.
 #[derive(Default)]

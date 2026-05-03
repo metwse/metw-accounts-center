@@ -26,3 +26,7 @@ pub mod token;
 
 /// External integration.
 pub mod client;
+
+/// Test utilities.
+#[cfg(test)]
+pub mod testutil;
