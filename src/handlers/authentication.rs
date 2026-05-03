@@ -1,4 +1,4 @@
-use super::HandlerResult;
+use super::{HandlerError, HandlerResult};
 use crate::{
     client::MailClient,
     dto, entity,
@@ -35,6 +35,17 @@ impl AuthenticationHandler {
         }
     }
 
+    /// Verify the authentication token.
+    pub async fn auth(&self, base64_encoded_token: String) -> HandlerResult<entity::AccountId> {
+        let token = self.token_service.verify(&base64_encoded_token).await?;
+
+        if let TokenScope::Authenticate = token.scope {
+            Ok(token.id)
+        } else {
+            Err(HandlerError::Unauthorized)
+        }
+    }
+
     /// POST `/signup`
     pub async fn signup(
         &self,
@@ -47,7 +58,7 @@ impl AuthenticationHandler {
 
         let signup_jwt = self.token_service.sign(&Token::new(
             account_id,
-            vec![TokenScope::Signup { email }],
+            TokenScope::Signup { email },
             SIGNUP_TOKEN_VALID_FOR,
         ));
 
@@ -85,7 +96,7 @@ impl AuthenticationHandler {
     fn login(&self, account_id: entity::AccountId) -> String {
         self.token_service.sign(&Token::new(
             account_id,
-            vec![TokenScope::Authenticate],
+            TokenScope::Authenticate,
             LOGIN_TOKEN_VALID_FOR,
         ))
     }

@@ -1,6 +1,5 @@
-use super::HandlerResult;
+use super::{HandlerError, HandlerResult};
 use crate::{
-    entity,
     service::{AccountService, TokenService},
     token::TokenScope,
 };
@@ -21,12 +20,15 @@ impl AuthorizationHandler {
         }
     }
 
-    async fn handle_token(&self, id: entity::AccountId, scope: TokenScope) -> HandlerResult<()> {
-        match scope {
-            TokenScope::Authenticate => Ok(()),
+    /// Handle privileged tokens.
+    pub async fn auth(&self, base64_encoded_token: String) -> HandlerResult<()> {
+        let token = self.token_service.revoke(&base64_encoded_token).await?;
+
+        match token.scope {
+            TokenScope::Authenticate => Err(HandlerError::Unauthorized),
 
             TokenScope::AddEmail(email) => {
-                Ok(self.account_service.auth_add_email(id, email).await?)
+                Ok(self.account_service.auth_add_email(token.id, email).await?)
             }
 
             TokenScope::SetPrimaryEmail {
@@ -34,23 +36,13 @@ impl AuthorizationHandler {
                 new_primary_email,
             } => Ok(self
                 .account_service
-                .auth_change_primary_email(id, current_primary_email, new_primary_email)
+                .auth_change_primary_email(token.id, current_primary_email, new_primary_email)
                 .await?),
 
-            TokenScope::Signup { email } => {
-                Ok(self.account_service.auth_complete_signup(id, email).await?)
-            }
+            TokenScope::Signup { email } => Ok(self
+                .account_service
+                .auth_complete_signup(token.id, email)
+                .await?),
         }
-    }
-
-    /// Handle privileged tokens.
-    pub async fn auth(&self, base64_encoded_token: String) -> HandlerResult<()> {
-        let token = self.token_service.revoke(&base64_encoded_token).await?;
-
-        for scope in token.scopes {
-            self.handle_token(token.id, scope).await?;
-        }
-
-        Ok(())
     }
 }

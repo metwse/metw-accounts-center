@@ -98,7 +98,7 @@ async fn account_creation() -> HandlerResult<()> {
         authorization_handler.auth(signup_jwt.clone()).await?;
 
         assert!(signup_token1.id == account_id);
-        assert!(matches!(signup_token1.scopes[0], TokenScope::Signup { .. }));
+        assert!(matches!(signup_token1.scope, TokenScope::Signup { .. }));
 
         let templated_mails::Template::Signup {
             signup_jwt: signup_jwt2,
@@ -112,8 +112,8 @@ async fn account_creation() -> HandlerResult<()> {
     }
 
     // Try to log in with username & password.
-    token_service
-        .verify(&authentication_handler.login_by_username(login_dto).await?)
+    authentication_handler
+        .auth(authentication_handler.login_by_username(login_dto).await?)
         .await?;
 
     token_service
@@ -164,10 +164,7 @@ async fn account_creation() -> HandlerResult<()> {
         authorization_handler.auth(add_email_jwt.clone()).await?;
 
         assert!(add_email_token.id == account_id);
-        assert!(matches!(
-            add_email_token.scopes[0],
-            TokenScope::AddEmail { .. }
-        ));
+        assert!(matches!(add_email_token.scope, TokenScope::AddEmail { .. }));
         assert!(email == "email2@example.com");
     }
 

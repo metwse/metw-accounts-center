@@ -176,13 +176,13 @@ async fn token_service() -> ServiceResult<()> {
 
     let token1 = Token::new(
         entity::AccountId(0),
-        vec![TokenScope::Authenticate],
+        TokenScope::Authenticate,
         Duration::from_secs(1000),
     );
 
     let token2 = Token::new(
         entity::AccountId(0),
-        vec![TokenScope::Authenticate],
+        TokenScope::Authenticate,
         Duration::from_secs(0),
     );
 

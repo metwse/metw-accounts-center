@@ -57,7 +57,7 @@ impl PersonalHandler {
 
         let add_email_jwt = self.token_service.sign(&Token::new(
             id,
-            vec![TokenScope::AddEmail(email.clone())],
+            TokenScope::AddEmail(email.clone()),
             ADD_EMAIL_TOKEN_VALID_FOR,
         ));
 
@@ -105,10 +105,10 @@ impl PersonalHandler {
 
         let set_primary_mail_jwt = self.token_service.sign(&Token::new(
             id,
-            vec![TokenScope::SetPrimaryEmail {
+            TokenScope::SetPrimaryEmail {
                 current_primary_email: current_primary_email.clone(),
                 new_primary_email: new_primary_email.clone(),
-            }],
+            },
             SET_PRIMARY_MAIL_VALID_FOR,
         ));
 

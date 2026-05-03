@@ -9,7 +9,7 @@ pub struct Token {
     /// Account id.
     pub id: entity::AccountId,
     /// Token's persmissions.
-    pub scopes: Vec<TokenScope>,
+    pub scope: TokenScope,
 
     pub(crate) exp: usize,
     nbf: usize,
@@ -37,13 +37,13 @@ pub enum TokenScope {
 
 impl Token {
     /// Create a new token.
-    pub fn new(id: entity::AccountId, scopes: Vec<TokenScope>, valid_for: Duration) -> Self {
+    pub fn new(id: entity::AccountId, scope: TokenScope, valid_for: Duration) -> Self {
         let iat = Utc::now().timestamp() as usize;
         let exp = iat + (valid_for.as_secs() as usize);
 
         Token {
             id,
-            scopes,
+            scope,
             exp,
             nbf: iat,
             iat,
