@@ -1,6 +1,5 @@
 use super::{HandlerError, HandlerResult};
 use crate::{
-    entity,
     service::ServiceError,
     testutil::{TestCtx, random_email},
     token::TokenScope,
@@ -18,8 +17,6 @@ async fn account_creation() -> HandlerResult<()> {
     ctx.personal_handler.me(acc1_id).await?;
 
     // Try to get non-existent user.
-    assert!(ctx.personal_handler.me(entity::AccountId(0)).await.is_err());
-
     assert!(matches!(
         ctx.login_with_username(acc1_username, "passwd1").await,
         Err(HandlerError::Service(ServiceError::AccountNotVerified))

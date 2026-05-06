@@ -3,11 +3,12 @@ use crate::{
         MailClient,
         impls::{MockMailClientImpl, mock::Mails},
     },
-    dto, entity,
+    dto,
     handlers::{AuthenticationHandler, AuthorizationHandler, HandlerResult, PersonalHandler},
+    id::{AccountId, snowflake},
     repo::impls::{MockAccountRepoImpl, MockTokenRepoImpl},
     service::{AccountService, TokenService},
-    util::{snowflake, templated_mails},
+    util::templated_mails,
 };
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -84,7 +85,7 @@ impl TestCtx {
     pub async fn signup(
         &self,
         password_hash: &'static str,
-    ) -> (entity::AccountId, &'static str, &'static str) {
+    ) -> (AccountId, &'static str, &'static str) {
         let username = random_username();
         let email = random_email();
 
@@ -135,7 +136,7 @@ impl TestCtx {
     }
 
     /// Get the last email sent to the account.
-    pub async fn last_email(&self, account_id: entity::AccountId) -> templated_mails::Template {
+    pub async fn last_email(&self, account_id: AccountId) -> templated_mails::Template {
         let emails = self.emails.lock().await;
         let mailbox = emails.get(&account_id).unwrap();
 

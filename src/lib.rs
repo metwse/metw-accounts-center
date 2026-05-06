@@ -45,8 +45,9 @@
 //! internal communication between `service` and `repo` layers.
 //!
 //! [`util`] is used for miscellaneous utilities that do not fit into
-//! categories above. Conceptually, the [`token`] module should be inside the
-//! `util` module, but it is defined at the crate root as it is too common.
+//! categories above. Check out documenatations of the `util` for details.
+//! Conceptually, the [`token`] and [`id`] modules should be inside the `util`
+//! module, but they are defined at the crate root as they are too common.
 //!
 //! [SoC]: https://en.wikipedia.org/wiki/Separation_of_concerns
 
@@ -55,11 +56,8 @@
 
 /// Database entities.
 ///
-/// One-to-one mapping of database entities to Rust types. Usually used between
-/// `repo` and `service` layers, but [new types][newtype] defined in this
-/// module are exposed to all layers.
-///
-/// [newtype]: https://doc.rust-lang.org/rust-by-example/generics/new_types.html
+/// One-to-one mapping of database entities to Rust types. Used internally --
+/// between `repo` and `service` layers.
 pub mod entity;
 
 /// Data transfer objects.
@@ -94,6 +92,9 @@ pub mod token;
 
 /// External integrations.
 pub mod client;
+
+/// Unique identifier types and the ID generation algorithm.
+pub mod id;
 
 /// Test utilities.
 #[cfg(any(test, doc))]

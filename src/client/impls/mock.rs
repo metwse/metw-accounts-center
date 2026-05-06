@@ -1,10 +1,10 @@
 use super::super::MailClient;
-use crate::{entity, util::templated_mails};
+use crate::{id::AccountId, util::templated_mails};
 use async_trait::async_trait;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 
-pub(crate) type Mails = HashMap<entity::AccountId, Vec<templated_mails::Template>>;
+pub(crate) type Mails = HashMap<AccountId, Vec<templated_mails::Template>>;
 
 /// Mock mail client implementation.
 #[derive(Default)]
@@ -23,7 +23,7 @@ impl MockMailClientImpl {
 
 #[async_trait]
 impl MailClient for MockMailClientImpl {
-    async fn send(&self, id: entity::AccountId, template: templated_mails::Template) {
+    async fn send(&self, id: AccountId, template: templated_mails::Template) {
         let mut debug = self.mails.lock().await;
 
         let subject = template.subject();

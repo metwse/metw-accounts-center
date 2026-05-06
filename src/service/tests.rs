@@ -1,6 +1,6 @@
 use super::{AccountService, ServiceResult};
 use crate::{
-    dto, entity,
+    dto,
     repo::impls::{MockAccountRepoImpl, MockTokenRepoImpl},
     service::{ServiceError, TokenService},
     testutil::{random_email, random_username},
@@ -65,7 +65,7 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
 
     // Get /me from non-existent account.
     assert!(matches!(
-        account_service.me(entity::AccountId(0)).await,
+        account_service.me(0.into()).await,
         Err(ServiceError::AccountNotFound)
     ));
 
@@ -173,16 +173,12 @@ async fn token_service() -> ServiceResult<()> {
     let token_service = TokenService::new(repo, b"supersecret1234");
 
     let token1 = Token::new(
-        entity::AccountId(0),
+        0.into(),
         TokenScope::Authenticate,
         Duration::from_secs(1000),
     );
 
-    let token2 = Token::new(
-        entity::AccountId(0),
-        TokenScope::Authenticate,
-        Duration::from_secs(0),
-    );
+    let token2 = Token::new(0.into(), TokenScope::Authenticate, Duration::from_secs(0));
 
     let signed1 = token_service.sign(&token1);
     let signed2 = token_service.sign(&token2);

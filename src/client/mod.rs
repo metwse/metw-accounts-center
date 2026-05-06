@@ -1,4 +1,4 @@
-use crate::{entity, util::templated_mails};
+use crate::{id::AccountId, util::templated_mails};
 use async_trait::async_trait;
 
 /// Client implementations.
@@ -8,5 +8,5 @@ pub mod impls;
 #[async_trait]
 pub trait MailClient {
     /// Send emails.
-    async fn send(&self, id: entity::AccountId, template: templated_mails::Template);
+    async fn send(&self, id: AccountId, template: templated_mails::Template);
 }

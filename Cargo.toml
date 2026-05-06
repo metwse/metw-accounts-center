@@ -13,6 +13,7 @@ chrono = "0.4"
 jsonwebtoken = { version = "10", features = ["aws_lc_rs"] }
 argon2 = "0.5"
 
+pastey = "0.2"
 dotenvy = "0.15"
 lazy_static = "1.5"
 thiserror = "2"

@@ -1,16 +1,6 @@
+use crate::id::AccountId;
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
-
-/// Account ID.
-#[derive(Debug, Serialize, Deserialize, FromRow, Clone, Copy, Default, Hash, PartialEq, Eq)]
-pub struct AccountId(pub i64);
-
-impl std::fmt::Display for AccountId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
-    }
-}
 
 /// Account entity.
 ///
