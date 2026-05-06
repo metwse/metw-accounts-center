@@ -17,10 +17,10 @@ pub struct Account {
     pub identity_key: Vec<u8>,
 
     /// Private key encrypted by the master key.
-    pub encrpyted_private_key: Vec<u8>,
+    pub encrypted_private_key: Vec<u8>,
 
     /// Master key encrypted by user's password.
-    pub encrpyted_master_key: Vec<u8>,
+    pub encrypted_master_key: Vec<u8>,
 }
 
 /// Account flags entity.

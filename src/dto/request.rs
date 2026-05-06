@@ -66,7 +66,7 @@ pub struct Keys {
     /// Curve25519 public key in der format.
     #[validate(length(max = 2048))]
     pub identity_key: Vec<u8>,
-    /// Private pair of identity key, ecrypted by master key.
+    /// Private pair of identity key, encrypted by master key.
     #[validate(length(max = 2048))]
     pub encrypted_private_key: Vec<u8>,
     /// Master key, encrypted by password.
