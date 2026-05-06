@@ -1,7 +1,8 @@
 use super::{HandlerError, HandlerResult};
 use crate::{
     client::MailClient,
-    dto, entity,
+    dto,
+    id::AccountId,
     service::{AccountService, TokenService},
     token::{Token, TokenScope},
     util::templated_mails,
@@ -36,7 +37,7 @@ impl AuthenticationHandler {
     }
 
     /// Verify the authentication token.
-    pub async fn auth(&self, base64_encoded_token: String) -> HandlerResult<entity::AccountId> {
+    pub async fn auth(&self, base64_encoded_token: String) -> HandlerResult<AccountId> {
         let token = self.token_service.verify(&base64_encoded_token).await?;
 
         if let TokenScope::Authenticate = token.scope {
@@ -47,10 +48,7 @@ impl AuthenticationHandler {
     }
 
     /// POST `/signup`
-    pub async fn signup(
-        &self,
-        signup_dto: dto::request::Signup,
-    ) -> HandlerResult<entity::AccountId> {
+    pub async fn signup(&self, signup_dto: dto::request::Signup) -> HandlerResult<AccountId> {
         let email = signup_dto.email.clone();
         let username = signup_dto.username.clone();
 
@@ -93,7 +91,7 @@ impl AuthenticationHandler {
         Ok(self.login(account_id))
     }
 
-    fn login(&self, account_id: entity::AccountId) -> String {
+    fn login(&self, account_id: AccountId) -> String {
         self.token_service.sign(&Token::new(
             account_id,
             TokenScope::Authenticate,

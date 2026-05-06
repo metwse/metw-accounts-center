@@ -1,9 +1,5 @@
 use super::{ServiceError, ServiceResult};
-use crate::{
-    dto, entity,
-    repo::AccountRepo,
-    util::{password, snowflake},
-};
+use crate::{dto, id::AccountId, repo::AccountRepo, util::password};
 
 /// Account state.
 pub struct AccountService {
@@ -17,10 +13,7 @@ impl AccountService {
     }
 
     /// Signup a new account
-    pub async fn signup(
-        &self,
-        signup_dto: dto::request::Signup,
-    ) -> ServiceResult<entity::AccountId> {
+    pub async fn signup(&self, signup_dto: dto::request::Signup) -> ServiceResult<AccountId> {
         if self.repo.is_username_taken(&signup_dto.username).await? {
             return Err(ServiceError::UsernameTaken);
         }
@@ -39,7 +32,7 @@ impl AccountService {
             encrypted_master_key: signup_dto.keys.encrypted_master_key,
         };
 
-        let id = entity::AccountId(snowflake());
+        let id = AccountId::unique();
 
         transaction
             .upsert_account(id, &password_hash, &keys)
@@ -61,7 +54,7 @@ impl AccountService {
         &self,
         password_hash: String,
         login: dto::repo::Login,
-    ) -> ServiceResult<entity::AccountId> {
+    ) -> ServiceResult<AccountId> {
         if let Some(flags) = self.repo.get_account_flags(login.id).await?
             && flags.is_verified
         {
@@ -79,7 +72,7 @@ impl AccountService {
     pub async fn login_with_email(
         &self,
         credentials: dto::request::LoginWithEmail,
-    ) -> ServiceResult<entity::AccountId> {
+    ) -> ServiceResult<AccountId> {
         let Some(login) = self.repo.get_login_by_email(&credentials.email).await? else {
             return Err(ServiceError::InvalidCredentials);
         };
@@ -91,7 +84,7 @@ impl AccountService {
     pub async fn login_with_username(
         &self,
         credentials: dto::request::LoginWithUsername,
-    ) -> ServiceResult<entity::AccountId> {
+    ) -> ServiceResult<AccountId> {
         let Some(login) = self
             .repo
             .get_login_by_username(&credentials.username)
@@ -104,7 +97,7 @@ impl AccountService {
     }
 
     /// Fetch the account details.
-    pub async fn me(&self, id: entity::AccountId) -> ServiceResult<dto::response::Account> {
+    pub async fn me(&self, id: AccountId) -> ServiceResult<dto::response::Account> {
         let (username, username_aliases, email, secondary_emails, keys) = tokio::try_join!(
             self.repo.get_primary_username(id),
             self.repo.get_nonexpiring_username_aliases(id),
@@ -118,7 +111,7 @@ impl AccountService {
         };
 
         Ok(dto::response::Account {
-            id: id.0,
+            id: id.into(),
 
             username,
             email,
@@ -141,7 +134,7 @@ impl AccountService {
     }
 
     /// Add the email as a secondary email to the account.
-    pub async fn auth_add_email(&self, id: entity::AccountId, email: String) -> ServiceResult<()> {
+    pub async fn auth_add_email(&self, id: AccountId, email: String) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
         transaction.add_email(id, &email, false).await?;
         transaction.commit().await?;
@@ -152,30 +145,26 @@ impl AccountService {
     /// Remove a secondary email.
     pub async fn remove_email_if_not_primary(
         &self,
-        id: entity::AccountId,
+        id: AccountId,
         email: String,
     ) -> ServiceResult<()> {
         Ok(self.repo.remove_email_if_not_primary(id, &email).await?)
     }
 
     /// Returns true if the email has been taken by the given account.
-    pub async fn is_email_taken_by(
-        &self,
-        id: entity::AccountId,
-        email: String,
-    ) -> ServiceResult<bool> {
+    pub async fn is_email_taken_by(&self, id: AccountId, email: String) -> ServiceResult<bool> {
         Ok(self.repo.is_email_taken_by(id, &email).await?)
     }
 
     /// Primary mail of the account.
-    pub async fn get_primary_email(&self, id: entity::AccountId) -> ServiceResult<Option<String>> {
+    pub async fn get_primary_email(&self, id: AccountId) -> ServiceResult<Option<String>> {
         Ok(self.repo.get_primary_email(id).await?)
     }
 
     /// Change account's primary email.
     pub async fn auth_change_primary_email(
         &self,
-        id: entity::AccountId,
+        id: AccountId,
         current_primary_email: String,
         new_primary_email: String,
     ) -> ServiceResult<()> {
@@ -187,11 +176,7 @@ impl AccountService {
     }
 
     /// Complete signup by adding the email and activating the account.
-    pub async fn auth_complete_signup(
-        &self,
-        id: entity::AccountId,
-        email: String,
-    ) -> ServiceResult<()> {
+    pub async fn auth_complete_signup(&self, id: AccountId, email: String) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
         transaction.add_email(id, &email, true).await?;
         transaction.set_verified_flag(id, true).await?;

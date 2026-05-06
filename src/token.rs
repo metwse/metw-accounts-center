@@ -1,4 +1,4 @@
-use crate::entity;
+use crate::id::AccountId;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -7,7 +7,7 @@ use std::time::Duration;
 #[derive(Serialize, Deserialize)]
 pub struct Token {
     /// Account id.
-    pub id: entity::AccountId,
+    pub id: AccountId,
     /// Token's persmissions.
     pub scope: TokenScope,
 
@@ -37,7 +37,7 @@ pub enum TokenScope {
 
 impl Token {
     /// Create a new token.
-    pub fn new(id: entity::AccountId, scope: TokenScope, valid_for: Duration) -> Self {
+    pub fn new(id: AccountId, scope: TokenScope, valid_for: Duration) -> Self {
         let iat = Utc::now().timestamp() as usize;
         let exp = iat + (valid_for.as_secs() as usize);
 

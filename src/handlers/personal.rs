@@ -1,7 +1,8 @@
 use super::{HandlerError, HandlerResult};
 use crate::{
     client::MailClient,
-    dto, entity,
+    dto,
+    id::AccountId,
     service::{AccountService, ServiceError, TokenService},
     token::{Token, TokenScope},
     util::templated_mails,
@@ -42,7 +43,7 @@ impl PersonalHandler {
     }
 
     /// GET `/me`
-    pub async fn me(&self, id: entity::AccountId) -> HandlerResult<dto::response::Account> {
+    pub async fn me(&self, id: AccountId) -> HandlerResult<dto::response::Account> {
         Ok(self.account_service.me(id).await?)
     }
 
@@ -50,7 +51,7 @@ impl PersonalHandler {
     ///
     /// Add a new email to the account. Sends verification code to requested
     /// email.
-    pub async fn add_email(&self, id: entity::AccountId, email: String) -> HandlerResult<()> {
+    pub async fn add_email(&self, id: AccountId, email: String) -> HandlerResult<()> {
         if self.account_service.is_email_taken(email.clone()).await? {
             return Err(ServiceError::EmailTaken)?;
         }
@@ -75,7 +76,7 @@ impl PersonalHandler {
     /// DELETE `/me/emails/<email>`
     ///
     /// Remove the email if it is not primary email.
-    pub async fn delete_email(&self, id: entity::AccountId, email: String) -> HandlerResult<()> {
+    pub async fn delete_email(&self, id: AccountId, email: String) -> HandlerResult<()> {
         self.account_service
             .remove_email_if_not_primary(id, email)
             .await?;
@@ -88,7 +89,7 @@ impl PersonalHandler {
     /// Set the email as account's primary mail.
     pub async fn set_primary_mail(
         &self,
-        id: entity::AccountId,
+        id: AccountId,
         new_primary_email: String,
     ) -> HandlerResult<()> {
         let Some(current_primary_email) = self.account_service.get_primary_email(id).await? else {

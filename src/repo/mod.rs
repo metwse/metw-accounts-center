@@ -1,4 +1,4 @@
-use crate::{dto, entity};
+use crate::{dto, entity, id::AccountId};
 use async_trait::async_trait;
 
 mod error;
@@ -32,36 +32,30 @@ pub trait AccountRepo: Send + Sync {
     ///
     /// Usually all the accounts have primary usernames, but pending deletion
     /// might drop usernames of an account.
-    async fn get_primary_username(&self, id: entity::AccountId) -> RepoResult<Option<String>>;
+    async fn get_primary_username(&self, id: AccountId) -> RepoResult<Option<String>>;
 
     /// Get usernames by account id.
     ///
     /// After username change, previous usernames for will continue to belong
     /// the account for a while; but they will be garbage collected.
-    async fn get_nonexpiring_username_aliases(
-        &self,
-        id: entity::AccountId,
-    ) -> RepoResult<Vec<String>>;
+    async fn get_nonexpiring_username_aliases(&self, id: AccountId) -> RepoResult<Vec<String>>;
 
     /// Get primary email if, exists.
     ///
     /// All regular accounts shall have primary mail, but some system accounts
     /// or deleted accounts do not.
-    async fn get_primary_email(&self, id: entity::AccountId) -> RepoResult<Option<String>>;
+    async fn get_primary_email(&self, id: AccountId) -> RepoResult<Option<String>>;
 
     /// Get secondary emails by account id.
     ///
     /// Returns an empty list if none have been added.
-    async fn get_secondary_emails(&self, id: entity::AccountId) -> RepoResult<Vec<String>>;
+    async fn get_secondary_emails(&self, id: AccountId) -> RepoResult<Vec<String>>;
 
     /// Get account keys - the key bundle of the account.
-    async fn get_keys(&self, id: entity::AccountId) -> RepoResult<Option<dto::repo::Keys>>;
+    async fn get_keys(&self, id: AccountId) -> RepoResult<Option<dto::repo::Keys>>;
 
     /// Get account flags.
-    async fn get_account_flags(
-        &self,
-        id: entity::AccountId,
-    ) -> RepoResult<Option<entity::AccountFlags>>;
+    async fn get_account_flags(&self, id: AccountId) -> RepoResult<Option<entity::AccountFlags>>;
 
     /// Set the email primary for the account.
     ///
@@ -72,17 +66,13 @@ pub trait AccountRepo: Send + Sync {
     /// prevented.
     async fn set_primary_email_if_current_is(
         &self,
-        id: entity::AccountId,
+        id: AccountId,
         current_primary_email: &str,
         new_primary_email: &str,
     ) -> RepoResult<()>;
 
     /// Remove the email if it is not primary mail of the account.
-    async fn remove_email_if_not_primary(
-        &self,
-        id: entity::AccountId,
-        email: &str,
-    ) -> RepoResult<()>;
+    async fn remove_email_if_not_primary(&self, id: AccountId, email: &str) -> RepoResult<()>;
 
     /// Returns true if the username has been taken.
     async fn is_username_taken(&self, username: &str) -> RepoResult<bool>;
@@ -91,7 +81,7 @@ pub trait AccountRepo: Send + Sync {
     async fn is_email_taken(&self, email: &str) -> RepoResult<bool>;
 
     /// Returns true if the email has been taken by the given account.
-    async fn is_email_taken_by(&self, id: entity::AccountId, email: &str) -> RepoResult<bool>;
+    async fn is_email_taken_by(&self, id: AccountId, email: &str) -> RepoResult<bool>;
 }
 
 /// Transactional repository access wrapper.
@@ -103,36 +93,27 @@ pub trait AccountRepoTransaction: Send + Sync {
     /// Register a new account, or update its keys.
     async fn upsert_account(
         &mut self,
-        id: entity::AccountId,
+        id: AccountId,
         password_hash: &str,
         keys: &dto::repo::Keys,
     ) -> RepoResult<()>;
 
     /// Load default flags to user.
-    async fn insert_default_flags(&mut self, id: entity::AccountId) -> RepoResult<()>;
+    async fn insert_default_flags(&mut self, id: AccountId) -> RepoResult<()>;
 
     /// Add a secondary email to the account.
-    async fn add_email(
-        &mut self,
-        id: entity::AccountId,
-        email: &str,
-        is_primary: bool,
-    ) -> RepoResult<()>;
+    async fn add_email(&mut self, id: AccountId, email: &str, is_primary: bool) -> RepoResult<()>;
 
     /// Add username alias to the account.
     async fn add_username(
         &mut self,
-        id: entity::AccountId,
+        id: AccountId,
         username: &str,
         is_primary: bool,
     ) -> RepoResult<()>;
 
     /// Set the verified flag of account.
-    async fn set_verified_flag(
-        &mut self,
-        id: entity::AccountId,
-        is_verified: bool,
-    ) -> RepoResult<()>;
+    async fn set_verified_flag(&mut self, id: AccountId, is_verified: bool) -> RepoResult<()>;
 }
 
 /// Token provider holds data temporarily.

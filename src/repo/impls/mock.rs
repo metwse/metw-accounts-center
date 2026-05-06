@@ -1,5 +1,5 @@
 use super::super::{AccountRepo, AccountRepoTransaction, RepoResult, TokenRepo};
-use crate::{dto, entity, repo::RepoError};
+use crate::{dto, entity, id::AccountId, repo::RepoError};
 use async_trait::async_trait;
 use chrono::Utc;
 use std::{
@@ -65,7 +65,7 @@ impl AccountRepo for MockAccountRepoImpl {
         }
     }
 
-    async fn get_primary_username(&self, id: entity::AccountId) -> RepoResult<Option<String>> {
+    async fn get_primary_username(&self, id: AccountId) -> RepoResult<Option<String>> {
         let state = self.lock_state().await;
 
         for username_entity in state.usernames.values() {
@@ -77,10 +77,7 @@ impl AccountRepo for MockAccountRepoImpl {
         Ok(None)
     }
 
-    async fn get_nonexpiring_username_aliases(
-        &self,
-        id: entity::AccountId,
-    ) -> RepoResult<Vec<String>> {
+    async fn get_nonexpiring_username_aliases(&self, id: AccountId) -> RepoResult<Vec<String>> {
         let state = self.lock_state().await;
 
         let mut nonexpiring_usernames = Vec::new();
@@ -94,7 +91,7 @@ impl AccountRepo for MockAccountRepoImpl {
         Ok(nonexpiring_usernames)
     }
 
-    async fn get_primary_email(&self, id: entity::AccountId) -> RepoResult<Option<String>> {
+    async fn get_primary_email(&self, id: AccountId) -> RepoResult<Option<String>> {
         let state = self.lock_state().await;
 
         for email_entity in state.emails.values() {
@@ -106,7 +103,7 @@ impl AccountRepo for MockAccountRepoImpl {
         Ok(None)
     }
 
-    async fn get_secondary_emails(&self, id: entity::AccountId) -> RepoResult<Vec<String>> {
+    async fn get_secondary_emails(&self, id: AccountId) -> RepoResult<Vec<String>> {
         let state = self.lock_state().await;
 
         let mut secondary_emails = Vec::new();
@@ -120,7 +117,7 @@ impl AccountRepo for MockAccountRepoImpl {
         Ok(secondary_emails)
     }
 
-    async fn get_keys(&self, id: entity::AccountId) -> RepoResult<Option<dto::repo::Keys>> {
+    async fn get_keys(&self, id: AccountId) -> RepoResult<Option<dto::repo::Keys>> {
         let state = self.lock_state().await;
 
         if let Some(account_entity) = state.accounts.get(&id) {
@@ -134,10 +131,7 @@ impl AccountRepo for MockAccountRepoImpl {
         }
     }
 
-    async fn get_account_flags(
-        &self,
-        id: entity::AccountId,
-    ) -> RepoResult<Option<entity::AccountFlags>> {
+    async fn get_account_flags(&self, id: AccountId) -> RepoResult<Option<entity::AccountFlags>> {
         let state = self.lock_state().await;
 
         if let Some(flags_entity) = state.account_flags.get(&id) {
@@ -149,7 +143,7 @@ impl AccountRepo for MockAccountRepoImpl {
 
     async fn set_primary_email_if_current_is(
         &self,
-        id: entity::AccountId,
+        id: AccountId,
         current_primary_email: &str,
         new_primary_email: &str,
     ) -> RepoResult<()> {
@@ -184,11 +178,7 @@ impl AccountRepo for MockAccountRepoImpl {
         Ok(())
     }
 
-    async fn remove_email_if_not_primary(
-        &self,
-        id: entity::AccountId,
-        email: &str,
-    ) -> RepoResult<()> {
+    async fn remove_email_if_not_primary(&self, id: AccountId, email: &str) -> RepoResult<()> {
         let mut state = self.lock_state().await;
 
         let email_entity = state
@@ -218,7 +208,7 @@ impl AccountRepo for MockAccountRepoImpl {
         Ok(state.emails.contains_key(email))
     }
 
-    async fn is_email_taken_by(&self, id: entity::AccountId, email: &str) -> RepoResult<bool> {
+    async fn is_email_taken_by(&self, id: AccountId, email: &str) -> RepoResult<bool> {
         let state = self.lock_state().await;
 
         let Some(email_entity) = state.emails.get(email) else {
@@ -231,10 +221,10 @@ impl AccountRepo for MockAccountRepoImpl {
 
 #[derive(Default)]
 struct AccountRepoState {
-    accounts: HashMap<entity::AccountId, entity::Account>,
+    accounts: HashMap<AccountId, entity::Account>,
     emails: HashMap<String, entity::Email>,
     usernames: HashMap<String, entity::Username>,
-    account_flags: HashMap<entity::AccountId, entity::AccountFlags>,
+    account_flags: HashMap<AccountId, entity::AccountFlags>,
 }
 
 struct MockAccountRepoTransactionImpl {
@@ -249,7 +239,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
 
     async fn upsert_account(
         &mut self,
-        id: entity::AccountId,
+        id: AccountId,
         password_hash: &str,
         keys: &dto::repo::Keys,
     ) -> RepoResult<()> {
@@ -265,7 +255,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         Ok(())
     }
 
-    async fn insert_default_flags(&mut self, id: entity::AccountId) -> RepoResult<()> {
+    async fn insert_default_flags(&mut self, id: AccountId) -> RepoResult<()> {
         self.state.account_flags.insert(
             id,
             entity::AccountFlags {
@@ -277,12 +267,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         Ok(())
     }
 
-    async fn add_email(
-        &mut self,
-        id: entity::AccountId,
-        email: &str,
-        is_primary: bool,
-    ) -> RepoResult<()> {
+    async fn add_email(&mut self, id: AccountId, email: &str, is_primary: bool) -> RepoResult<()> {
         if self.state.emails.contains_key(email) {
             Err(RepoError::Internal("email does not exists"))
         } else {
@@ -302,7 +287,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
 
     async fn add_username(
         &mut self,
-        id: entity::AccountId,
+        id: AccountId,
         username: &str,
         is_primary: bool,
     ) -> RepoResult<()> {
@@ -324,11 +309,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         }
     }
 
-    async fn set_verified_flag(
-        &mut self,
-        id: entity::AccountId,
-        is_verified: bool,
-    ) -> RepoResult<()> {
+    async fn set_verified_flag(&mut self, id: AccountId, is_verified: bool) -> RepoResult<()> {
         if let Some(account_flags_entity) = self.state.account_flags.get_mut(&id) {
             account_flags_entity.is_verified = is_verified;
 

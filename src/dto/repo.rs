@@ -1,4 +1,4 @@
-use crate::entity::AccountId;
+use crate::id::AccountId;
 
 #[cfg_attr(test, derive(Eq, PartialEq))]
 pub struct Keys {
