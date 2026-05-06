@@ -123,8 +123,8 @@ impl AccountRepo for MockAccountRepoImpl {
         if let Some(account_entity) = state.accounts.get(&id) {
             Ok(Some(dto::repo::Keys {
                 identity_key: account_entity.identity_key.clone(),
-                encrypted_private_key: account_entity.encrpyted_private_key.clone(),
-                encrypted_master_key: account_entity.encrpyted_master_key.clone(),
+                encrypted_private_key: account_entity.encrypted_private_key.clone(),
+                encrypted_master_key: account_entity.encrypted_master_key.clone(),
             }))
         } else {
             Ok(None)
@@ -249,8 +249,8 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
 
         account_entity.password_hash = password_hash.to_string();
         account_entity.identity_key = keys.identity_key.clone();
-        account_entity.encrpyted_private_key = keys.encrypted_private_key.clone();
-        account_entity.encrpyted_master_key = keys.encrypted_master_key.clone();
+        account_entity.encrypted_private_key = keys.encrypted_private_key.clone();
+        account_entity.encrypted_master_key = keys.encrypted_master_key.clone();
 
         Ok(())
     }
