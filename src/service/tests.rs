@@ -10,6 +10,7 @@ use crate::{
 use std::time::Duration;
 
 #[tokio::test(flavor = "multi_thread")] // multi_thread used to test Send+Sync
+#[test_log::test]
 async fn account_creation_mock_mt() -> ServiceResult<()> {
     let repo = MockAccountRepoImpl::boxed_new();
 
@@ -167,6 +168,7 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
 }
 
 #[tokio::test]
+#[test_log::test]
 async fn token_service() -> ServiceResult<()> {
     let repo = MockTokenRepoImpl::boxed_new();
 

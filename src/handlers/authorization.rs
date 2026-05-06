@@ -1,3 +1,5 @@
+use tracing::trace;
+
 use super::{HandlerError, HandlerResult};
 use crate::{
     service::{AccountService, TokenService},
@@ -21,8 +23,11 @@ impl AuthorizationHandler {
     }
 
     /// Handle privileged tokens.
+    #[tracing::instrument(skip_all)]
     pub async fn auth(&self, base64_encoded_token: String) -> HandlerResult<()> {
         let token = self.token_service.revoke(&base64_encoded_token).await?;
+
+        trace!(account_id = %token.id, variant = token.scope.variant_name());
 
         match token.scope {
             TokenScope::Authenticate => Err(HandlerError::Unauthorized),

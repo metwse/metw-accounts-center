@@ -7,6 +7,7 @@ use crate::{
 };
 
 #[tokio::test(flavor = "multi_thread")]
+#[test_log::test]
 async fn account_creation() -> HandlerResult<()> {
     let ctx = TestCtx::new();
 

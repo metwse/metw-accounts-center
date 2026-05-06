@@ -33,6 +33,7 @@ impl TokenService {
     }
 
     /// Validate and decode the token.
+    #[tracing::instrument(skip_all)]
     pub async fn verify(&self, base64_encoded_token: &str) -> ServiceResult<Token> {
         let mut it = base64_encoded_token.split(".");
         let protected = it.next().ok_or(ServiceError::InvalidJwt).unwrap();
@@ -63,6 +64,7 @@ impl TokenService {
     }
 
     /// Revoke the token
+    #[tracing::instrument(skip_all)]
     pub async fn revoke(&self, base64_encoded_token: &str) -> ServiceResult<Token> {
         let token = self.verify(base64_encoded_token).await?;
 

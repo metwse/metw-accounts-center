@@ -36,6 +36,7 @@ pub async fn hash(password: String) -> String {
 
 #[cfg(test)]
 #[tokio::test]
+#[test_log::test]
 async fn test_hash() {
     let password = "very_very_strong_password";
 

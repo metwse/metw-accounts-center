@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 /// Authentication token with authorization scopes.
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Token {
     /// Account id.
     pub id: AccountId,
@@ -17,7 +17,7 @@ pub struct Token {
 }
 
 /// Authorization scopes.
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[allow(missing_docs)]
 pub enum TokenScope {
     /// Permit logins.
@@ -47,6 +47,18 @@ impl Token {
             exp,
             nbf: iat,
             iat,
+        }
+    }
+}
+
+impl TokenScope {
+    /// Get name of the enum variant.
+    pub fn variant_name(&self) -> &'static str {
+        match self {
+            Self::Authenticate => "authenticate",
+            Self::AddEmail(..) => "add-email",
+            Self::SetPrimaryEmail { .. } => "set-primary-email",
+            Self::Signup { .. } => "signup",
         }
     }
 }

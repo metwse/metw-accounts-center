@@ -1,15 +1,13 @@
-use lazy_static::lazy_static;
+use std::sync::LazyLock;
 use validator::Validate;
 
 static USERNAME_REGEX_STR: &str = "^[a-z]([_.]?[a-z0-9])*$";
 
-lazy_static! {
-    static ref USERNAME_REGEX: regex::Regex = regex::Regex::new(USERNAME_REGEX_STR).unwrap();
-}
+static USERNAME_REGEX: LazyLock<regex::Regex> =
+    LazyLock::new(|| regex::Regex::new(USERNAME_REGEX_STR).unwrap());
 
 /// Sign up a new account.
-#[derive(Validate)]
-#[cfg_attr(test, derive(Clone))]
+#[derive(Validate, Debug, Clone)]
 pub struct Signup {
     /// Username.
     #[validate(length(min = 2, max = 20), regex(path = *USERNAME_REGEX))]
@@ -27,8 +25,7 @@ pub struct Signup {
 }
 
 /// Login into the account.
-#[derive(Validate)]
-#[cfg_attr(test, derive(Clone))]
+#[derive(Validate, Debug, Clone)]
 pub struct LoginWithUsername {
     /// Username.
     #[validate(length(min = 2, max = 20), regex(path = *USERNAME_REGEX))]
@@ -40,7 +37,7 @@ pub struct LoginWithUsername {
 }
 
 /// Login into the account.
-#[derive(Validate)]
+#[derive(Validate, Debug, Clone)]
 pub struct LoginWithEmail {
     /// Email.
     #[validate(email)]
@@ -52,7 +49,7 @@ pub struct LoginWithEmail {
 }
 
 /// Roll keys, change password, master key or key pair.
-#[derive(Validate)]
+#[derive(Validate, Debug, Clone)]
 pub struct KeyRoll {
     /// Argon2-hashed password. Password will not be changed if its empty.
     #[validate(length(max = 128))]
@@ -64,8 +61,7 @@ pub struct KeyRoll {
 }
 
 /// Account's criptographic keys.
-#[derive(Validate)]
-#[cfg_attr(test, derive(Clone))]
+#[derive(Validate, Debug, Clone)]
 pub struct Keys {
     /// Curve25519 public key in der format.
     #[validate(length(max = 2048))]

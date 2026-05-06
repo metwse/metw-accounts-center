@@ -43,6 +43,7 @@ impl PersonalHandler {
     }
 
     /// GET `/me`
+    #[tracing::instrument(skip(self))]
     pub async fn me(&self, id: AccountId) -> HandlerResult<dto::response::Account> {
         Ok(self.account_service.me(id).await?)
     }
@@ -51,6 +52,7 @@ impl PersonalHandler {
     ///
     /// Add a new email to the account. Sends verification code to requested
     /// email.
+    #[tracing::instrument(skip(self))]
     pub async fn add_email(&self, id: AccountId, email: String) -> HandlerResult<()> {
         if self.account_service.is_email_taken(email.clone()).await? {
             return Err(ServiceError::EmailTaken)?;
@@ -76,6 +78,7 @@ impl PersonalHandler {
     /// DELETE `/me/emails/<email>`
     ///
     /// Remove the email if it is not primary email.
+    #[tracing::instrument(skip(self))]
     pub async fn delete_email(&self, id: AccountId, email: String) -> HandlerResult<()> {
         self.account_service
             .remove_email_if_not_primary(id, email)
@@ -87,6 +90,7 @@ impl PersonalHandler {
     /// POST `/me/emails/<email>/set-primary`
     ///
     /// Set the email as account's primary mail.
+    #[tracing::instrument(skip(self))]
     pub async fn set_primary_mail(
         &self,
         id: AccountId,

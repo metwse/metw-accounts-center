@@ -13,6 +13,7 @@ impl AccountService {
     }
 
     /// Signup a new account
+    #[tracing::instrument(skip_all)]
     pub async fn signup(&self, signup_dto: dto::request::Signup) -> ServiceResult<AccountId> {
         if self.repo.is_username_taken(&signup_dto.username).await? {
             return Err(ServiceError::UsernameTaken);
@@ -69,6 +70,7 @@ impl AccountService {
     }
 
     /// Log into the account
+    #[tracing::instrument(skip_all)]
     pub async fn login_with_email(
         &self,
         credentials: dto::request::LoginWithEmail,
@@ -81,6 +83,7 @@ impl AccountService {
     }
 
     /// Log into the account
+    #[tracing::instrument(skip_all)]
     pub async fn login_with_username(
         &self,
         credentials: dto::request::LoginWithUsername,
@@ -97,6 +100,7 @@ impl AccountService {
     }
 
     /// Fetch the account details.
+    #[tracing::instrument(skip(self))]
     pub async fn me(&self, id: AccountId) -> ServiceResult<dto::response::Account> {
         let (username, username_aliases, email, secondary_emails, keys) = tokio::try_join!(
             self.repo.get_primary_username(id),
@@ -134,6 +138,7 @@ impl AccountService {
     }
 
     /// Add the email as a secondary email to the account.
+    #[tracing::instrument(skip_all, fields(id))]
     pub async fn auth_add_email(&self, id: AccountId, email: String) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
         transaction.add_email(id, &email, false).await?;
@@ -143,6 +148,7 @@ impl AccountService {
     }
 
     /// Remove a secondary email.
+    #[tracing::instrument(skip_all, fields(id))]
     pub async fn remove_email_if_not_primary(
         &self,
         id: AccountId,
@@ -152,16 +158,19 @@ impl AccountService {
     }
 
     /// Returns true if the email has been taken by the given account.
+    #[tracing::instrument(skip_all, fields(id))]
     pub async fn is_email_taken_by(&self, id: AccountId, email: String) -> ServiceResult<bool> {
         Ok(self.repo.is_email_taken_by(id, &email).await?)
     }
 
     /// Primary mail of the account.
+    #[tracing::instrument(skip(self))]
     pub async fn get_primary_email(&self, id: AccountId) -> ServiceResult<Option<String>> {
         Ok(self.repo.get_primary_email(id).await?)
     }
 
     /// Change account's primary email.
+    #[tracing::instrument(skip_all, fields(id))]
     pub async fn auth_change_primary_email(
         &self,
         id: AccountId,
@@ -176,6 +185,7 @@ impl AccountService {
     }
 
     /// Complete signup by adding the email and activating the account.
+    #[tracing::instrument(skip_all, fields(id))]
     pub async fn auth_complete_signup(&self, id: AccountId, email: String) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
         transaction.add_email(id, &email, true).await?;

@@ -1,6 +1,6 @@
 use crate::id::AccountId;
 
-#[cfg_attr(test, derive(Eq, PartialEq))]
+#[derive(Eq, PartialEq)]
 pub struct Keys {
     pub identity_key: Vec<u8>,
     pub encrypted_private_key: Vec<u8>,

@@ -4,7 +4,7 @@
 ///
 /// [`TokenScope`]: `crate::token::TokenScope`
 #[allow(missing_docs)]
-#[cfg_attr(test, derive(Clone))]
+#[derive(Clone, Debug)]
 pub enum Template {
     Signup {
         username: String,
