@@ -172,7 +172,7 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
 async fn token_service() -> ServiceResult<()> {
     let repo = MockTokenRepoImpl::boxed_new();
 
-    let token_service = TokenService::new(repo, b"supersecret1234");
+    let token_service = TokenService::new(repo, "supersecret1234".into());
 
     let token1 = Token::new(
         0.into(),
@@ -182,8 +182,12 @@ async fn token_service() -> ServiceResult<()> {
 
     let token2 = Token::new(0.into(), TokenScope::Authenticate, Duration::from_secs(0));
 
+    let token3 = Token::new(2.into(), TokenScope::Authenticate, Duration::from_secs(40));
+
     let signed1 = token_service.sign(&token1);
     let signed2 = token_service.sign(&token2);
+    let signed3 = token_service.sign(&token3);
+    let signed3_invalid = signed3.clone() + "a";
 
     // token1 should be valid.
     token_service.verify(&signed1).await?;
@@ -200,9 +204,18 @@ async fn token_service() -> ServiceResult<()> {
         Err(ServiceError::TokenRevoked)
     ));
 
-    // Verify accept token2, just-expired token.
-    token_service.verify(&signed2).await?;
-    token_service.revoke(&signed2).await?;
+    // Do not allow token2, just-expired.
+    assert!(matches!(
+        token_service.verify(&signed2).await,
+        Err(ServiceError::InvalidJwt)
+    ));
+
+    token_service.verify(&signed3).await?;
+    // Do not allow token3, invalid signature.
+    assert!(matches!(
+        token_service.verify(&signed3_invalid).await,
+        Err(ServiceError::InvalidJwt)
+    ));
 
     // Try some invalid tokens
     for invalid_jwt in ["invalid", "", "invalid.invalid", "invalid.invalid.invalid"] {

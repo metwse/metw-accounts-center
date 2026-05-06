@@ -10,7 +10,7 @@ async-trait = "0.1"
 sqlx = { version = "0.8", features = ["postgres", "chrono"]}
 chrono = "0.4"
 
-jsonwebtoken = { version = "10", features = ["aws_lc_rs"] }
+biscuit = "0.8"
 argon2 = "0.5"
 
 tracing = "0.1"

@@ -40,7 +40,7 @@ impl Default for TestCtx {
         let account_service = Arc::new(AccountService::new(MockAccountRepoImpl::boxed_new()));
         let token_service = Arc::new(TokenService::new(
             MockTokenRepoImpl::boxed_new(),
-            b"supersecret123",
+            "supersecret123".into(),
         ));
         let (emails, mail_client) = MockMailClientImpl::shared_new_with_emails();
 

@@ -1,23 +1,20 @@
 use crate::id::AccountId;
-use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 /// Authentication token with authorization scopes.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct Token {
     /// Account id.
     pub id: AccountId,
-    /// Token's persmissions.
+    /// Token's permissions.
     pub scope: TokenScope,
-
-    pub(crate) exp: usize,
-    nbf: usize,
-    iat: usize,
+    /// Duration the token is valid for.
+    pub valid_for: Duration,
 }
 
 /// Authorization scopes.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(missing_docs)]
 pub enum TokenScope {
     /// Permit logins.
@@ -38,15 +35,10 @@ pub enum TokenScope {
 impl Token {
     /// Create a new token.
     pub fn new(id: AccountId, scope: TokenScope, valid_for: Duration) -> Self {
-        let iat = Utc::now().timestamp() as usize;
-        let exp = iat + (valid_for.as_secs() as usize);
-
         Token {
             id,
             scope,
-            exp,
-            nbf: iat,
-            iat,
+            valid_for,
         }
     }
 }
