@@ -3,8 +3,11 @@ use crate::{
     token::{Token, TokenScope},
 };
 use biscuit::{JWT, jwa, jws};
-use chrono::{Duration, Utc};
+use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
+
+#[cfg(test)]
+use std::sync::Mutex;
 
 /// JSON web signature (JWS).
 pub struct JsonWebSignature {
@@ -16,6 +19,16 @@ struct PrivateClaims {
     scope: TokenScope,
     id: AccountId,
 }
+
+// TODO: now injection
+
+#[cfg(not(test))]
+static NOW: fn() -> DateTime<Utc> = Utc::now;
+#[cfg(test)]
+static NOW: fn() -> DateTime<Utc> = JsonWebSignature::injected_now;
+
+#[cfg(test)]
+static INJECTED_NOW: Mutex<Option<DateTime<Utc>>> = Mutex::new(None);
 
 impl JsonWebSignature {
     /// Creates a new JWS verifier/signer for [`Token`].
@@ -71,7 +84,21 @@ impl JsonWebSignature {
 
         let now = Utc::now();
 
-        token.validate(biscuit::ValidationOptions::default()).ok()?;
+        token
+            .validate(biscuit::ValidationOptions {
+                claim_presence_options: biscuit::ClaimPresenceOptions {
+                    issued_at: biscuit::Presence::Required,
+                    not_before: biscuit::Presence::Required,
+                    expiry: biscuit::Presence::Required,
+                    ..Default::default()
+                },
+                temporal_options: biscuit::TemporalOptions {
+                    now: Some(NOW()),
+                    ..Default::default()
+                },
+                ..Default::default()
+            })
+            .ok()?;
 
         let payload = token.payload().unwrap();
         let expiry = *payload.registered.expiry.unwrap();
@@ -90,5 +117,19 @@ impl JsonWebSignature {
             },
             signature,
         ))
+    }
+
+    #[cfg(test)]
+    pub(crate) fn inject_now(date_time: Option<DateTime<Utc>>) {
+        *INJECTED_NOW.lock().unwrap() = date_time
+    }
+
+    #[cfg(test)]
+    fn injected_now() -> DateTime<Utc> {
+        if let Some(now) = *INJECTED_NOW.lock().unwrap() {
+            now
+        } else {
+            Utc::now()
+        }
     }
 }

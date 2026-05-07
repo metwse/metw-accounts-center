@@ -5,9 +5,11 @@ use crate::{
     service::{ServiceError, TokenService},
     testutil::{random_email, random_username},
     token::{Token, TokenScope},
-    util::password,
+    util::{JsonWebSignature, password},
 };
-use std::time::Duration;
+use chrono::Utc;
+use futures_util::future::join_all;
+use std::{sync::Arc, time::Duration};
 
 #[tokio::test(flavor = "multi_thread")] // multi_thread used to test Send+Sync
 #[test_log::test]
@@ -169,6 +171,7 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
 
 #[tokio::test]
 #[test_log::test]
+#[serial_test::serial]
 async fn token_service() -> ServiceResult<()> {
     let repo = MockTokenRepoImpl::boxed_new();
 
@@ -229,6 +232,62 @@ async fn token_service() -> ServiceResult<()> {
             Err(ServiceError::InvalidJwt)
         ));
     }
+
+    Ok(())
+}
+
+#[tokio::test]
+#[test_log::test]
+#[serial_test::serial]
+async fn token_service_expired() -> ServiceResult<()> {
+    let repo = MockTokenRepoImpl::boxed_new();
+
+    let token_service = TokenService::new(repo, "supersecret1234".into());
+
+    let token = Token::new(3.into(), TokenScope::Authenticate, Duration::from_secs(40));
+
+    let signed = token_service.sign(&token);
+
+    // Expire token4
+    JsonWebSignature::inject_now(Some(Utc::now() - Duration::from_secs(40)));
+    assert!(matches!(
+        token_service.verify(&signed).await,
+        Err(ServiceError::InvalidJwt)
+    ));
+
+    JsonWebSignature::inject_now(None);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[test_log::test]
+#[serial_test::serial]
+async fn token_service_toctou() -> ServiceResult<()> {
+    let repo = MockTokenRepoImpl::boxed_new();
+
+    let token_service = Arc::new(TokenService::new(repo, "supersecret1234".into()));
+
+    let token = Token::new(3.into(), TokenScope::Authenticate, Duration::from_secs(40));
+
+    let signed = token_service.sign(&token);
+
+    let mut futures = Vec::with_capacity(32);
+
+    // Spawn 32 concurrent futures.
+    for _ in 0..32 {
+        let token_service = Arc::clone(&token_service);
+        let signed = signed.clone();
+
+        futures.push(async move { token_service.revoke(&signed).await });
+    }
+
+    let results = join_all(futures).await;
+
+    // Only one of the futures can be succeed.
+    let total_success = results.iter().filter(|res| res.is_ok()).count();
+
+    assert!(total_success == 1);
 
     Ok(())
 }
