@@ -119,9 +119,14 @@ pub trait AccountRepoTransaction: Send + Sync {
 /// Token provider holds data temporarily.
 #[async_trait]
 pub trait TokenRepo: Send + Sync {
-    /// Revoke the token with provided fingerprint. Keep the fingerprint for
-    /// at least `revoke_for` time.
-    async fn revoke(&self, fingerprint: &[u8], revoke_for: std::time::Duration) -> RepoResult<()>;
+    /// Atomic operation for checking the revocation and doing it.
+    ///
+    /// Returns false if the token has already been revoked.
+    async fn check_and_revoke(
+        &self,
+        fingerprint: &[u8],
+        revoke_for: std::time::Duration,
+    ) -> RepoResult<bool>;
 
     /// Returns true if the token has been revoked.
     async fn check_revocation(&self, fingerprint: &[u8]) -> RepoResult<bool>;

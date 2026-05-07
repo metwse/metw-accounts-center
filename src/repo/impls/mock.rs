@@ -323,7 +323,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
 /// Mock token repo implementation.
 #[derive(Default)]
 pub struct MockTokenRepoImpl {
-    revocations: Mutex<HashSet<Vec<u8>>>,
+    revocations: Arc<Mutex<HashSet<Vec<u8>>>>,
 }
 
 impl MockTokenRepoImpl {
@@ -335,10 +335,33 @@ impl MockTokenRepoImpl {
 
 #[async_trait]
 impl TokenRepo for MockTokenRepoImpl {
-    async fn revoke(&self, fingerprint: &[u8], _revoke_for: std::time::Duration) -> RepoResult<()> {
-        self.revocations.lock().await.insert(fingerprint.into());
+    async fn check_and_revoke(
+        &self,
+        fingerprint: &[u8],
+        revoke_for: std::time::Duration,
+    ) -> RepoResult<bool> {
+        let mut state = self.revocations.lock().await;
 
-        Ok(())
+        if state.contains(fingerprint) {
+            Ok(false)
+        } else {
+            state.insert(fingerprint.into());
+
+            tokio::spawn({
+                let state = Arc::clone(&self.revocations);
+                let fingerprint: Vec<u8> = fingerprint.into();
+
+                async move {
+                    tokio::time::sleep(revoke_for).await;
+
+                    let mut state = state.lock().await;
+
+                    state.remove(&fingerprint);
+                }
+            });
+
+            Ok(true)
+        }
     }
 
     async fn check_revocation(&self, fingerprint: &[u8]) -> RepoResult<bool> {

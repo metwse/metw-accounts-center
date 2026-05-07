@@ -28,26 +28,26 @@ impl TokenService {
     /// Validate and decode the token.
     #[tracing::instrument(skip_all)]
     pub async fn verify(&self, base64_encoded_token: &str) -> ServiceResult<Token> {
-        self.verify_internal(base64_encoded_token, false).await
+        if let Some((token, signature)) = self.jws.decode(base64_encoded_token) {
+            if !self.repo.check_revocation(&signature).await? {
+                Ok(token)
+            } else {
+                Err(ServiceError::TokenRevoked)
+            }
+        } else {
+            Err(ServiceError::InvalidJwt)
+        }
     }
 
     /// Revoke the token
     #[tracing::instrument(skip_all)]
     pub async fn revoke(&self, base64_encoded_token: &str) -> ServiceResult<Token> {
-        self.verify_internal(base64_encoded_token, true).await
-    }
-
-    async fn verify_internal(
-        &self,
-        base64_encoded_token: &str,
-        revoke: bool,
-    ) -> ServiceResult<Token> {
         if let Some((token, signature)) = self.jws.decode(base64_encoded_token) {
-            if !self.repo.check_revocation(&signature).await? {
-                if revoke {
-                    self.repo.revoke(&signature, token.valid_for).await?;
-                }
-
+            if self
+                .repo
+                .check_and_revoke(&signature, token.valid_for)
+                .await?
+            {
                 Ok(token)
             } else {
                 Err(ServiceError::TokenRevoked)
