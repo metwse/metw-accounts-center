@@ -1,13 +1,13 @@
 use super::{HandlerError, HandlerResult};
 use crate::{
-    client::MailClient,
     dto,
     id::AccountId,
-    service::{AccountService, ServiceError, TokenService},
+    service::ServiceError,
+    state::State,
     token::{Token, TokenScope},
     util::templated_mails,
 };
-use std::{sync::Arc, time::Duration};
+use std::time::Duration;
 
 static ADD_EMAIL_TOKEN_VALID_FOR: Duration = Duration::from_secs(60 * 60);
 static SET_PRIMARY_MAIL_VALID_FOR: Duration = Duration::from_secs(60 * 10);
@@ -19,33 +19,13 @@ static SET_PRIMARY_MAIL_VALID_FOR: Duration = Duration::from_secs(60 * 10);
 /// extracted from that token.
 ///
 /// [`TokenScope::Authenticate`]: crate::token::TokenScope::Authenticate
-pub struct PersonalHandler {
-    account_service: Arc<AccountService>,
-    token_service: Arc<TokenService>,
-    email_client: Arc<dyn MailClient>,
-    email_callback_url: &'static str,
-}
+pub struct PersonalHandler(pub State);
 
 impl PersonalHandler {
-    /// Creates a new account hander.
-    pub fn new(
-        account_service: Arc<AccountService>,
-        token_service: Arc<TokenService>,
-        email_client: Arc<dyn MailClient>,
-        email_callback_url: &'static str,
-    ) -> Self {
-        Self {
-            account_service,
-            token_service,
-            email_client,
-            email_callback_url,
-        }
-    }
-
     /// GET `/me`
     #[tracing::instrument(skip(self))]
-    pub async fn me(&self, id: AccountId) -> HandlerResult<dto::response::Account> {
-        Ok(self.account_service.me(id).await?)
+    pub async fn me(self, id: AccountId) -> HandlerResult<dto::response::Account> {
+        Ok(self.0.account_service.me(id).await?)
     }
 
     /// POST `/me/emails`
@@ -53,12 +33,12 @@ impl PersonalHandler {
     /// Add a new email to the account. Sends verification code to requested
     /// email.
     #[tracing::instrument(skip(self))]
-    pub async fn add_email(&self, id: AccountId, email: String) -> HandlerResult<()> {
-        if self.account_service.is_email_taken(email.clone()).await? {
+    pub async fn add_email(self, id: AccountId, email: String) -> HandlerResult<()> {
+        if self.0.account_service.is_email_taken(email.clone()).await? {
             return Err(ServiceError::EmailTaken)?;
         }
 
-        let add_email_jwt = self.token_service.sign(&Token::new(
+        let add_email_jwt = self.0.token_service.sign(&Token::new(
             id,
             TokenScope::AddEmail(email.clone()),
             ADD_EMAIL_TOKEN_VALID_FOR,
@@ -67,10 +47,10 @@ impl PersonalHandler {
         let template = templated_mails::Template::AddEmail {
             email,
             add_email_jwt,
-            callback_url: self.email_callback_url,
+            callback_url: self.0.email_callback_url,
         };
 
-        self.email_client.send(id, template).await;
+        self.0.mail_client.send(id, template).await;
 
         Ok(())
     }
@@ -79,8 +59,9 @@ impl PersonalHandler {
     ///
     /// Remove the email if it is not primary email.
     #[tracing::instrument(skip(self))]
-    pub async fn delete_email(&self, id: AccountId, email: String) -> HandlerResult<()> {
-        self.account_service
+    pub async fn delete_email(self, id: AccountId, email: String) -> HandlerResult<()> {
+        self.0
+            .account_service
             .remove_email_if_not_primary(id, email)
             .await?;
 
@@ -92,15 +73,17 @@ impl PersonalHandler {
     /// Set the email as account's primary mail.
     #[tracing::instrument(skip(self))]
     pub async fn set_primary_mail(
-        &self,
+        self,
         id: AccountId,
         new_primary_email: String,
     ) -> HandlerResult<()> {
-        let Some(current_primary_email) = self.account_service.get_primary_email(id).await? else {
+        let Some(current_primary_email) = self.0.account_service.get_primary_email(id).await?
+        else {
             return Err(HandlerError::UnexceptedError("account with no email"));
         };
 
         if !self
+            .0
             .account_service
             .is_email_taken_by(id, new_primary_email.clone())
             .await?
@@ -108,7 +91,7 @@ impl PersonalHandler {
             return Err(ServiceError::EmailNotFound)?;
         };
 
-        let set_primary_mail_jwt = self.token_service.sign(&Token::new(
+        let set_primary_mail_jwt = self.0.token_service.sign(&Token::new(
             id,
             TokenScope::SetPrimaryEmail {
                 current_primary_email: current_primary_email.clone(),
@@ -121,10 +104,10 @@ impl PersonalHandler {
             current_primary_email,
             new_primary_email,
             set_primary_mail_jwt,
-            callback_url: self.email_callback_url,
+            callback_url: self.0.email_callback_url,
         };
 
-        self.email_client.send(id, template).await;
+        self.0.mail_client.send(id, template).await;
 
         Ok(())
     }

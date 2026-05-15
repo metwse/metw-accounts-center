@@ -72,41 +72,41 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
         Err(ServiceError::AccountNotFound)
     ));
 
-    // Consume the account_service, dive into `repo` layer.
-    let repo = account_service.repo;
+    {
+        // Dive into `repo` layer.
+        let repo = account_service.repo();
 
-    // Validate account creation.
-    assert!(repo.get_primary_username(acc1_id).await?.unwrap() == acc1_username);
-    assert!(
-        password::check(
-            "paswd1".to_string(),
-            repo.get_login_by_username(acc1_username)
-                .await?
-                .unwrap()
-                .password_hash
-        )
-        .await
-    );
-    // Email should not be added as we did not verified it.
-    assert!(repo.get_login_by_email(acc1_email).await?.is_none());
-    assert!(repo.get_primary_username(acc2_id).await?.unwrap() == acc2_username);
-    assert!(
-        repo.get_keys(acc2_id).await?.unwrap()
-            == dto::repo::Keys {
-                identity_key: vec![1],
-                encrypted_private_key: vec![2],
-                encrypted_master_key: vec![3],
-            }
-    );
+        // Validate account creation.
+        assert!(repo.get_primary_username(acc1_id).await?.unwrap() == acc1_username);
+        assert!(
+            password::check(
+                "paswd1".to_string(),
+                repo.get_login_by_username(acc1_username)
+                    .await?
+                    .unwrap()
+                    .password_hash
+            )
+            .await
+        );
+        // Email should not be added as we did not verified it.
+        assert!(repo.get_login_by_email(acc1_email).await?.is_none());
+        assert!(repo.get_primary_username(acc2_id).await?.unwrap() == acc2_username);
+        assert!(
+            repo.get_keys(acc2_id).await?.unwrap()
+                == dto::repo::Keys {
+                    identity_key: vec![1],
+                    encrypted_private_key: vec![2],
+                    encrypted_master_key: vec![3],
+                }
+        );
 
-    // Add email to the account, and elaborate abstraction to account_service
-    // again.
-    let mut transaction = repo.begin_transaction().await?;
-    transaction.add_email(acc1_id, acc1_email, true).await?;
-    transaction.set_verified_flag(acc1_id, true).await?;
-    transaction.commit().await?;
-
-    let account_service = AccountService::new(repo);
+        // Add email to the account, and elaborate abstraction to account_service
+        // again.
+        let mut transaction = repo.begin_transaction().await?;
+        transaction.add_email(acc1_id, acc1_email, true).await?;
+        transaction.set_verified_flag(acc1_id, true).await?;
+        transaction.commit().await?;
+    }
 
     // Try to register an account with already-taken email.
     let mut already_taken_email = signup_dto.clone();

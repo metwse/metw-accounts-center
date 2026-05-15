@@ -3,13 +3,19 @@ use crate::{dto, id::AccountId, repo::AccountRepo, util::password};
 
 /// Account state.
 pub struct AccountService {
-    pub(super) repo: Box<dyn AccountRepo>,
+    repo: Box<dyn AccountRepo>,
 }
 
 impl AccountService {
     /// Creates a new account service.
     pub fn new(repo: Box<dyn AccountRepo>) -> Self {
         Self { repo }
+    }
+
+    /// Returns the underlying repository.
+    #[cfg(test)]
+    pub fn repo(&self) -> &dyn AccountRepo {
+        self.repo.as_ref()
     }
 
     /// Signup a new account

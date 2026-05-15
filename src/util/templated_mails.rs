@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 /// Mail templates.
 ///
 /// See [`TokenScope`].
@@ -9,20 +11,20 @@ pub enum Template {
     Signup {
         username: String,
         signup_jwt: String,
-        callback_url: &'static str,
+        callback_url: Arc<String>,
     },
 
     AddEmail {
         email: String,
         add_email_jwt: String,
-        callback_url: &'static str,
+        callback_url: Arc<String>,
     },
 
     SetPrimaryEmail {
         current_primary_email: String,
         new_primary_email: String,
         set_primary_mail_jwt: String,
-        callback_url: &'static str,
+        callback_url: Arc<String>,
     },
 }
 

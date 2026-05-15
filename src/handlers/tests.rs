@@ -1,5 +1,6 @@
 use super::{HandlerError, HandlerResult};
 use crate::{
+    handlers::{AuthenticationHandler, AuthorizationHandler, PersonalHandler},
     service::ServiceError,
     testutil::{TestCtx, random_email},
     token::TokenScope,
@@ -15,7 +16,7 @@ async fn account_creation() -> HandlerResult<()> {
     let (acc1_id, acc1_username, acc1_email) = ctx.signup("passwd1").await;
     let (acc2_id, acc2_username, acc2_email) = ctx.signup("passwd2").await;
 
-    ctx.personal_handler.me(acc1_id).await?;
+    PersonalHandler(ctx.state.clone()).me(acc1_id).await?;
 
     // Try to get non-existent user.
     assert!(matches!(
@@ -36,10 +37,12 @@ async fn account_creation() -> HandlerResult<()> {
 
         assert!(username == acc1_username);
 
-        let signup_token = ctx.token_service.verify(&signup_jwt).await?;
+        let signup_token = ctx.state.token_service.verify(&signup_jwt).await?;
 
         // Now the account is verified and we can log into it.
-        ctx.authorization_handler.auth(signup_jwt.clone()).await?;
+        AuthorizationHandler(ctx.state.clone())
+            .auth(signup_jwt.clone())
+            .await?;
 
         assert!(signup_token.id == acc1_id);
         assert!(matches!(signup_token.scope, TokenScope::Signup { .. }));
@@ -57,25 +60,29 @@ async fn account_creation() -> HandlerResult<()> {
 
         // Provide authorization token to authentication handler
         assert!(matches!(
-            ctx.authentication_handler.auth(signup_jwt2.clone()).await,
+            AuthenticationHandler(ctx.state.clone())
+                .auth(signup_jwt2.clone())
+                .await,
             Err(HandlerError::Unauthorized)
         ));
 
-        ctx.authorization_handler.auth(signup_jwt2.clone()).await?;
+        AuthorizationHandler(ctx.state.clone())
+            .auth(signup_jwt2.clone())
+            .await?;
     }
 
     // Try to log in with username & password.
-    ctx.authentication_handler
+    AuthenticationHandler(ctx.state.clone())
         .auth(ctx.login_with_email(acc1_email, "passwd1").await?)
         .await?;
 
-    ctx.authentication_handler
+    AuthenticationHandler(ctx.state.clone())
         .auth(ctx.login_with_username(acc1_username, "passwd1").await?)
         .await?;
 
     // Provide authorization token to authentication handler
     assert!(matches!(
-        ctx.authorization_handler
+        AuthorizationHandler(ctx.state.clone())
             .auth(ctx.login_with_username(acc1_username, "passwd1").await?)
             .await,
         Err(HandlerError::Unauthorized)
@@ -83,13 +90,13 @@ async fn account_creation() -> HandlerResult<()> {
 
     // Add another email to the account.
     let new_email = random_email();
-    ctx.personal_handler
+    PersonalHandler(ctx.state.clone())
         .add_email(acc1_id, new_email.to_string())
         .await?;
 
     // Cannot add already-taken emails
     assert!(matches!(
-        ctx.personal_handler
+        PersonalHandler(ctx.state.clone())
             .add_email(acc1_id, acc2_email.to_string())
             .await,
         Err(HandlerError::Service(ServiceError::EmailTaken))
@@ -97,7 +104,7 @@ async fn account_creation() -> HandlerResult<()> {
 
     // Try to add account2's email as primary mail
     assert!(matches!(
-        ctx.personal_handler
+        PersonalHandler(ctx.state.clone())
             .set_primary_mail(acc1_id, acc2_email.to_string())
             .await,
         Err(HandlerError::Service(ServiceError::EmailNotFound))
@@ -114,10 +121,10 @@ async fn account_creation() -> HandlerResult<()> {
             unreachable!()
         };
 
-        let add_email_token = ctx.token_service.verify(&add_email_jwt).await?;
+        let add_email_token = ctx.state.token_service.verify(&add_email_jwt).await?;
 
         // Add the email.
-        ctx.authorization_handler
+        AuthorizationHandler(ctx.state.clone())
             .auth(add_email_jwt.clone())
             .await?;
 
@@ -127,7 +134,7 @@ async fn account_creation() -> HandlerResult<()> {
     }
 
     // Change primary email.
-    ctx.personal_handler
+    PersonalHandler(ctx.state.clone())
         .set_primary_mail(acc1_id, new_email.to_string())
         .await?;
 
@@ -140,22 +147,25 @@ async fn account_creation() -> HandlerResult<()> {
             unreachable!()
         };
 
-        ctx.token_service.verify(&set_primary_mail_jwt).await?;
+        ctx.state
+            .token_service
+            .verify(&set_primary_mail_jwt)
+            .await?;
 
         // Change the primary mail.
-        ctx.authorization_handler
+        AuthorizationHandler(ctx.state.clone())
             .auth(set_primary_mail_jwt.clone())
             .await?;
     }
 
     // Delete the old email.
-    ctx.personal_handler
+    PersonalHandler(ctx.state.clone())
         .delete_email(acc1_id, acc1_email.to_string())
         .await?;
 
     // Cannot remove primary email.
     assert!(
-        ctx.personal_handler
+        PersonalHandler(ctx.state.clone())
             .delete_email(acc1_id, new_email.to_string())
             .await
             .is_err()

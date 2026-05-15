@@ -96,6 +96,9 @@ pub mod client;
 /// Unique identifier types and the ID generation algorithm.
 pub mod id;
 
+/// Application-wide state.
+pub mod state;
+
 /// Test utilities.
 #[cfg(any(test, doc))]
 pub mod testutil;

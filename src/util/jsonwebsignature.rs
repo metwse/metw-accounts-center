@@ -38,7 +38,7 @@ impl JsonWebSignature {
 
     /// Sign and encode the token.
     pub fn encode(&self, token: &Token) -> String {
-        let now = NOW;
+        let now = NOW();
 
         let payload = biscuit::ClaimsSet::<PrivateClaims> {
             registered: biscuit::RegisteredClaims {
@@ -80,7 +80,7 @@ impl JsonWebSignature {
             .into_decoded(&self.secret, jwa::SignatureAlgorithm::HS256)
             .ok()?;
 
-        let now = NOW;
+        let now = NOW();
 
         token
             .validate(biscuit::ValidationOptions {

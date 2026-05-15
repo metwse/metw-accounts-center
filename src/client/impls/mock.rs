@@ -15,10 +15,15 @@ pub struct MockMailClientImpl {
 
 impl MockMailClientImpl {
     /// Creates a new mock mail client.
-    pub fn shared_new_with_emails() -> (Arc<Mutex<Mails>>, Arc<dyn MailClient>) {
-        let res = Self::default();
+    pub fn boxed_new() -> (Arc<Mutex<Mails>>, Box<dyn MailClient>) {
+        let mail_client = Self::default();
 
-        (Arc::clone(&res.mails), Arc::new(res))
+        (mail_client.get_mails(), Box::new(mail_client))
+    }
+
+    /// Get mail entries.
+    pub fn get_mails(&self) -> Arc<Mutex<Mails>> {
+        Arc::clone(&self.mails)
     }
 }
 

@@ -1,45 +1,24 @@
 use super::{HandlerError, HandlerResult};
 use crate::{
-    client::MailClient,
     dto,
     id::AccountId,
-    service::{AccountService, TokenService},
+    state::State,
     token::{Token, TokenScope},
     util::templated_mails,
 };
-use std::{sync::Arc, time::Duration};
+use std::time::Duration;
 
 static SIGNUP_TOKEN_VALID_FOR: Duration = Duration::from_secs(60 * 60 * 24);
 static LOGIN_TOKEN_VALID_FOR: Duration = Duration::from_secs(60 * 60 * 24 * 7);
 
 /// Gateway handlers for creating accouts or logging into accounts.
-pub struct AuthenticationHandler {
-    account_service: Arc<AccountService>,
-    token_service: Arc<TokenService>,
-    email_client: Arc<dyn MailClient>,
-    signup_callback_url: &'static str,
-}
+pub struct AuthenticationHandler(pub State);
 
 impl AuthenticationHandler {
-    /// Creates a new authentication hander.
-    pub fn new(
-        account_service: Arc<AccountService>,
-        token_service: Arc<TokenService>,
-        email_client: Arc<dyn MailClient>,
-        signup_callback_url: &'static str,
-    ) -> Self {
-        Self {
-            account_service,
-            token_service,
-            email_client,
-            signup_callback_url,
-        }
-    }
-
     /// Verify the authentication token.
     #[tracing::instrument(skip_all)]
-    pub async fn auth(&self, base64_encoded_token: String) -> HandlerResult<AccountId> {
-        let token = self.token_service.verify(&base64_encoded_token).await?;
+    pub async fn auth(self, base64_encoded_token: String) -> HandlerResult<AccountId> {
+        let token = self.0.token_service.verify(&base64_encoded_token).await?;
 
         if let TokenScope::Authenticate = token.scope {
             Ok(token.id)
@@ -50,13 +29,13 @@ impl AuthenticationHandler {
 
     /// POST `/signup`
     #[tracing::instrument(skip_all, fields(username = signup_dto.username, email = signup_dto.email))]
-    pub async fn signup(&self, signup_dto: dto::request::Signup) -> HandlerResult<AccountId> {
+    pub async fn signup(self, signup_dto: dto::request::Signup) -> HandlerResult<AccountId> {
         let email = signup_dto.email.clone();
         let username = signup_dto.username.clone();
 
-        let account_id = self.account_service.signup(signup_dto).await?;
+        let account_id = self.0.account_service.signup(signup_dto).await?;
 
-        let signup_jwt = self.token_service.sign(&Token::new(
+        let signup_jwt = self.0.token_service.sign(&Token::new(
             account_id,
             TokenScope::Signup { email },
             SIGNUP_TOKEN_VALID_FOR,
@@ -65,10 +44,10 @@ impl AuthenticationHandler {
         let template = templated_mails::Template::Signup {
             username,
             signup_jwt,
-            callback_url: self.signup_callback_url,
+            callback_url: self.0.email_callback_url,
         };
 
-        self.email_client.send(account_id, template).await;
+        self.0.mail_client.send(account_id, template).await;
 
         Ok(account_id)
     }
@@ -76,10 +55,14 @@ impl AuthenticationHandler {
     /// POST `/login` (with `username`)
     #[tracing::instrument(skip_all, fields(username = login_dto.username))]
     pub async fn login_by_username(
-        &self,
+        self,
         login_dto: dto::request::LoginWithUsername,
     ) -> HandlerResult<String> {
-        let account_id = self.account_service.login_with_username(login_dto).await?;
+        let account_id = self
+            .0
+            .account_service
+            .login_with_username(login_dto)
+            .await?;
 
         Ok(self.login(account_id))
     }
@@ -87,18 +70,18 @@ impl AuthenticationHandler {
     /// POST `/login` (with `email`)
     #[tracing::instrument(skip_all, fields(email = login_dto.email))]
     pub async fn login_by_email(
-        &self,
+        self,
         login_dto: dto::request::LoginWithEmail,
     ) -> HandlerResult<String> {
-        let account_id = self.account_service.login_with_email(login_dto).await?;
+        let account_id = self.0.account_service.login_with_email(login_dto).await?;
 
         Ok(self.login(account_id))
     }
 
-    fn login(&self, account_id: AccountId) -> String {
+    fn login(self, account_id: AccountId) -> String {
         tracing::trace!(%account_id);
 
-        self.token_service.sign(&Token::new(
+        self.0.token_service.sign(&Token::new(
             account_id,
             TokenScope::Authenticate,
             LOGIN_TOKEN_VALID_FOR,

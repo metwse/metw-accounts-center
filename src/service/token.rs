@@ -7,7 +7,7 @@ use crate::{
 
 /// Token state.
 pub struct TokenService {
-    pub(super) repo: Box<dyn TokenRepo>,
+    repo: Box<dyn TokenRepo>,
     jws: JsonWebSignature,
 }
 
