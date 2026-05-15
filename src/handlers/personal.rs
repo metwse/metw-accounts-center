@@ -45,12 +45,12 @@ impl PersonalHandler {
         ));
 
         let template = templated_mails::Template::AddEmail {
-            email,
+            email: email.clone(),
             add_email_jwt,
             callback_url: self.0.email_callback_url,
         };
 
-        self.0.mail_client.send(id, template).await;
+        self.0.mail_client.send(email, id, template).await;
 
         Ok(())
     }
@@ -101,13 +101,16 @@ impl PersonalHandler {
         ));
 
         let template = templated_mails::Template::SetPrimaryEmail {
-            current_primary_email,
+            current_primary_email: current_primary_email.clone(),
             new_primary_email,
             set_primary_mail_jwt,
             callback_url: self.0.email_callback_url,
         };
 
-        self.0.mail_client.send(id, template).await;
+        self.0
+            .mail_client
+            .send(current_primary_email, id, template)
+            .await;
 
         Ok(())
     }

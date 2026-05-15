@@ -18,6 +18,7 @@ use std::{env, sync::Arc};
 pub struct Config {
     pub email_callback_url: String,
     pub jwt_secret: String,
+    pub cloudflare_turnstile_secret: String,
 
     pub database_url: String,
 
@@ -34,6 +35,9 @@ impl Config {
 
         let jwt_secret =
             env::var("JWT_SECRET").expect("JWT_SECRET environment variable is not found");
+
+        let cloudflare_turnstile_secret = env::var("CLOUDFLARE_TURNSTILE_SECRET")
+            .expect("CLOUDFLARE_TURNSTILE_SECRET environment variable is not found");
 
         let database_url =
             env::var("DATABASE_URL").expect("DATABASE_URL environment variable is not found");
@@ -61,6 +65,7 @@ impl Config {
         Self {
             email_callback_url,
             jwt_secret,
+            cloudflare_turnstile_secret,
             database_url,
             host,
             port,
@@ -82,7 +87,7 @@ pub struct State {
 
 impl State {
     /// Initializes application state from given configuration.
-    pub fn new(_config: Config) -> Self {
+    pub async fn init(_config: Config) -> Self {
         todo!()
     }
 
