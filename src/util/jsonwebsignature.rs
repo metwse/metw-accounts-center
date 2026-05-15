@@ -20,8 +20,6 @@ struct PrivateClaims {
     id: AccountId,
 }
 
-// TODO: now injection
-
 #[cfg(not(test))]
 static NOW: fn() -> DateTime<Utc> = Utc::now;
 #[cfg(test)]
@@ -40,7 +38,7 @@ impl JsonWebSignature {
 
     /// Sign and encode the token.
     pub fn encode(&self, token: &Token) -> String {
-        let now = Utc::now();
+        let now = NOW;
 
         let payload = biscuit::ClaimsSet::<PrivateClaims> {
             registered: biscuit::RegisteredClaims {
@@ -82,7 +80,7 @@ impl JsonWebSignature {
             .into_decoded(&self.secret, jwa::SignatureAlgorithm::HS256)
             .ok()?;
 
-        let now = Utc::now();
+        let now = NOW;
 
         token
             .validate(biscuit::ValidationOptions {
