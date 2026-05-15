@@ -8,5 +8,5 @@ pub mod impls;
 #[async_trait]
 pub trait MailClient {
     /// Send emails.
-    async fn send(&self, id: AccountId, template: templated_mails::Template);
+    async fn send(&self, email: String, id: AccountId, template: templated_mails::Template);
 }

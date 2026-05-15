@@ -49,6 +49,14 @@
 //! Conceptually, the [`token`] and [`id`] modules should be inside the `util`
 //! module, but they are defined at the crate root as they are too common.
 //!
+//! ### HTTP Layer
+//!
+//! The `axum` API is built on top of this modules and layers:
+//! - [`state`]: The application state boostrapping the services, repositories,
+//!   and clients.
+//! - [`routes`]: HTTP endpoints mapping handlers to axum endpoints.
+//! - [`App`]: The main web API.
+//!
 //! [SoC]: https://en.wikipedia.org/wiki/Separation_of_concerns
 
 #![forbid(unsafe_code, unused_must_use)]
@@ -98,6 +106,13 @@ pub mod id;
 
 /// Application-wide state.
 pub mod state;
+
+/// HTTP routes.
+pub mod routes;
+
+mod app;
+
+pub use app::App;
 
 /// Test utilities.
 #[cfg(any(test, doc))]

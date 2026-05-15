@@ -37,7 +37,9 @@ impl AuthenticationHandler {
 
         let signup_jwt = self.0.token_service.sign(&Token::new(
             account_id,
-            TokenScope::Signup { email },
+            TokenScope::Signup {
+                email: email.clone(),
+            },
             SIGNUP_TOKEN_VALID_FOR,
         ));
 
@@ -47,7 +49,7 @@ impl AuthenticationHandler {
             callback_url: self.0.email_callback_url,
         };
 
-        self.0.mail_client.send(account_id, template).await;
+        self.0.mail_client.send(email, account_id, template).await;
 
         Ok(account_id)
     }

@@ -14,6 +14,7 @@ biscuit = "0.8"
 argon2 = "0.5"
 
 tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 pastey = "0.2"
 dotenvy = "0.15"
