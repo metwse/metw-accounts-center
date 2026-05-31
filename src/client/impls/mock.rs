@@ -1,5 +1,5 @@
 use super::super::MailClient;
-use crate::{id::AccountId, util::templated_mails};
+use crate::{client::CaptchaClient, id::AccountId, util::templated_mails};
 use async_trait::async_trait;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
@@ -39,5 +39,15 @@ impl MailClient for MockMailClientImpl {
         debug!(%id, subject, ?template, "email to account");
 
         debug.entry(id).or_default().push(template);
+    }
+}
+
+/// Mock CAPTCHA client implementation.
+pub struct MockCaptchaClientImpl;
+
+#[async_trait]
+impl CaptchaClient for MockCaptchaClientImpl {
+    async fn validate(&self, _id: String) -> bool {
+        true
     }
 }

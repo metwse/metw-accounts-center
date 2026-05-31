@@ -9,7 +9,7 @@ use crate::{
 };
 use chrono::Utc;
 use futures_util::future::join_all;
-use std::{sync::Arc, time::Duration};
+use std::{assert_matches, sync::Arc, time::Duration};
 
 #[tokio::test(flavor = "multi_thread")] // multi_thread used to test Send+Sync
 #[test_log::test]
@@ -47,13 +47,13 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
     // Try to register an account with already-taken username.
     let mut already_taken_username = signup_dto.clone();
     already_taken_username.email = "...".to_string();
-    assert!(matches!(
+    assert_matches!(
         account_service.signup(already_taken_username).await,
         Err(ServiceError::UsernameTaken)
-    ));
+    );
 
     // Try to log into user2 account, but it is not verified.
-    assert!(matches!(
+    assert_matches!(
         account_service
             .login_with_username(dto::request::LoginWithUsername {
                 username: acc2_username.to_string(),
@@ -61,16 +61,16 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
             })
             .await,
         Err(ServiceError::AccountNotVerified)
-    ));
+    );
 
     // Get /me.
     account_service.me(acc2_id).await?;
 
     // Get /me from non-existent account.
-    assert!(matches!(
+    assert_matches!(
         account_service.me(0.into()).await,
         Err(ServiceError::AccountNotFound)
-    ));
+    );
 
     {
         // Dive into `repo` layer.
@@ -111,10 +111,10 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
     // Try to register an account with already-taken email.
     let mut already_taken_email = signup_dto.clone();
     already_taken_email.username = random_username().to_string();
-    assert!(matches!(
+    assert_matches!(
         account_service.signup(already_taken_email).await,
         Err(ServiceError::EmailTaken)
-    ));
+    );
 
     // Log into user1 account.
     let acc1_id_from_login = account_service
@@ -127,7 +127,7 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
     assert!(acc1_id_from_login == acc1_id);
 
     // Try logging with invalid credentials.
-    assert!(matches!(
+    assert_matches!(
         account_service
             .login_with_username(dto::request::LoginWithUsername {
                 username: "invalid_username".to_string(),
@@ -135,8 +135,8 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
             })
             .await,
         Err(ServiceError::InvalidCredentials)
-    ));
-    assert!(matches!(
+    );
+    assert_matches!(
         account_service
             .login_with_username(dto::request::LoginWithUsername {
                 username: acc1_username.to_string(),
@@ -144,10 +144,10 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
             })
             .await,
         Err(ServiceError::InvalidCredentials)
-    ));
+    );
 
     // Also try invalid emails.
-    assert!(matches!(
+    assert_matches!(
         account_service
             .login_with_email(dto::request::LoginWithEmail {
                 email: "invalid_email".to_string(),
@@ -155,8 +155,8 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
             })
             .await,
         Err(ServiceError::InvalidCredentials)
-    ));
-    assert!(matches!(
+    );
+    assert_matches!(
         account_service
             .login_with_email(dto::request::LoginWithEmail {
                 email: acc1_email.to_string(),
@@ -164,7 +164,7 @@ async fn account_creation_mock_mt() -> ServiceResult<()> {
             })
             .await,
         Err(ServiceError::InvalidCredentials)
-    ));
+    );
 
     Ok(())
 }
@@ -197,40 +197,40 @@ async fn token_service() -> ServiceResult<()> {
 
     // Revoke token1 and check revocation status.
     token_service.revoke(&signed1).await?;
-    assert!(matches!(
+    assert_matches!(
         token_service.verify(&signed1).await,
         Err(ServiceError::TokenRevoked)
-    ));
+    );
     // Revocation of already-revoked token returns error.
-    assert!(matches!(
+    assert_matches!(
         token_service.revoke(&signed1).await,
         Err(ServiceError::TokenRevoked)
-    ));
+    );
 
     // Do not allow token2, just-expired.
-    assert!(matches!(
+    assert_matches!(
         token_service.verify(&signed2).await,
         Err(ServiceError::InvalidJwt)
-    ));
+    );
 
     token_service.verify(&signed3).await?;
     // Do not allow token3, invalid signature.
-    assert!(matches!(
+    assert_matches!(
         token_service.verify(&signed3_invalid).await,
         Err(ServiceError::InvalidJwt)
-    ));
+    );
 
     // Try some invalid tokens
     for invalid_jwt in ["invalid", "", "invalid.invalid", "invalid.invalid.invalid"] {
-        assert!(matches!(
+        assert_matches!(
             token_service.revoke(invalid_jwt).await,
             Err(ServiceError::InvalidJwt)
-        ));
+        );
 
-        assert!(matches!(
+        assert_matches!(
             token_service.verify(invalid_jwt).await,
             Err(ServiceError::InvalidJwt)
-        ));
+        );
     }
 
     Ok(())
@@ -250,10 +250,10 @@ async fn token_service_expired() -> ServiceResult<()> {
 
     // Expire token4
     JsonWebSignature::inject_now(Some(Utc::now() - Duration::from_secs(40)));
-    assert!(matches!(
+    assert_matches!(
         token_service.verify(&signed).await,
         Err(ServiceError::InvalidJwt)
-    ));
+    );
 
     JsonWebSignature::inject_now(None);
 

@@ -1,6 +1,7 @@
 use super::repo;
 
 /// Account entity returned to user after authentication.
+#[derive(Debug)]
 pub struct Account {
     /// Unique user id.
     pub id: i64,
@@ -19,6 +20,7 @@ pub struct Account {
     pub keys: Keys,
 }
 
+#[derive(Debug)]
 pub struct Keys {
     pub identity_key: Vec<u8>,
     pub encrypted_private_key: Vec<u8>,

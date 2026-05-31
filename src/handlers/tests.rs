@@ -6,6 +6,7 @@ use crate::{
     token::TokenScope,
     util::templated_mails,
 };
+use std::assert_matches;
 
 #[tokio::test(flavor = "multi_thread")]
 #[test_log::test]
@@ -19,10 +20,10 @@ async fn account_creation() -> HandlerResult<()> {
     PersonalHandler(ctx.state.clone()).me(acc1_id).await?;
 
     // Try to get non-existent user.
-    assert!(matches!(
+    assert_matches!(
         ctx.login_with_username(acc1_username, "passwd1").await,
         Err(HandlerError::Service(ServiceError::AccountNotVerified))
-    ));
+    );
 
     // Check sent verification mail.
     {
@@ -45,7 +46,7 @@ async fn account_creation() -> HandlerResult<()> {
             .await?;
 
         assert!(signup_token.id == acc1_id);
-        assert!(matches!(signup_token.scope, TokenScope::Signup { .. }));
+        assert_matches!(signup_token.scope, TokenScope::Signup { .. });
 
         let templated_mails::Template::Signup {
             username: username2,
@@ -59,12 +60,12 @@ async fn account_creation() -> HandlerResult<()> {
         assert!(username2 == acc2_username);
 
         // Provide authorization token to authentication handler
-        assert!(matches!(
+        assert_matches!(
             AuthenticationHandler(ctx.state.clone())
                 .auth(signup_jwt2.clone())
                 .await,
             Err(HandlerError::Unauthorized)
-        ));
+        );
 
         AuthorizationHandler(ctx.state.clone())
             .auth(signup_jwt2.clone())
@@ -81,12 +82,12 @@ async fn account_creation() -> HandlerResult<()> {
         .await?;
 
     // Provide authorization token to authentication handler
-    assert!(matches!(
+    assert_matches!(
         AuthorizationHandler(ctx.state.clone())
             .auth(ctx.login_with_username(acc1_username, "passwd1").await?)
             .await,
         Err(HandlerError::Unauthorized)
-    ));
+    );
 
     // Add another email to the account.
     let new_email = random_email();
@@ -95,20 +96,20 @@ async fn account_creation() -> HandlerResult<()> {
         .await?;
 
     // Cannot add already-taken emails
-    assert!(matches!(
+    assert_matches!(
         PersonalHandler(ctx.state.clone())
             .add_email(acc1_id, acc2_email.to_string())
             .await,
         Err(HandlerError::Service(ServiceError::EmailTaken))
-    ));
+    );
 
     // Try to add account2's email as primary mail
-    assert!(matches!(
+    assert_matches!(
         PersonalHandler(ctx.state.clone())
             .set_primary_mail(acc1_id, acc2_email.to_string())
             .await,
         Err(HandlerError::Service(ServiceError::EmailNotFound))
-    ));
+    );
 
     // Validate the new email.
     {
@@ -129,7 +130,7 @@ async fn account_creation() -> HandlerResult<()> {
             .await?;
 
         assert!(add_email_token.id == acc1_id);
-        assert!(matches!(add_email_token.scope, TokenScope::AddEmail { .. }));
+        assert_matches!(add_email_token.scope, TokenScope::AddEmail { .. });
         assert!(email == new_email);
     }
 
