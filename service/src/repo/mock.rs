@@ -146,25 +146,23 @@ impl AccountRepo for MockAccountRepoImpl {
         id: AccountId,
         current_primary_email: &str,
         new_primary_email: &str,
-    ) -> RepoResult<()> {
+    ) -> RepoResult<bool> {
         let mut state = self.lock_state().await;
 
         {
-            let current_primary_email_entity = state
-                .emails
-                .get(current_primary_email)
-                .ok_or(RepoError::Internal("invalid current primary email"))?;
-            let new_primary_email_entity = state
-                .emails
-                .get(new_primary_email)
-                .ok_or(RepoError::Internal("new mail not found"))?;
+            let Some(current_primary_email_entity) = state.emails.get(current_primary_email) else {
+                return Ok(false);
+            };
+            let Some(new_primary_email_entity) = state.emails.get(new_primary_email) else {
+                return Ok(false);
+            };
 
             if !(current_primary_email_entity.is_primary
                 && current_primary_email_entity.account_id == id
                 && new_primary_email_entity.account_id == id
                 && new_primary_email != current_primary_email)
             {
-                return Err(RepoError::Internal("cannot change the primary mail"));
+                return Ok(false);
             }
         }
 
@@ -175,24 +173,21 @@ impl AccountRepo for MockAccountRepoImpl {
             .is_primary = false;
         state.emails.get_mut(new_primary_email).unwrap().is_primary = true;
 
-        Ok(())
+        Ok(true)
     }
 
-    async fn remove_email_if_not_primary(&self, id: AccountId, email: &str) -> RepoResult<()> {
+    async fn remove_email_if_not_primary(&self, id: AccountId, email: &str) -> RepoResult<bool> {
         let mut state = self.lock_state().await;
 
-        let email_entity = state
-            .emails
-            .get(email)
-            .ok_or(RepoError::Internal("email not found"))?;
+        let Some(email_entity) = state.emails.get(email) else {
+            return Ok(false);
+        };
 
         if email_entity.account_id == id && !email_entity.is_primary {
             state.emails.remove(email);
-            Ok(())
+            Ok(true)
         } else {
-            Err(RepoError::Internal(
-                "email does not belong to the account, or it is a primary email",
-            ))
+            Ok(false)
         }
     }
 
@@ -269,7 +264,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
 
     async fn add_email(&mut self, id: AccountId, email: &str, is_primary: bool) -> RepoResult<()> {
         if self.state.emails.contains_key(email) {
-            Err(RepoError::Internal("email does not exists"))
+            Err(RepoError::Internal("email does not exists".to_string()))
         } else {
             self.state.emails.insert(
                 email.to_string(),
@@ -292,7 +287,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         is_primary: bool,
     ) -> RepoResult<()> {
         if self.state.usernames.contains_key(username) {
-            Err(RepoError::Internal("username does not exists"))
+            Err(RepoError::Internal("username does not exists".to_string()))
         } else {
             self.state.usernames.insert(
                 username.to_string(),
@@ -315,7 +310,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
 
             Ok(())
         } else {
-            Err(RepoError::Internal("account does not exists"))
+            Err(RepoError::Internal("account does not exists".to_string()))
         }
     }
 }

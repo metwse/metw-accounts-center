@@ -16,26 +16,35 @@ impl AuthorizationHandler {
         match token.scope {
             TokenScope::Authenticate => Err(HandlerError::Unauthorized),
 
-            TokenScope::AddEmail(email) => Ok(self
-                .0
-                .account_service
-                .auth_add_email(token.id, email)
-                .await?),
+            TokenScope::AddEmail(email) => {
+                self.0
+                    .account_service
+                    .auth_add_email(token.id, email)
+                    .await?;
+
+                Ok(())
+            }
 
             TokenScope::SetPrimaryEmail {
                 current_primary_email,
                 new_primary_email,
-            } => Ok(self
-                .0
-                .account_service
-                .auth_change_primary_email(token.id, current_primary_email, new_primary_email)
-                .await?),
+            } => {
+                self.0
+                    .account_service
+                    .auth_change_primary_email(token.id, current_primary_email, new_primary_email)
+                    .await?;
 
-            TokenScope::Signup { email } => Ok(self
-                .0
-                .account_service
-                .auth_complete_signup(token.id, email)
-                .await?),
+                Ok(())
+            }
+
+            TokenScope::Signup { email } => {
+                self.0
+                    .account_service
+                    .auth_complete_signup(token.id, email)
+                    .await?;
+
+                Ok(())
+            }
         }
     }
 }

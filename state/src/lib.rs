@@ -6,17 +6,19 @@
 use service::State;
 use std::env;
 
-mod account_repo;
 mod captcha_client;
 mod mail_client;
+
+mod account_repo;
 mod token_repo;
 
 #[cfg(test)]
 mod tests;
 
-pub use account_repo::AccountRepoImpl;
 pub use captcha_client::CaptchaClientImpl;
 pub use mail_client::MailClientImpl;
+
+pub use account_repo::AccountRepoImpl;
 pub use token_repo::TokenRepoImpl;
 
 /// Config holds the configuration for the application.

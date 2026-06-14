@@ -26,7 +26,6 @@ macro_rules! id_newtype {
             }
         }
 
-        #[cfg(any(feature = "testutil", test))]
         impl From<i64> for [< $name Id >] {
             /// Creates an ID from an arbitrary integer.
             ///

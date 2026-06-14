@@ -1,6 +1,9 @@
 use std::time;
 
-use service::{repo::{RepoResult, TokenRepo}, testutil::random_username};
+use service::{
+    repo::{RepoResult, TokenRepo},
+    testutil::random_username,
+};
 
 pub async fn token_revocation(repo: Box<dyn TokenRepo>) -> RepoResult<()> {
     // Let's use snowflake id as random fingerprint.
@@ -10,7 +13,14 @@ pub async fn token_revocation(repo: Box<dyn TokenRepo>) -> RepoResult<()> {
     assert!(!repo.check_revocation(random_fingerprint.as_bytes()).await?);
 
     // Now the fingerprint is revoked.
-    assert!(!repo.check_and_revoke(random_fingerprint.as_bytes(), time::Duration::from_secs(100)).await?);
+    assert!(
+        !repo
+            .check_and_revoke(
+                random_fingerprint.as_bytes(),
+                time::Duration::from_secs(100)
+            )
+            .await?
+    );
 
     // Revoke should return true.
     assert!(repo.check_revocation(random_fingerprint.as_bytes()).await?);

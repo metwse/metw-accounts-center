@@ -6,7 +6,10 @@ use thiserror::Error;
 pub enum RepoError {
     /// DO NOT EXPOSE PUBLIC
     #[error("internal error: {0}")]
-    Internal(&'static str),
+    Internal(String),
+
+    #[error("internal sqlx error: {0}")]
+    InternalSqlx(#[from] sqlx::error::Error),
 
     #[error("error details are redacted")]
     Redacted,

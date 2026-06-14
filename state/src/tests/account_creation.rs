@@ -21,7 +21,7 @@ pub async fn account_creation(repo: Box<dyn AccountRepo>) -> ServiceResult<()> {
     let signup_dto = dto::request::Signup {
         username: acc1_username.to_string(),
         email: acc1_email.to_string(),
-        password_hash: "paswd1".to_string(),
+        client_password_hash: "paswd1".to_string(),
         keys: dto::request::Keys {
             identity_key: vec![1],
             encrypted_private_key: vec![2],
@@ -34,7 +34,7 @@ pub async fn account_creation(repo: Box<dyn AccountRepo>) -> ServiceResult<()> {
     let mut signup_dto2 = signup_dto.clone();
     signup_dto2.username = acc2_username.to_string();
     signup_dto2.email = acc2_email.to_string();
-    signup_dto2.password_hash = "paswd2".to_string();
+    signup_dto2.client_password_hash = "paswd2".to_string();
 
     let acc2_id = account_service.signup(signup_dto2.clone()).await?;
 
@@ -51,7 +51,7 @@ pub async fn account_creation(repo: Box<dyn AccountRepo>) -> ServiceResult<()> {
         account_service
             .login_with_username(dto::request::LoginWithUsername {
                 username: acc2_username.to_string(),
-                password_hash: "paswd2".to_string(),
+                client_password_hash: "paswd2".to_string(),
             })
             .await,
         Err(ServiceError::AccountNotVerified)
@@ -114,7 +114,7 @@ pub async fn account_creation(repo: Box<dyn AccountRepo>) -> ServiceResult<()> {
     let acc1_id_from_login = account_service
         .login_with_email(dto::request::LoginWithEmail {
             email: acc1_email.to_string(),
-            password_hash: "paswd1".to_string(),
+            client_password_hash: "paswd1".to_string(),
         })
         .await?;
     // Is id returned from login same with sign up?
@@ -125,7 +125,7 @@ pub async fn account_creation(repo: Box<dyn AccountRepo>) -> ServiceResult<()> {
         account_service
             .login_with_username(dto::request::LoginWithUsername {
                 username: "invalid_username".to_string(),
-                password_hash: "paswd2".to_string(),
+                client_password_hash: "paswd2".to_string(),
             })
             .await,
         Err(ServiceError::InvalidCredentials)
@@ -134,7 +134,7 @@ pub async fn account_creation(repo: Box<dyn AccountRepo>) -> ServiceResult<()> {
         account_service
             .login_with_username(dto::request::LoginWithUsername {
                 username: acc1_username.to_string(),
-                password_hash: "invalid_password".to_string(),
+                client_password_hash: "invalid_password".to_string(),
             })
             .await,
         Err(ServiceError::InvalidCredentials)
@@ -145,7 +145,7 @@ pub async fn account_creation(repo: Box<dyn AccountRepo>) -> ServiceResult<()> {
         account_service
             .login_with_email(dto::request::LoginWithEmail {
                 email: "invalid_email".to_string(),
-                password_hash: "paswd1".to_string(),
+                client_password_hash: "paswd1".to_string(),
             })
             .await,
         Err(ServiceError::InvalidCredentials)
@@ -154,7 +154,7 @@ pub async fn account_creation(repo: Box<dyn AccountRepo>) -> ServiceResult<()> {
         account_service
             .login_with_email(dto::request::LoginWithEmail {
                 email: acc1_email.to_string(),
-                password_hash: "invalid_password".to_string(),
+                client_password_hash: "invalid_password".to_string(),
             })
             .await,
         Err(ServiceError::InvalidCredentials)
