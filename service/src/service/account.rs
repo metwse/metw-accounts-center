@@ -143,16 +143,6 @@ impl AccountService {
         Ok(self.repo.is_email_taken(&email).await?)
     }
 
-    /// Add the email as a secondary email to the account.
-    #[tracing::instrument(skip_all, fields(id))]
-    pub async fn auth_add_email(&self, id: AccountId, email: String) -> ServiceResult<()> {
-        let mut transaction = self.repo.begin_transaction().await?;
-        transaction.add_email(id, &email, false).await?;
-        transaction.commit().await?;
-
-        Ok(())
-    }
-
     /// Remove a secondary email.
     #[tracing::instrument(skip_all, fields(id))]
     pub async fn remove_email_if_not_primary(
@@ -179,6 +169,19 @@ impl AccountService {
         Ok(self.repo.get_primary_email(id).await?)
     }
 
+    /// Add the email as a secondary email to the account.
+    #[tracing::instrument(skip_all, fields(id))]
+    pub async fn auth_add_email(&self, id: AccountId, email: String) -> ServiceResult<()> {
+        let mut transaction = self.repo.begin_transaction().await?;
+        transaction
+            .add_email(id, &email, false)
+            .await
+            .map_err(|_| ServiceError::EmailAddFailed)?;
+        transaction.commit().await?;
+
+        Ok(())
+    }
+
     /// Change account's primary email.
     #[tracing::instrument(skip_all, fields(id))]
     pub async fn auth_change_primary_email(
@@ -187,18 +190,25 @@ impl AccountService {
         current_primary_email: String,
         new_primary_email: String,
     ) -> ServiceResult<()> {
-        self.repo
+        if self
+            .repo
             .set_primary_email_if_current_is(id, &current_primary_email, &new_primary_email)
-            .await?;
-
-        Ok(())
+            .await?
+        {
+            Ok(())
+        } else {
+            Err(ServiceError::ChangePrimaryEmailFailed)
+        }
     }
 
     /// Complete signup by adding the email and activating the account.
     #[tracing::instrument(skip_all, fields(id))]
     pub async fn auth_complete_signup(&self, id: AccountId, email: String) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
-        transaction.add_email(id, &email, true).await?;
+        transaction
+            .add_email(id, &email, true)
+            .await
+            .map_err(|_| ServiceError::SignupCompleteFailed)?;
         transaction.set_verified_flag(id, true).await?;
         transaction.commit().await?;
 
