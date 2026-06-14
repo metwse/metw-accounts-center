@@ -4,7 +4,7 @@ use crate::{
     service::ServiceError,
     testutil::{TestCtx, random_email},
     token::TokenScope,
-    util::templated_mails,
+    util::mails,
 };
 use std::assert_matches;
 
@@ -27,7 +27,7 @@ async fn account_creation() -> HandlerResult<()> {
 
     // Check sent verification mail.
     {
-        let templated_mails::Template::Signup {
+        let mails::Template::Signup {
             username,
             signup_jwt,
             ..
@@ -48,7 +48,7 @@ async fn account_creation() -> HandlerResult<()> {
         assert!(signup_token.id == acc1_id);
         assert_matches!(signup_token.scope, TokenScope::Signup { .. });
 
-        let templated_mails::Template::Signup {
+        let mails::Template::Signup {
             username: username2,
             signup_jwt: signup_jwt2,
             ..
@@ -113,7 +113,7 @@ async fn account_creation() -> HandlerResult<()> {
 
     // Validate the new email.
     {
-        let templated_mails::Template::AddEmail {
+        let mails::Template::AddEmail {
             email,
             add_email_jwt,
             ..
@@ -140,7 +140,7 @@ async fn account_creation() -> HandlerResult<()> {
         .await?;
 
     {
-        let templated_mails::Template::SetPrimaryEmail {
+        let mails::Template::SetPrimaryEmail {
             set_primary_mail_jwt,
             ..
         } = ctx.last_email(acc1_id).await

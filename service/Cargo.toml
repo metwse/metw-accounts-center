@@ -4,14 +4,13 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-tokio = { workspace = true, features = ["rt-multi-thread", "net", "time", "macros", "sync"] }
+tokio = { workspace = true, features = ["rt", "macros", "sync"] }
 async-trait = { workspace = true }
 
-sqlx = { workspace = true, features = ["postgres", "chrono"]}
+sqlx = { workspace = true, features = ["chrono"]}
 chrono = { workspace = true }
 
 tracing = { workspace = true }
-tracing-subscriber = { workspace = true, features = ["env-filter"] }
 
 pastey = { workspace = true }
 dotenvy = { workspace = true }
@@ -36,4 +35,8 @@ futures-util = { workspace = true }
 service = { path = ".", features = ["mock"] }
 
 [features]
-mock = []
+# tokio/time requred for time outs in mock token service.
+mock = ["tokio/time"]
+
+[lints]
+workspace = true

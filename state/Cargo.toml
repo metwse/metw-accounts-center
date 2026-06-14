@@ -1,0 +1,19 @@
+[package]
+name = "state"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+async-trait = { workspace = true }
+
+sqlx = { workspace = true, features = ["postgres", "chrono"]}
+
+tracing = { workspace = true }
+
+service = { path = "../service/" }
+
+[dev-dependencies]
+service = { path = "../service/", features = ["mock"] }
+
+[lints]
+workspace = true

@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 #[cfg(test)]
 use crate::{
-    client::mock::{MockMailClientImpl, Mails},
+    client::mock::{Mails, MockMailClientImpl},
     repo::mock::{MockAccountRepoImpl, MockTokenRepoImpl},
 };
 #[cfg(test)]

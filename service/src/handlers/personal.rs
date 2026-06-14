@@ -5,7 +5,7 @@ use crate::{
     service::ServiceError,
     state::State,
     token::{Token, TokenScope},
-    util::templated_mails,
+    util::mails,
 };
 use std::time::Duration;
 
@@ -44,7 +44,7 @@ impl PersonalHandler {
             ADD_EMAIL_TOKEN_VALID_FOR,
         ));
 
-        let template = templated_mails::Template::AddEmail {
+        let template = mails::Template::AddEmail {
             email: email.clone(),
             add_email_jwt,
             callback_url: self.0.email_callback_url,
@@ -100,7 +100,7 @@ impl PersonalHandler {
             SET_PRIMARY_MAIL_VALID_FOR,
         ));
 
-        let template = templated_mails::Template::SetPrimaryEmail {
+        let template = mails::Template::SetPrimaryEmail {
             current_primary_email: current_primary_email.clone(),
             new_primary_email,
             set_primary_mail_jwt,

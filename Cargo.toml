@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["service"]
+members = ["service", "state"]
 
 [workspace.dependencies]
 # async runtime&utility
@@ -30,3 +30,11 @@ serde = "1"
 serial_test = "3.4"
 test-log = "0.2"
 futures-util = "0.3"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+unused_must_use = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = "warn"
