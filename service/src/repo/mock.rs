@@ -83,7 +83,10 @@ impl AccountRepo for MockAccountRepoImpl {
         let mut nonexpiring_usernames = Vec::new();
 
         for username_entity in state.usernames.values() {
-            if username_entity.expires_at.is_none() && username_entity.account_id == id {
+            if username_entity.expires_at.is_none()
+                && !username_entity.is_primary
+                && username_entity.account_id == id
+            {
                 nonexpiring_usernames.push(username_entity.username.clone());
             }
         }
@@ -109,7 +112,7 @@ impl AccountRepo for MockAccountRepoImpl {
         let mut secondary_emails = Vec::new();
 
         for email_entity in state.emails.values() {
-            if email_entity.account_id == id {
+            if email_entity.account_id == id && !email_entity.is_primary {
                 secondary_emails.push(email_entity.email.clone());
             }
         }

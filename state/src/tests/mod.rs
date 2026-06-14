@@ -1,12 +1,15 @@
-mod account_creation;
+mod accounts;
 mod token_revocation;
 
-use account_creation::account_creation;
-use token_revocation::token_revocation;
-
 use crate::AccountRepoImpl;
-use service::repo::mock::{MockAccountRepoImpl, MockTokenRepoImpl};
+use accounts::{account_creation, email_change};
+use service::{
+    repo::mock::{MockAccountRepoImpl, MockTokenRepoImpl},
+    service::AccountService,
+};
 use sqlx::PgPool;
+use std::sync::Arc;
+use token_revocation::token_revocation;
 
 async fn default_db() -> PgPool {
     dotenvy::dotenv().ok();
@@ -19,9 +22,12 @@ async fn default_db() -> PgPool {
 #[tokio::test(flavor = "multi_thread")]
 #[test_log::test]
 async fn mock_account_creation() {
-    let account_repo = MockAccountRepoImpl::boxed_new();
+    let account_service = Arc::new(AccountService::new(MockAccountRepoImpl::boxed_new()));
 
-    account_creation(account_repo).await.unwrap();
+    account_creation(account_service.clone()).await.unwrap();
+    let username1 = account_creation(account_service.clone()).await.unwrap();
+
+    email_change(username1, account_service).await.unwrap();
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -30,9 +36,14 @@ async fn mock_account_creation() {
 async fn db_account_creation() {
     let pool = default_db().await;
 
-    let account_repo = AccountRepoImpl::boxed_new(pool);
+    let account_service = Arc::new(AccountService::new(AccountRepoImpl::boxed_new(
+        pool.clone(),
+    )));
 
-    account_creation(account_repo).await.unwrap();
+    account_creation(account_service.clone()).await.unwrap();
+    let username1 = account_creation(account_service.clone()).await.unwrap();
+
+    email_change(username1, account_service).await.unwrap();
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -29,6 +29,15 @@ pub enum ServiceError {
     #[error("invalid credentials")]
     InvalidCredentials,
 
+    #[error("email add failed")]
+    EmailAddFailed,
+
+    #[error("change primary email failed")]
+    ChangePrimaryEmailFailed,
+
+    #[error("signup complete failed")]
+    SignupCompleteFailed,
+
     #[error("invalid jwt")]
     InvalidJwt,
 

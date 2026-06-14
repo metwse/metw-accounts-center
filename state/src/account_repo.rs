@@ -152,7 +152,7 @@ impl AccountRepo for AccountRepoImpl {
             "UPDATE emails SET is_primary = true
                 WHERE account_id = $1 AND is_primary = false AND email = $2 AND
                       EXISTS(SELECT * FROM emails WHERE
-                             account_id = $1 AND is_primary = true AND email = $3)",
+                             account_id = $1 AND is_primary = false AND email = $3)",
             i64::from(id),
             new_primary_email,
             current_primary_email,
