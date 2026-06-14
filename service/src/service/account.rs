@@ -13,7 +13,7 @@ impl AccountService {
     }
 
     /// Returns the underlying repository.
-    #[cfg(test)]
+    #[cfg(any(feature = "testutil", test))]
     pub fn repo(&self) -> &dyn AccountRepo {
         self.repo.as_ref()
     }

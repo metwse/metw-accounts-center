@@ -26,7 +26,7 @@ macro_rules! id_newtype {
             }
         }
 
-        #[cfg(any(test, doc))]
+        #[cfg(any(feature = "testutil", test))]
         impl From<i64> for [< $name Id >] {
             /// Creates an ID from an arbitrary integer.
             ///
@@ -77,14 +77,14 @@ static GLOBAL_STATE: Mutex<SnowflakeState> = Mutex::new(SnowflakeState {
 });
 
 /// ID generator inspired from Twitter's snowflake format. Available only in
-/// `cfg(test)`.
+/// `cfg(test)` or `feature = "testutil"`.
 ///
 /// | Field | Bits | Description |
 /// | -- | -- | -- |
 /// | Timestamp | 22 to 63 | Milliseconds since metw.cc [`EPOCH`] |
 /// | Reserved for future use | 12 to 21 | |
 /// | Increment | 0 to 11 | For every ID that is generated, this number is incremented |
-#[cfg(any(test, doc))]
+#[cfg(any(feature = "testutil", test))]
 pub fn snowflake() -> i64 {
     internal_snowflake()
 }

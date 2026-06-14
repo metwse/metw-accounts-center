@@ -13,7 +13,11 @@ tracing = { workspace = true }
 service = { path = "../service/" }
 
 [dev-dependencies]
-service = { path = "../service/", features = ["mock"] }
+tokio = { workspace = true, features = ["full"] }
+
+test-log = { workspace = true, features = ["trace"] }
+
+service = { path = "../service/", features = ["mock", "testutil"] }
 
 [lints]
 workspace = true

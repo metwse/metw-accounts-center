@@ -122,7 +122,7 @@ pub trait AccountRepoTransaction: Send + Sync {
 pub trait TokenRepo: Send + Sync {
     /// Atomic operation for checking the revocation and doing it.
     ///
-    /// Returns false if the token has already been revoked.
+    /// Returns true if the token has already been revoked.
     async fn check_and_revoke(
         &self,
         fingerprint: &[u8],

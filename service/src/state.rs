@@ -4,12 +4,12 @@ use crate::{
 };
 use std::sync::Arc;
 
-#[cfg(test)]
+#[cfg(feature = "mock")]
 use crate::{
     client::mock::{Mails, MockMailClientImpl},
     repo::mock::{MockAccountRepoImpl, MockTokenRepoImpl},
 };
-#[cfg(test)]
+#[cfg(feature = "mock")]
 use tokio::sync::Mutex;
 
 /// Application-wide state.
@@ -20,13 +20,13 @@ pub struct State {
     pub token_service: Arc<TokenService>,
     pub mail_client: Arc<dyn MailClient>,
     pub email_callback_url: Arc<String>,
-    #[cfg(test)]
+    #[cfg(feature = "mock")]
     pub emails: Arc<Mutex<Mails>>,
 }
 
 impl State {
     /// Creates a new mock state.
-    #[cfg(any(test, doc))]
+    #[cfg(feature = "mock")]
     pub fn new_mock() -> Self {
         let account_service = AccountService::new(MockAccountRepoImpl::boxed_new());
         let token_service =

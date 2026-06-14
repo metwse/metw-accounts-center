@@ -11,6 +11,9 @@ mod captcha_client;
 mod mail_client;
 mod token_repo;
 
+#[cfg(test)]
+mod tests;
+
 pub use account_repo::AccountRepoImpl;
 pub use captcha_client::CaptchaClientImpl;
 pub use mail_client::MailClientImpl;

@@ -343,7 +343,7 @@ impl TokenRepo for MockTokenRepoImpl {
         let mut state = self.revocations.lock().await;
 
         if state.contains(fingerprint) {
-            Ok(false)
+            Ok(true)
         } else {
             state.insert(fingerprint.into());
 
@@ -360,7 +360,7 @@ impl TokenRepo for MockTokenRepoImpl {
                 }
             });
 
-            Ok(true)
+            Ok(false)
         }
     }
 
