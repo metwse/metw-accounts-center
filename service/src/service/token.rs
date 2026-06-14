@@ -43,7 +43,7 @@ impl TokenService {
     #[tracing::instrument(skip_all)]
     pub async fn revoke(&self, base64_encoded_token: &str) -> ServiceResult<Token> {
         if let Some((token, signature)) = self.jws.decode(base64_encoded_token) {
-            if self
+            if !self
                 .repo
                 .check_and_revoke(&signature, token.valid_for)
                 .await?

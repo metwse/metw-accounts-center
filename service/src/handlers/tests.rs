@@ -10,7 +10,7 @@ use std::assert_matches;
 
 #[tokio::test(flavor = "multi_thread")]
 #[test_log::test]
-async fn account_creation() -> HandlerResult<()> {
+async fn test_handlers() -> HandlerResult<()> {
     let ctx = TestCtx::new();
 
     // Sign up an account.

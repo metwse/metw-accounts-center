@@ -99,5 +99,5 @@ pub use util::{id, token};
 pub use state::State;
 
 /// Test utilities.
-#[cfg(any(test, doc))]
+#[cfg(any(feature = "testutil", test))]
 pub mod testutil;
