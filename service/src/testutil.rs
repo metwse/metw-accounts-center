@@ -3,7 +3,7 @@ use crate::{
     handlers::{AuthenticationHandler, HandlerResult},
     id::{AccountId, snowflake},
     state::State,
-    util::templated_mails,
+    util::mails,
 };
 
 /// Generate a random username string.
@@ -92,7 +92,7 @@ impl TestCtx {
     }
 
     /// Get the last email sent to the account.
-    pub async fn last_email(&self, account_id: AccountId) -> templated_mails::Template {
+    pub async fn last_email(&self, account_id: AccountId) -> mails::Template {
         let emails = self.state.emails.lock().await;
         let mailbox = emails.get(&account_id).unwrap();
 

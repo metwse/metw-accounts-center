@@ -1,11 +1,11 @@
-use crate::{client::CaptchaClient, id::AccountId, util::templated_mails};
 use super::MailClient;
+use crate::{client::CaptchaClient, id::AccountId, util::mails};
 use async_trait::async_trait;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 use tracing::debug;
 
-pub(crate) type Mails = HashMap<AccountId, Vec<templated_mails::Template>>;
+pub(crate) type Mails = HashMap<AccountId, Vec<mails::Template>>;
 
 /// Mock mail client implementation.
 #[derive(Default)]
@@ -30,7 +30,7 @@ impl MockMailClientImpl {
 #[async_trait]
 impl MailClient for MockMailClientImpl {
     #[tracing::instrument(skip_all)]
-    async fn send(&self, _email: String, id: AccountId, template: templated_mails::Template) {
+    async fn send(&self, _email: String, id: AccountId, template: mails::Template) {
         let mut debug = self.mails.lock().await;
 
         let subject = template.subject();

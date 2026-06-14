@@ -4,7 +4,7 @@ use crate::{
     id::AccountId,
     state::State,
     token::{Token, TokenScope},
-    util::templated_mails,
+    util::mails,
 };
 use std::time::Duration;
 
@@ -43,7 +43,7 @@ impl AuthenticationHandler {
             SIGNUP_TOKEN_VALID_FOR,
         ));
 
-        let template = templated_mails::Template::Signup {
+        let template = mails::Template::Signup {
             username,
             signup_jwt,
             callback_url: self.0.email_callback_url,

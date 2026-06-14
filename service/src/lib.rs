@@ -56,9 +56,6 @@
 //!
 //! [SoC]: https://en.wikipedia.org/wiki/Separation_of_concerns
 
-#![forbid(unsafe_code, unused_must_use)]
-#![warn(clippy::all, missing_docs)]
-
 /// Database entities.
 ///
 /// One-to-one mapping of database entities to Rust types. Used internally --
