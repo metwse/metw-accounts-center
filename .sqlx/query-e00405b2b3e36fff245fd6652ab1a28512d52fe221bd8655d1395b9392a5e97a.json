@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT identity_key, encrypted_private_key, encrypted_master_key FROM accounts\n                WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "identity_key",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 1,
+        "name": "encrypted_private_key",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 2,
+        "name": "encrypted_master_key",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e00405b2b3e36fff245fd6652ab1a28512d52fe221bd8655d1395b9392a5e97a"
+}

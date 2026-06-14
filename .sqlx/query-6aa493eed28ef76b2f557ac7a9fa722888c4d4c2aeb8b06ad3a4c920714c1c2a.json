@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE emails SET is_primary = false\n                WHERE account_id = $1 AND is_primary = true AND email = $2 AND\n                      EXISTS(SELECT * FROM emails WHERE\n                             account_id = $1 AND is_primary = false AND email = $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6aa493eed28ef76b2f557ac7a9fa722888c4d4c2aeb8b06ad3a4c920714c1c2a"
+}
