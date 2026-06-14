@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM emails\n                WHERE account_id = $1 AND is_primary = false AND email = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7d684ed34f44a88e1d32755edba62c5161a7f1f2e635be244b761efb188936a5"
+}

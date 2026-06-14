@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, password_hash FROM accounts\n                WHERE id = (SELECT account_id FROM usernames WHERE username = $1)",
+  "query": "SELECT id, password_hash FROM accounts\n                WHERE id = (SELECT account_id FROM usernames WHERE username = $1 AND expires_at IS NULL)",
   "describe": {
     "columns": [
       {
@@ -24,5 +24,5 @@
       false
     ]
   },
-  "hash": "29991c48217e2c2ac27bd58a091ab134c5d323e945d5d055c0786d2cf312ae08"
+  "hash": "da7e9e4b4a5c8c5ea72c08b3fc81103c5ec938df69ee9bb296efa7228a3d033e"
 }

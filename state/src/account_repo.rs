@@ -43,7 +43,7 @@ impl AccountRepo for AccountRepoImpl {
         let login = sqlx::query_as!(
             dto::repo::Login,
             "SELECT id, password_hash FROM accounts
-                WHERE id = (SELECT account_id FROM usernames WHERE username = $1)",
+                WHERE id = (SELECT account_id FROM usernames WHERE username = $1 AND expires_at IS NULL)",
             username
         )
         .fetch_optional(&self.pool)
@@ -172,7 +172,7 @@ impl AccountRepo for AccountRepoImpl {
     async fn remove_email_if_not_primary(&self, id: AccountId, email: &str) -> RepoResult<bool> {
         let result = sqlx::query!(
             "DELETE FROM emails
-                WHERE account_id = $1 AND email = $2 AND is_primary = false",
+                WHERE account_id = $1 AND is_primary = false AND email = $2",
             i64::from(id),
             email
         )
