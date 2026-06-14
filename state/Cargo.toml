@@ -6,7 +6,9 @@ edition = "2024"
 [dependencies]
 async-trait = { workspace = true }
 
-sqlx = { workspace = true, features = ["postgres", "chrono"]}
+sqlx = { workspace = true, features = ["postgres", "chrono", "macros", "runtime-tokio"] }
+
+dotenvy = { workspace = true }
 
 tracing = { workspace = true }
 

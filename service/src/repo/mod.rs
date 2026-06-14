@@ -70,10 +70,10 @@ pub trait AccountRepo: Send + Sync {
         id: AccountId,
         current_primary_email: &str,
         new_primary_email: &str,
-    ) -> RepoResult<()>;
+    ) -> RepoResult<bool>;
 
     /// Remove the email if it is not primary mail of the account.
-    async fn remove_email_if_not_primary(&self, id: AccountId, email: &str) -> RepoResult<()>;
+    async fn remove_email_if_not_primary(&self, id: AccountId, email: &str) -> RepoResult<bool>;
 
     /// Returns true if the username has been taken.
     async fn is_username_taken(&self, username: &str) -> RepoResult<bool>;

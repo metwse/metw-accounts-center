@@ -29,7 +29,7 @@ impl AccountService {
             return Err(ServiceError::EmailTaken);
         }
 
-        let password_hash = password::hash(signup_dto.password_hash).await;
+        let password_hash = password::hash(signup_dto.client_password_hash).await;
 
         let mut transaction = self.repo.begin_transaction().await?;
 
@@ -59,13 +59,13 @@ impl AccountService {
     /// For use with login.
     async fn login(
         &self,
-        password_hash: String,
+        client_password_hash: String,
         login: dto::repo::Login,
     ) -> ServiceResult<AccountId> {
         if let Some(flags) = self.repo.get_account_flags(login.id).await?
             && flags.is_verified
         {
-            if password::check(password_hash, login.password_hash).await {
+            if password::check(client_password_hash, login.password_hash).await {
                 Ok(login.id)
             } else {
                 Err(ServiceError::InvalidCredentials)
@@ -85,7 +85,7 @@ impl AccountService {
             return Err(ServiceError::InvalidCredentials);
         };
 
-        self.login(credentials.password_hash, login).await
+        self.login(credentials.client_password_hash, login).await
     }
 
     /// Log into the account
@@ -102,7 +102,7 @@ impl AccountService {
             return Err(ServiceError::InvalidCredentials);
         };
 
-        self.login(credentials.password_hash, login).await
+        self.login(credentials.client_password_hash, login).await
     }
 
     /// Fetch the account details.
@@ -160,7 +160,11 @@ impl AccountService {
         id: AccountId,
         email: String,
     ) -> ServiceResult<()> {
-        Ok(self.repo.remove_email_if_not_primary(id, &email).await?)
+        if self.repo.remove_email_if_not_primary(id, &email).await? {
+            Ok(())
+        } else {
+            Err(ServiceError::CannotDeletePrimaryEmail)
+        }
     }
 
     /// Returns true if the email has been taken by the given account.

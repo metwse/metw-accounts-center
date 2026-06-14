@@ -15,9 +15,9 @@ pub struct Signup {
     /// Email.
     #[validate(email)]
     pub email: String,
-    /// Argon2-hashed password.
+    /// Password hashed client-side.
     #[validate(length(max = 128))]
-    pub password_hash: String,
+    pub client_password_hash: String,
 
     /// Initial keys assigned when account is created.
     #[validate(nested)]
@@ -31,9 +31,9 @@ pub struct LoginWithUsername {
     #[validate(length(min = 2, max = 20), regex(path = *USERNAME_REGEX))]
     pub username: String,
 
-    /// Argon2-hashed password.
+    /// Password hashed client-side.
     #[validate(length(max = 128))]
-    pub password_hash: String,
+    pub client_password_hash: String,
 }
 
 /// Login into the account.
@@ -45,7 +45,7 @@ pub struct LoginWithEmail {
 
     /// Argon2-hashed password.
     #[validate(length(max = 128))]
-    pub password_hash: String,
+    pub client_password_hash: String,
 }
 
 /// Roll keys, change password, master key or key pair.
@@ -53,7 +53,7 @@ pub struct LoginWithEmail {
 pub struct KeyRoll {
     /// Argon2-hashed password. Password will not be changed if its empty.
     #[validate(length(max = 128))]
-    pub password_hash: String,
+    pub client_password_hash: String,
 
     /// New keys.
     #[validate(nested)]

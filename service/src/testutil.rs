@@ -5,10 +5,17 @@ use crate::{
     state::State,
     util::mails,
 };
+use std::cmp::max;
 
 /// Generate a random username string.
 pub fn random_username() -> &'static str {
-    format!("user{}", snowflake() as u64).leak()
+    let username = format!("{}", snowflake() as u64);
+
+    format!(
+        "user{}",
+        &username[max(username.len() - 16, 0)..username.len()]
+    )
+    .leak()
 }
 
 /// Generate a random email string.
@@ -41,14 +48,14 @@ impl TestCtx {
     /// Returns `(id, username, email)`
     pub async fn signup(
         &self,
-        password_hash: &'static str,
+        client_password_hash: &'static str,
     ) -> (AccountId, &'static str, &'static str) {
         let username = random_username();
         let email = random_email();
 
         let account_id = AuthenticationHandler(self.state.clone())
             .signup(dto::request::Signup {
-                password_hash: password_hash.to_string(),
+                client_password_hash: client_password_hash.to_string(),
                 username: username.to_string(),
                 email: email.to_string(),
                 keys: dto::request::Keys {
@@ -67,12 +74,12 @@ impl TestCtx {
     pub async fn login_with_username(
         &self,
         username: &'static str,
-        password_hash: &'static str,
+        client_password_hash: &'static str,
     ) -> HandlerResult<String> {
         AuthenticationHandler(self.state.clone())
             .login_by_username(dto::request::LoginWithUsername {
                 username: username.to_string(),
-                password_hash: password_hash.to_string(),
+                client_password_hash: client_password_hash.to_string(),
             })
             .await
     }
@@ -81,12 +88,12 @@ impl TestCtx {
     pub async fn login_with_email(
         &self,
         email: &'static str,
-        password_hash: &'static str,
+        client_password_hash: &'static str,
     ) -> HandlerResult<String> {
         AuthenticationHandler(self.state.clone())
             .login_by_email(dto::request::LoginWithEmail {
                 email: email.to_string(),
-                password_hash: password_hash.to_string(),
+                client_password_hash: client_password_hash.to_string(),
             })
             .await
     }
