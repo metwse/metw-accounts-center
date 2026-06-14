@@ -1,8 +1,11 @@
-//! # metw-accounts-center
+//! # metw-accounts-center service
 //!
-//! This project is the back end microservice for metw.cc. It is responsible
-//! for storing encrypted cryptographic secrets and serving users' public keys
-//! to other services.
+//! This crate is the abstract orchestrating microservice for metw.cc. It
+//! manages clients and data repositories, and  provides a library interface to
+//! use with a presentation layer.
+//!
+//! Applications storing encrypted cryptographic secrets and serving users'
+//! public keys to other services can use this service.
 //!
 //! This microservice must not be extended with non-authentication features.
 //! Functionality of this microservice is limited only to username, email, and
@@ -34,6 +37,8 @@
 //! - [`handlers`]: The final level of abstraction to manipulate the
 //!   application state. This layer is a transport-agnostic front end for
 //!   the microservice.
+//! - [`State`]: The application state contains the services constructed from
+//!   repositories and clients. Handlers require a state instance to construct.
 //!
 //! ### Supporting Modules
 //!
@@ -46,16 +51,8 @@
 //!
 //! [`util`] is used for miscellaneous utilities that do not fit into
 //! categories above. Check out documenatations of the `util` for details.
-//! Conceptually, the [`token`] and [`id`] modules should be inside the `util`
-//! module, but they are defined at the crate root as they are too common.
-//!
-//! ### HTTP Layer
-//!
-//! The `axum` API is built on top of this modules and layers:
-//! - [`state`]: The application state boostrapping the services, repositories,
-//!   and clients.
-//! - [`routes`]: HTTP endpoints mapping handlers to axum endpoints.
-//! - [`App`]: The main web API.
+//! Conceptually, the [`token`] and [`id`] modules are re-exported at the crate
+//! root as they are too common.
 //!
 //! [SoC]: https://en.wikipedia.org/wiki/Separation_of_concerns
 
@@ -95,24 +92,14 @@ pub mod handlers;
 /// Miscellaneous utilities.
 pub mod util;
 
-/// Authentication and privileged access tokens.
-pub mod token;
-
 /// External integrations.
 pub mod client;
 
-/// Unique identifier types and the ID generation algorithm.
-pub mod id;
+mod state;
 
-/// Application-wide state.
-pub mod state;
+pub use util::{id, token};
 
-/// HTTP routes.
-pub mod routes;
-
-mod app;
-
-pub use app::App;
+pub use state::State;
 
 /// Test utilities.
 #[cfg(any(test, doc))]

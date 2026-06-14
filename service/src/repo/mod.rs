@@ -3,8 +3,9 @@ use async_trait::async_trait;
 
 mod error;
 
-/// Repository implementations.
-pub mod impls;
+/// Mock repository implementations.
+#[cfg(feature = "mock")]
+pub mod mock;
 
 pub use error::RepoError;
 

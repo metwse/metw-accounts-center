@@ -1,8 +1,9 @@
 use crate::{id::AccountId, util::templated_mails};
 use async_trait::async_trait;
 
-/// Client implementations.
-pub mod impls;
+/// Mock client implementations.
+#[cfg(feature = "mock")]
+pub mod mock;
 
 /// Send emails.
 #[async_trait]

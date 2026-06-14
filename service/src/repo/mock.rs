@@ -1,4 +1,4 @@
-use super::super::{AccountRepo, AccountRepoTransaction, RepoResult, TokenRepo};
+use super::{AccountRepo, AccountRepoTransaction, RepoResult, TokenRepo};
 use crate::{dto, entity, id::AccountId, repo::RepoError};
 use async_trait::async_trait;
 use chrono::Utc;

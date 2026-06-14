@@ -1,7 +1,7 @@
 use super::{AccountService, ServiceResult};
 use crate::{
     dto,
-    repo::impls::{MockAccountRepoImpl, MockTokenRepoImpl},
+    repo::mock::{MockAccountRepoImpl, MockTokenRepoImpl},
     service::{ServiceError, TokenService},
     testutil::{random_email, random_username},
     token::{Token, TokenScope},

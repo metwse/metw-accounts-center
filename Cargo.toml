@@ -1,31 +1,32 @@
-[package]
-name = "metw-accounts-center"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+resolver = "3"
+members = ["service"]
 
-[dependencies]
-tokio = { version = "1", features = ["rt-multi-thread", "net", "time", "macros", "sync"] }
+[workspace.dependencies]
+# async runtime&utility
+tokio = "1"
 async-trait = "0.1"
 
-sqlx = { version = "0.8", features = ["postgres", "chrono"]}
+# repository
+sqlx = "0.8"
 chrono = "0.4"
 
-biscuit = "0.8"
-argon2 = "0.5"
-
+# observability
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber = "0.3"
 
+# utility macros
 pastey = "0.2"
 dotenvy = "0.15"
 thiserror = "2"
 
-validator = { version = "0.20", features = ["derive"] }
+# field verification
+validator = "0.20"
 regex = "1.12"
-serde = { version = "1", features = ["derive"] }
 
-[dev-dependencies]
-tokio = { version = "1", features = ["full"] }
+serde = "1"
+
+# [dev-dependencies]
 serial_test = "3.4"
-test-log = { version = "0.2", features = ["trace"] }
+test-log = "0.2"
 futures-util = "0.3"

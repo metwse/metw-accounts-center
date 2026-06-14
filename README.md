@@ -1,4 +1,4 @@
-# metw-accounts center
+# metw-accounts-center
 metw.cc encrypted storage & authentication provider.
 
 ## Contributing

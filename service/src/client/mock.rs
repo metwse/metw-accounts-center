@@ -1,5 +1,5 @@
-use super::super::MailClient;
 use crate::{client::CaptchaClient, id::AccountId, util::templated_mails};
+use super::MailClient;
 use async_trait::async_trait;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
