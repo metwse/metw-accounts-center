@@ -24,6 +24,10 @@ jobs:
         run: echo '<!DOCTYPE html><html><head><meta http-equiv="Refresh" content="0; URL=_docs/index.html" /></head></html>' > target/doc/index.html
         shell: bash
 
+      - name: Create .nojekyll (ensures pages with underscores work on gh pages)
+        run: touch target/doc/.nojekyll
+        shell: bash
+
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
