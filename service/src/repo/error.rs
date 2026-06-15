@@ -11,6 +11,9 @@ pub enum RepoError {
     #[error("internal sqlx error: {0}")]
     InternalSqlx(#[from] sqlx::error::Error),
 
+    #[error("internal redis error: {0}")]
+    InternalRedis(#[from] redis::RedisError),
+
     #[error("error details are redacted")]
     Redacted,
 }

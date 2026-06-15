@@ -9,6 +9,7 @@ async-trait = { workspace = true }
 
 sqlx = { workspace = true, features = ["chrono"]}
 chrono = { workspace = true }
+redis = { workspace = true }
 
 tracing = { workspace = true }
 

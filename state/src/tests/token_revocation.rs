@@ -8,9 +8,15 @@ use service::{
 pub async fn token_revocation(repo: Box<dyn TokenRepo>) -> RepoResult<()> {
     // Let's use snowflake id as random fingerprint.
     let random_fingerprint = random_username();
+    let another_random_fingerprint = random_username();
 
     // The "fingerprint", random string, has never revoked.
     assert!(!repo.check_revocation(random_fingerprint.as_bytes()).await?);
+    assert!(
+        !repo
+            .check_revocation(another_random_fingerprint.as_bytes())
+            .await?
+    );
 
     // Now the fingerprint is revoked.
     assert!(
@@ -24,6 +30,12 @@ pub async fn token_revocation(repo: Box<dyn TokenRepo>) -> RepoResult<()> {
 
     // Revoke should return true.
     assert!(repo.check_revocation(random_fingerprint.as_bytes()).await?);
+    // The other fingerprint should stay the valid.
+    assert!(
+        !repo
+            .check_revocation(another_random_fingerprint.as_bytes())
+            .await?
+    );
 
     Ok(())
 }

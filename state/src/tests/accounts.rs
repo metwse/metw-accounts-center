@@ -40,6 +40,11 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
         client_password_hash: "passwd".to_string(),
     };
 
+    let login_with_incorrect_password = dto::request::LoginWithUsername {
+        username: username.to_string(),
+        client_password_hash: "incorrect_passwd".to_string(),
+    };
+
     // Sign up the account. User cannot log into the account as it is not
     // verified.
     assert!(
@@ -99,6 +104,12 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
             .login_with_username(login_with_username_dto)
             .await?
             == account_id
+    );
+    assert_matches!(
+        account_service
+            .login_with_username(login_with_incorrect_password)
+            .await,
+        Err(ServiceError::InvalidCredentials)
     );
 
     // Email taken!
