@@ -54,7 +54,7 @@
 //! # Drafts
 //!
 //! The design principles of metw-accounts-center are specified in the drafts.
-//! - [`acd_1`]: Abstraction Layers
+//! - [`acd_1`]: State Abstraction Layers
 
-/// # Abstraction Layers
+/// # State Abstraction Layers
 pub mod acd_1;
