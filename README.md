@@ -2,7 +2,7 @@
 metw.cc encrypted storage & authentication provider.
 
 Check out online documentation at:
-[metwse.github.io/metw-accounts-center/](https://metwse.github.io/metw-accounts-center/service/index.html)
+[metwse.github.io/metw-accounts-center/](https://metwse.github.io/metw-accounts-center/)
 
 ## Contributing
 <img width="96" height="96" alt="no-ai-slop" align="right" src="https://github.com/user-attachments/assets/bca16d5a-a6fe-4cbf-b41f-1176e000cff2" />
