@@ -4,26 +4,6 @@
 //! manages clients and data repositories, and  provides a library interface to
 //! use with a presentation layer.
 //!
-//! Applications storing encrypted cryptographic secrets and serving users'
-//! public keys to other services can use this service.
-//!
-//! This microservice must not be extended with non-authentication features.
-//! Functionality of this microservice is limited only to username, email, and
-//! password authentication.
-//!
-//! Goals:
-//! - Authentication Service: A service can use this microservice as an
-//!   authentication authority.
-//! - End-to-End Encryption (E2EE): Users have a public key-private key pair
-//!   and a master key. Their master keys and private keys are stored in the
-//!   server, encrypted on the client side. The microservice publicly serves
-//!   users' public keys; services that use this microservice for
-//!   authentication can use those public keys to verify tokens signed by
-//!   users.
-//!
-//! Non-Goals:
-//! - Profiles, posts, shares, etc. The scope of this service is only
-//!   authentication.
 //!
 //! ## System Design
 //!

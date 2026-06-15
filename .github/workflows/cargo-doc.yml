@@ -20,6 +20,10 @@ jobs:
         run: cargo doc --all-features --no-deps
         shell: bash
 
+      - name: Redirect to Documentation Crate from index.html
+        run: echo '<!DOCTYPE html><html><head><meta http-equiv="Refresh" content="0; URL=_docs/index.html" /></head></html>' > target/doc/index.html
+        shell: bash
+
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
