@@ -1,7 +1,7 @@
 //! # metw-accounts-center service
 //!
 //! This crate is the abstract orchestrating microservice for metw.cc. It
-//! manages clients and data repositories, and  provides a library interface to
+//! manages clients and data repositories, and provides a library interface to
 //! use with a presentation layer.
 //!
 //!
@@ -30,7 +30,7 @@
 //! internal communication between `service` and `repo` layers.
 //!
 //! [`util`] is used for miscellaneous utilities that do not fit into
-//! categories above. Check out documenatations of the `util` for details.
+//! categories above. Check out documentations of the `util` for details.
 //! Conceptually, the [`token`] and [`id`] modules are re-exported at the crate
 //! root as they are too common.
 //!
@@ -44,26 +44,29 @@ pub mod entity;
 
 /// Data transfer objects.
 ///
-/// Types for inter-layer communication interface is defined by objects in this
-/// module.
+/// Types for the inter-layer communication interface are defined by objects in
+/// this module
 pub mod dto;
 
 /// Low-level definitions for application storage.
 ///
-/// This module defines the traits required to store persistent and volatile
-/// data. Methods of `*Repo` traits provide read-only access or test-and-set
-/// operations. `*Transaction` traits on the other hand, are atomic
-/// transactional units to manipulate data freely.
+/// See [`_docs`] for the detailed documentation.
+///
+/// [`_docs`]: ../../_docs/acd_1/index.html#repo
 pub mod repo;
 
-/// Application state.
+/// An interface for manipulating a repo.
 ///
-/// The service layer acts as the "middleman" between the handlers and the data
-/// access, `repo`, layers. It abstracts low-level access operations into units
-/// of works.
+/// See [`_docs`] for the detailed documentation.
+///
+/// [`_docs`]: ../../_docs/acd_1/index.html#service
 pub mod service;
 
-/// Application state front end.
+/// An interface for manipulating the entire application state.
+///
+/// See [`_docs`] for the detailed documentation.
+///
+/// [`_docs`]: ../../_docs/acd_1/index.html#handlers
 pub mod handlers;
 
 /// Miscellaneous utilities.

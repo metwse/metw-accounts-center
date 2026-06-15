@@ -2,3 +2,7 @@
 name = "_docs"
 version = "0.0.0"
 edition = "2024"
+
+[dependencies]
+service = { path = "../service/", features = ["mock", "testutil"] }
+state = { path = "../state/" }
