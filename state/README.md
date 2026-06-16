@@ -1,33 +1,37 @@
 # metw-accounts-center state
-Check out the
-[sqlx-cli](https://github.com/transact-rs/sqlx/tree/main/sqlx-cli#create-and-run-migrations)
-documentation for database migration.
+Production repository and client implementations for the `service` crate.
 
-## Running Tests
-By default, tests require database connection or a secret to connect 3rd party
-integration is ignored.
+## Setup
+Required environment variables for the state are listed in fields of
+[Config](https://metwse.github.io/metw-accounts-center/state/struct.Config.html)
+struct.
 
+Run database migrations:
 ```sh
-# This will run only the mock-repo tests
-cargo test
+cd state/
+
+cargo sqlx migrate run
 ```
+(check out
+[sqlx-cli](https://github.com/transact-rs/sqlx/tree/main/sqlx-cli#create-and-run-migrations)
+documentation for sqlx installation)
 
-Use `--include-ignored` to run all tests:
+> **Important:** To ensure application security, carefully read the
+  [Setup Recommendations](https://metwse.github.io/metw-accounts-center/state/index.html#setup-recommendations)
+  section.
 
+## Tests
+`cargo test` runs mock-only tests with no external dependencies. To include
+tests that require live services (require `.env`):
 ```sh
 cargo test -- --include-ignored
 ```
 
-Tests read environment variables for connection URLs/secrets.
-| Variable | Description |
+Some tests require human interaction and are run as examples:
+```sh
+cargo run --example <name>
+```
+
+| Example | Description |
 |--|--|
-| `DATABASE_URL` | PostgreSQL connection URL. |
-| `REDIS_URL` | Redis connection URL. |
-
-Some tests require human interaction, and they do not run even if
-`--include-ignored` flag given. You should manually run those tests, using
-`cargo run --example <test-name>`.
-
-| Test| Description | Required Variables |
-|--|--|--|
-| `amazon-sesv2` | Send a verification email for adding a new address. | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `NOREPLY_EMAIL_ADDRESS` |
+| `amazon-sesv2` | Send a verification email for adding a new address. |

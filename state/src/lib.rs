@@ -2,6 +2,11 @@
 //!
 //! This crate contains the state, *side effects*, of the [`service`] crate.
 //! External integrations and data repository is served by this crate.
+//!
+//! ## Setup Recommendations
+//!
+//! - The token consumption is enforced only by Redis revocation keys. In
+//!   case of Redis state loss, one-time tokens can be accepted again.
 
 mod captcha_client;
 mod mail_client;
