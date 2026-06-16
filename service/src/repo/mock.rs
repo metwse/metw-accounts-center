@@ -267,7 +267,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
 
     async fn add_email(&mut self, id: AccountId, email: &str, is_primary: bool) -> RepoResult<()> {
         if self.state.emails.contains_key(email) {
-            Err(RepoError::Internal("email is taken".to_string()))
+            Err(RepoError::Internal("email is taken"))
         } else {
             self.state.emails.insert(
                 email.to_string(),
@@ -290,7 +290,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         is_primary: bool,
     ) -> RepoResult<()> {
         if self.state.usernames.contains_key(username) {
-            Err(RepoError::Internal("username is taken".to_string()))
+            Err(RepoError::Internal("username is taken"))
         } else {
             self.state.usernames.insert(
                 username.to_string(),
@@ -313,7 +313,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
 
             Ok(())
         } else {
-            Err(RepoError::Internal("account does not exists".to_string()))
+            Err(RepoError::Internal("account does not exists"))
         }
     }
 }

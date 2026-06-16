@@ -79,7 +79,7 @@ impl PersonalHandler {
     ) -> HandlerResult<()> {
         let Some(current_primary_email) = self.0.account_service.get_primary_email(id).await?
         else {
-            return Err(HandlerError::UnexceptedError("account with no email"));
+            return Err(HandlerError::UnexpectedError("account with no email"));
         };
 
         if !self

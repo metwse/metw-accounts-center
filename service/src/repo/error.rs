@@ -4,9 +4,10 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 #[allow(missing_docs)]
 pub enum RepoError {
-    /// DO NOT EXPOSE PUBLIC
+    // The internal errors must be redacted before returning to the public.
+
     #[error("internal error: {0}")]
-    Internal(String),
+    Internal(&'static str),
 
     #[error("internal sqlx error: {0}")]
     InternalSqlx(#[from] sqlx::error::Error),

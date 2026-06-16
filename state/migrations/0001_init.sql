@@ -62,6 +62,10 @@ CREATE UNIQUE INDEX usernames_at_most_one_primary_username_per_account_check
     ON usernames (account_id, is_primary)
     WHERE is_primary;
 
+-- account_id -> username index
+CREATE INDEX usernames_account_id_idx
+    ON usernames (account_id);
+
 
 -- 4 "emails" table
 -- ---------------------------------------------------------------------------
@@ -88,3 +92,7 @@ CREATE TABLE emails (
 CREATE UNIQUE INDEX emails_at_most_one_primary_email_per_account_check
     ON emails (account_id, is_primary)
     WHERE is_primary;
+
+-- account_id -> email index
+CREATE INDEX email_account_id_idx
+    ON emails (account_id);
