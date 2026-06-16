@@ -1,5 +1,6 @@
 use super::{HandlerError, HandlerResult};
 use crate::{
+    dto,
     handlers::{AuthenticationHandler, AuthorizationHandler, PersonalHandler},
     service::ServiceError,
     testutil::{TestCtx, random_email},
@@ -92,13 +93,23 @@ async fn test_handlers() -> HandlerResult<()> {
     // Add another email to the account.
     let new_email = random_email();
     PersonalHandler(ctx.state.clone())
-        .add_email(acc1_id, new_email.to_string())
+        .add_email(
+            acc1_id,
+            dto::request::Email {
+                email: new_email.to_string(),
+            },
+        )
         .await?;
 
     // Cannot add already-taken emails
     assert_matches!(
         PersonalHandler(ctx.state.clone())
-            .add_email(acc1_id, acc2_email.to_string())
+            .add_email(
+                acc1_id,
+                dto::request::Email {
+                    email: acc2_email.to_string()
+                }
+            )
             .await,
         Err(HandlerError::Service(ServiceError::EmailTaken))
     );
@@ -106,7 +117,12 @@ async fn test_handlers() -> HandlerResult<()> {
     // Try to add account2's email as primary mail
     assert_matches!(
         PersonalHandler(ctx.state.clone())
-            .set_primary_mail(acc1_id, acc2_email.to_string())
+            .set_primary_mail(
+                acc1_id,
+                dto::request::Email {
+                    email: acc2_email.to_string()
+                }
+            )
             .await,
         Err(HandlerError::Service(ServiceError::EmailNotFound))
     );
@@ -136,7 +152,12 @@ async fn test_handlers() -> HandlerResult<()> {
 
     // Change primary email.
     PersonalHandler(ctx.state.clone())
-        .set_primary_mail(acc1_id, new_email.to_string())
+        .set_primary_mail(
+            acc1_id,
+            dto::request::Email {
+                email: new_email.to_string(),
+            },
+        )
         .await?;
 
     {
@@ -161,13 +182,23 @@ async fn test_handlers() -> HandlerResult<()> {
 
     // Delete the old email.
     PersonalHandler(ctx.state.clone())
-        .delete_email(acc1_id, acc1_email.to_string())
+        .delete_email(
+            acc1_id,
+            dto::request::Email {
+                email: acc1_email.to_string(),
+            },
+        )
         .await?;
 
     // Cannot remove primary email.
     assert!(
         PersonalHandler(ctx.state.clone())
-            .delete_email(acc1_id, new_email.to_string())
+            .delete_email(
+                acc1_id,
+                dto::request::Email {
+                    email: new_email.to_string()
+                }
+            )
             .await
             .is_err()
     );

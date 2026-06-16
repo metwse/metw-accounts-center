@@ -107,6 +107,10 @@
 //! | Token scope is not [`TokenScope::Authenticate`] | [`HandlerError::Unauthorized`] |
 //! | JWT-related issue (triggered from TokenService) | [`HandlerError::Service`] |
 //!
+//! - Request validation happens at the handlers. Everything coming from the
+//!   user that requires validation *must be* a [`dto::request`] type or a JWT
+//!   string.
+//!
 //! [`handlers`]: service::handlers
 //!
 //! [`ServiceError`]: service::service::ServiceError
@@ -114,5 +118,6 @@
 //! [`HandlerError::Service`]: service::handlers::HandlerError::Service
 //!
 //! [`TokenScope::Authenticate`]: service::token::TokenScope::Authenticate
+//! [`dto::request`]: service::dto::request
 //!
 //! [`AuthenticationHandler::auth`]: service::handlers::AuthenticationHandler::auth

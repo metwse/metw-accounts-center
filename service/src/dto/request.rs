@@ -6,6 +6,14 @@ static USERNAME_REGEX_STR: &str = "^[a-z]([_.]?[a-z0-9])*$";
 static USERNAME_REGEX: LazyLock<regex::Regex> =
     LazyLock::new(|| regex::Regex::new(USERNAME_REGEX_STR).unwrap());
 
+fn validate_lowercase(s: &str) -> Result<(), validator::ValidationError> {
+    if s.bytes().all(|b| !b.is_ascii_uppercase()) {
+        Ok(())
+    } else {
+        Err(validator::ValidationError::new("must_be_lowercase"))
+    }
+}
+
 /// Sign up a new account.
 #[derive(Validate, Debug, Clone)]
 pub struct Signup {
@@ -13,7 +21,7 @@ pub struct Signup {
     #[validate(length(min = 2, max = 20), regex(path = *USERNAME_REGEX))]
     pub username: String,
     /// Email.
-    #[validate(email)]
+    #[validate(email, custom(function = validate_lowercase))]
     pub email: String,
     /// Password hashed client-side.
     #[validate(length(max = 128))]
@@ -40,7 +48,7 @@ pub struct LoginWithUsername {
 #[derive(Validate, Debug, Clone)]
 pub struct LoginWithEmail {
     /// Email.
-    #[validate(email)]
+    #[validate(email, custom(function = validate_lowercase))]
     pub email: String,
 
     /// Argon2-hashed password.
@@ -74,6 +82,14 @@ pub struct Keys {
     pub encrypted_master_key: Vec<u8>,
 }
 
+/// Request only containing an email.
+#[derive(Validate, Debug, Clone)]
+pub struct Email {
+    /// Email.
+    #[validate(email, custom(function = validate_lowercase))]
+    pub email: String,
+}
+
 #[cfg(test)]
 #[test]
 fn username_regex() {
@@ -94,5 +110,33 @@ fn username_regex() {
 
     for invalid in invalids {
         assert!(!(*USERNAME_REGEX).is_match(invalid));
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn email_validation() {
+    let valids = ["test@example.com", "another_email@example.com"];
+
+    let invalids = ["invalid.email", "NOUPPERCASE@example.com"];
+
+    for valid in valids {
+        assert!(
+            Email {
+                email: valid.into()
+            }
+            .validate()
+            .is_ok()
+        )
+    }
+
+    for invalid in invalids {
+        assert!(
+            Email {
+                email: invalid.into()
+            }
+            .validate()
+            .is_err()
+        )
     }
 }

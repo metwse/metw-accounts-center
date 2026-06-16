@@ -1,3 +1,5 @@
+use validator::Validate;
+
 use super::{HandlerError, HandlerResult};
 use crate::{
     dto,
@@ -33,7 +35,11 @@ impl PersonalHandler {
     /// Add a new email to the account. Sends verification code to requested
     /// email.
     #[tracing::instrument(skip(self))]
-    pub async fn add_email(self, id: AccountId, email: String) -> HandlerResult<()> {
+    pub async fn add_email(self, id: AccountId, email: dto::request::Email) -> HandlerResult<()> {
+        email.validate()?;
+
+        let email = email.email;
+
         if self.0.account_service.is_email_taken(email.clone()).await? {
             return Err(ServiceError::EmailTaken)?;
         }
@@ -58,7 +64,15 @@ impl PersonalHandler {
     ///
     /// Remove the email if it is not primary email.
     #[tracing::instrument(skip(self))]
-    pub async fn delete_email(self, id: AccountId, email: String) -> HandlerResult<()> {
+    pub async fn delete_email(
+        self,
+        id: AccountId,
+        email: dto::request::Email,
+    ) -> HandlerResult<()> {
+        email.validate()?;
+
+        let email = email.email;
+
         self.0
             .account_service
             .remove_email_if_not_primary(id, email)
@@ -74,8 +88,12 @@ impl PersonalHandler {
     pub async fn set_primary_mail(
         self,
         id: AccountId,
-        new_primary_email: String,
+        new_primary_email: dto::request::Email,
     ) -> HandlerResult<()> {
+        new_primary_email.validate()?;
+
+        let new_primary_email = new_primary_email.email;
+
         let Some(current_primary_email) = self.0.account_service.get_primary_email(id).await?
         else {
             return Err(HandlerError::UnexpectedError("account with no email"));

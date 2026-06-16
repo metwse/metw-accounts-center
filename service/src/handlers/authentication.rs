@@ -1,3 +1,5 @@
+use validator::Validate;
+
 use super::{HandlerError, HandlerResult};
 use crate::{
     dto,
@@ -30,6 +32,8 @@ impl AuthenticationHandler {
     /// POST `/signup`
     #[tracing::instrument(skip_all, fields(username = signup_dto.username, email = signup_dto.email))]
     pub async fn signup(self, signup_dto: dto::request::Signup) -> HandlerResult<AccountId> {
+        signup_dto.validate()?;
+
         let email = signup_dto.email.clone();
         let username = signup_dto.username.clone();
 
@@ -59,6 +63,8 @@ impl AuthenticationHandler {
         self,
         login_dto: dto::request::LoginWithUsername,
     ) -> HandlerResult<String> {
+        login_dto.validate()?;
+
         let account_id = self
             .0
             .account_service
@@ -74,6 +80,8 @@ impl AuthenticationHandler {
         self,
         login_dto: dto::request::LoginWithEmail,
     ) -> HandlerResult<String> {
+        login_dto.validate()?;
+
         let account_id = self.0.account_service.login_with_email(login_dto).await?;
 
         Ok(self.login(account_id))
