@@ -34,7 +34,7 @@ impl MailClient for MockMailClientImpl {
         let mut debug = self.mails.lock().await;
 
         let subject = template.subject();
-        let _body = template.body();
+        let _body = template.body("http://example.com/");
 
         debug!(%id, subject, ?template, "email to account");
 
@@ -44,6 +44,13 @@ impl MailClient for MockMailClientImpl {
 
 /// Mock CAPTCHA client implementation.
 pub struct MockCaptchaClientImpl;
+
+impl MockCaptchaClientImpl {
+    /// Creates a new mock CAPTCHA client, which accepts any request.
+    pub fn boxed_new() -> Box<dyn CaptchaClient> {
+        Box::new(Self)
+    }
+}
 
 #[async_trait]
 impl CaptchaClient for MockCaptchaClientImpl {

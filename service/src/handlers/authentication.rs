@@ -46,7 +46,6 @@ impl AuthenticationHandler {
         let template = mails::Template::Signup {
             username,
             signup_jwt,
-            callback_url: self.0.email_callback_url,
         };
 
         self.0.mail_client.send(email, account_id, template).await;

@@ -15,10 +15,14 @@ dotenvy = { workspace = true }
 
 service = { path = "../service/" }
 
+serde = { workspace = true, features = ["derive"] }
+envy = { workspace = true }
+
 # Client-specific utilities
 cf-turnstile = { version = "0.2.0", features = ["native-tls"], default-features = false }
 
 aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
+aws-credential-types = { version = "1.2.4" }
 aws-sdk-sesv2 = "1.123.0"
 
 [dev-dependencies]
