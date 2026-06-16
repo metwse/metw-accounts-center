@@ -143,6 +143,37 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
     Ok(username)
 }
 
+// Only one account should be created.
+pub async fn account_creation_data_race(
+    account_service: Arc<AccountService>,
+) -> ServiceResult<&'static str> {
+    let username = random_username();
+    let email = random_email();
+
+    let signup_dto = dto::request::Signup {
+        username: username.to_string(),
+        email: email.to_string(),
+        client_password_hash: "passwd".to_string(),
+        keys: dto::request::Keys {
+            identity_key: vec![1],
+            encrypted_private_key: vec![2],
+            encrypted_master_key: vec![3],
+        },
+    };
+
+    let mut signup_futures = Vec::with_capacity(16);
+
+    for _ in 0..16 {
+        signup_futures.push(account_service.signup(signup_dto.clone()));
+    }
+
+    let signup_results = futures_util::future::join_all(signup_futures).await;
+
+    assert!(signup_results.iter().filter(|res| res.is_ok()).count() == 1);
+
+    Ok(username)
+}
+
 pub async fn email_change(
     username: &'static str,
     account_service: Arc<AccountService>,

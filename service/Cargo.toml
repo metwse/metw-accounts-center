@@ -7,7 +7,7 @@ edition = "2024"
 tokio = { workspace = true, features = ["rt", "macros", "sync"] }
 async-trait = { workspace = true }
 
-sqlx = { workspace = true, features = ["chrono"]}
+sqlx = { workspace = true, features = ["chrono", "postgres"]}
 chrono = { workspace = true }
 redis = { workspace = true }
 

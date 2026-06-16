@@ -5,7 +5,6 @@ use thiserror::Error;
 #[allow(missing_docs)]
 pub enum RepoError {
     // The internal errors must be redacted before returning to the public.
-
     #[error("internal error: {0}")]
     Internal(&'static str),
 

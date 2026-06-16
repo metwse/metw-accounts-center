@@ -1786,6 +1786,7 @@ version = "0.0.0"
 dependencies = [
  "async-trait",
  "dotenvy",
+ "futures-util",
  "redis",
  "service",
  "sqlx",

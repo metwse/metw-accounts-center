@@ -17,6 +17,7 @@ service = { path = "../service/" }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["full"] }
+futures-util = { workspace = true }
 
 test-log = { workspace = true, features = ["trace"] }
 

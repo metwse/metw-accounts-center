@@ -57,7 +57,7 @@ impl Config {
     }
 
     /// Initialize the [`service`] [`State`] from config.
-    pub async fn boostrap(self) -> State {
+    pub async fn bootstrap(self) -> State {
         todo!()
     }
 }

@@ -2,15 +2,19 @@ mod accounts;
 mod token_revocation;
 
 use crate::{AccountRepoImpl, TokenRepoImpl};
-use accounts::{account_creation, email_change};
+use accounts::{account_creation, account_creation_data_race, email_change};
+use token_revocation::{token_revocation, token_revocation_data_race};
+
 use redis::aio::MultiplexedConnection;
 use service::{
-    repo::mock::{MockAccountRepoImpl, MockTokenRepoImpl},
-    service::AccountService,
+    repo::{
+        RepoResult,
+        mock::{MockAccountRepoImpl, MockTokenRepoImpl},
+    },
+    service::{AccountService, ServiceResult},
 };
 use sqlx::PgPool;
 use std::sync::Arc;
-use token_revocation::token_revocation;
 
 async fn default_db() -> PgPool {
     dotenvy::dotenv().ok();
@@ -32,48 +36,60 @@ async fn default_redis() -> MultiplexedConnection {
 
 #[tokio::test(flavor = "multi_thread")]
 #[test_log::test]
-async fn mock_account_creation() {
+async fn mock_account_creation() -> ServiceResult<()> {
     let account_service = Arc::new(AccountService::new(MockAccountRepoImpl::boxed_new()));
 
-    account_creation(account_service.clone()).await.unwrap();
-    let username1 = account_creation(account_service.clone()).await.unwrap();
+    account_creation_data_race(account_service.clone()).await?;
 
-    email_change(username1, account_service).await.unwrap();
+    account_creation(account_service.clone()).await?;
+    let username1 = account_creation(account_service.clone()).await?;
+
+    email_change(username1, account_service).await?;
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
 #[test_log::test]
 #[ignore]
-async fn db_account_creation() {
+async fn db_account_creation() -> ServiceResult<()> {
     let pool = default_db().await;
 
     let account_service = Arc::new(AccountService::new(AccountRepoImpl::boxed_new(
         pool.clone(),
     )));
 
-    account_creation(account_service.clone()).await.unwrap();
-    let username1 = account_creation(account_service.clone()).await.unwrap();
+    account_creation_data_race(account_service.clone()).await?;
 
-    email_change(username1, account_service).await.unwrap();
+    account_creation(account_service.clone()).await?;
+    let username1 = account_creation(account_service.clone()).await?;
+
+    email_change(username1, account_service).await?;
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
 #[test_log::test]
-async fn mock_token_revocation() {
-    let token_repo = MockTokenRepoImpl::boxed_new();
+async fn mock_token_revocation() -> RepoResult<()> {
+    token_revocation(MockTokenRepoImpl::boxed_new()).await?;
 
-    token_revocation(token_repo).await.unwrap();
+    token_revocation_data_race(MockTokenRepoImpl::boxed_new()).await?;
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
 #[test_log::test]
 #[ignore]
-async fn redis_token_revocation() {
+async fn redis_token_revocation() -> RepoResult<()> {
     let redis = default_redis().await;
 
     for _ in 0..16 {
-        let token_repo = TokenRepoImpl::boxed_new(redis.clone());
+        token_revocation(TokenRepoImpl::boxed_new(redis.clone())).await?;
 
-        token_revocation(token_repo).await.unwrap();
+        token_revocation_data_race(TokenRepoImpl::boxed_new(redis.clone())).await?;
     }
+
+    Ok(())
 }

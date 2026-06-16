@@ -1,4 +1,4 @@
-use std::time;
+use std::time::{self, Duration};
 
 use service::{
     repo::{RepoResult, TokenRepo},
@@ -35,6 +35,30 @@ pub async fn token_revocation(repo: Box<dyn TokenRepo>) -> RepoResult<()> {
         !repo
             .check_revocation(another_random_fingerprint.as_bytes())
             .await?
+    );
+
+    Ok(())
+}
+
+pub async fn token_revocation_data_race(repo: Box<dyn TokenRepo>) -> RepoResult<()> {
+    let random_fingerprint = random_username();
+
+    let mut token_revocation_futures = Vec::with_capacity(16);
+
+    for _ in 0..16 {
+        token_revocation_futures
+            .push(repo.check_and_revoke(random_fingerprint.as_bytes(), Duration::from_mins(1)));
+    }
+
+    let token_revocation_results = futures_util::future::join_all(token_revocation_futures).await;
+
+    // Accept the token only once.
+    assert!(
+        token_revocation_results
+            .iter()
+            .filter(|is_revoked| !is_revoked.as_ref().unwrap())
+            .count()
+            == 1
     );
 
     Ok(())

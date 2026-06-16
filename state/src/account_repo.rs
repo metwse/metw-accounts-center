@@ -56,7 +56,7 @@ impl AccountRepo for AccountRepoImpl {
         let username = sqlx::query_scalar!(
             "SELECT username FROM usernames
                 WHERE account_id = $1 AND is_primary = true",
-            i64::from(id)
+            id as _
         )
         .fetch_optional(&self.pool)
         .await;
@@ -68,7 +68,7 @@ impl AccountRepo for AccountRepoImpl {
         let usernames = sqlx::query_scalar!(
             "SELECT username FROM usernames
                 WHERE account_id = $1 AND is_primary = false AND expires_at IS NULL",
-            i64::from(id)
+            id as _
         )
         .fetch_all(&self.pool)
         .await;
@@ -79,7 +79,7 @@ impl AccountRepo for AccountRepoImpl {
     async fn get_primary_email(&self, id: AccountId) -> RepoResult<Option<String>> {
         let email = sqlx::query_scalar!(
             "SELECT email FROM emails WHERE account_id = $1 AND is_primary = true",
-            i64::from(id)
+            id as _
         )
         .fetch_optional(&self.pool)
         .await;
@@ -90,7 +90,7 @@ impl AccountRepo for AccountRepoImpl {
     async fn get_secondary_emails(&self, id: AccountId) -> RepoResult<Vec<String>> {
         let emails = sqlx::query_scalar!(
             "SELECT email FROM emails WHERE account_id = $1 AND is_primary = false",
-            i64::from(id)
+            id as _
         )
         .fetch_all(&self.pool)
         .await;
@@ -103,7 +103,7 @@ impl AccountRepo for AccountRepoImpl {
             dto::repo::Keys,
             "SELECT identity_key, encrypted_private_key, encrypted_master_key FROM accounts
                 WHERE id = $1",
-            i64::from(id)
+            id as _
         )
         .fetch_optional(&self.pool)
         .await;
@@ -116,7 +116,7 @@ impl AccountRepo for AccountRepoImpl {
             entity::AccountFlags,
             "SELECT id, is_verified FROM account_flags
                 WHERE id = $1",
-            i64::from(id)
+            id as _
         )
         .fetch_optional(&self.pool)
         .await;
@@ -137,7 +137,7 @@ impl AccountRepo for AccountRepoImpl {
                 WHERE account_id = $1 AND is_primary = true AND email = $2 AND
                       EXISTS(SELECT * FROM emails WHERE
                              account_id = $1 AND is_primary = false AND email = $3)",
-            i64::from(id),
+            id as _,
             current_primary_email,
             new_primary_email
         )
@@ -150,12 +150,9 @@ impl AccountRepo for AccountRepoImpl {
 
         let result2 = sqlx::query!(
             "UPDATE emails SET is_primary = true
-                WHERE account_id = $1 AND is_primary = false AND email = $2 AND
-                      EXISTS(SELECT * FROM emails WHERE
-                             account_id = $1 AND is_primary = false AND email = $3)",
-            i64::from(id),
-            new_primary_email,
-            current_primary_email,
+                WHERE account_id = $1 AND is_primary = false AND email = $2",
+            id as _,
+            new_primary_email
         )
         .execute(&mut *tx)
         .await?;
@@ -173,7 +170,7 @@ impl AccountRepo for AccountRepoImpl {
         let result = sqlx::query!(
             "DELETE FROM emails
                 WHERE account_id = $1 AND is_primary = false AND email = $2",
-            i64::from(id),
+            id as _,
             email
         )
         .execute(&self.pool)
@@ -209,7 +206,7 @@ impl AccountRepo for AccountRepoImpl {
     async fn is_email_taken_by(&self, id: AccountId, email: &str) -> RepoResult<bool> {
         let is_email_taken = sqlx::query_scalar!(
             "SELECT EXISTS(SELECT * FROM emails WHERE account_id = $1 AND email = $2)",
-            i64::from(id),
+            id as _,
             email
         )
         .fetch_one(&self.pool)
@@ -251,7 +248,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
                 VALUES ($1, $2, $3, $4, $5)
                 ON CONFLICT (id)
                 DO UPDATE SET password_hash = $2, identity_key = $3, encrypted_master_key = $4, encrypted_private_key = $5",
-            i64::from(id),
+            id as _,
             password_hash,
             keys.identity_key,
             keys.encrypted_master_key,
@@ -266,7 +263,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
     async fn insert_default_flags(&mut self, id: AccountId) -> RepoResult<()> {
         sqlx::query!(
             "INSERT INTO account_flags (id, is_verified) VALUES ($1, false)",
-            i64::from(id)
+            id as _
         )
         .execute(&mut *self.tx)
         .await?;
@@ -278,7 +275,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         sqlx::query!(
             "INSERT INTO emails (account_id, email, is_primary)
                 VALUES ($1, $2, $3)",
-            i64::from(id),
+            id as _,
             email,
             is_primary
         )
@@ -297,7 +294,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         sqlx::query!(
             "INSERT INTO usernames (account_id, username, is_primary)
                 VALUES ($1, $2, $3)",
-            i64::from(id),
+            id as _,
             username,
             is_primary
         )
@@ -311,7 +308,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         sqlx::query!(
             "UPDATE account_flags SET is_verified = $1 WHERE id = $2",
             is_verified,
-            i64::from(id)
+            id as _
         )
         .execute(&mut *self.tx)
         .await?;

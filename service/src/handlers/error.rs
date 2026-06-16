@@ -10,4 +10,7 @@ pub enum HandlerError {
 
     #[error("unauthorized")]
     Unauthorized,
+
+    #[error("unexpected error: {0}")]
+    UnexpectedError(&'static str),
 }
