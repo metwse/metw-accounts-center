@@ -6,15 +6,21 @@ use tracing::{error, trace};
 /// Mail client for sending emails.
 pub struct MailClientImpl {
     client: sesv2::Client,
-    from_email_address: String,
+    from_address: String,
+    callback_url: String,
 }
 
 impl MailClientImpl {
     /// Creates a new Amazon SES v2 mail client.
-    pub fn boxed_new(client: sesv2::Client, from_email_address: String) -> Box<dyn MailClient> {
+    pub fn boxed_new(
+        client: sesv2::Client,
+        from_address: String,
+        callback_url: String,
+    ) -> Box<dyn MailClient> {
         Box::new(Self {
             client,
-            from_email_address,
+            from_address,
+            callback_url,
         })
     }
 }
@@ -37,7 +43,7 @@ impl MailClient for MailClientImpl {
         };
 
         let Ok(body_content) = sesv2::types::Content::builder()
-            .data(template.body())
+            .data(template.body(&self.callback_url))
             .charset("UTF-8")
             .build()
         else {
@@ -56,7 +62,7 @@ impl MailClient for MailClientImpl {
         let result = self
             .client
             .send_email()
-            .from_email_address(&self.from_email_address)
+            .from_email_address(&self.from_address)
             .destination(dest)
             .content(email_content)
             .send()

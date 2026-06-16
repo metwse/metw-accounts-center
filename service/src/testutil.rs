@@ -1,11 +1,15 @@
 use crate::{
+    client::mock::{Mails, MockCaptchaClientImpl, MockMailClientImpl},
     dto,
     handlers::{AuthenticationHandler, HandlerResult},
     id::{AccountId, snowflake},
+    repo::mock::{MockAccountRepoImpl, MockTokenRepoImpl},
+    service::{AccountService, TokenService},
     state::State,
     util::mails,
 };
-use std::cmp::max;
+use std::{cmp::max, sync::Arc};
+use tokio::sync::Mutex;
 
 /// Generate a random username string.
 pub fn random_username() -> &'static str {
@@ -27,13 +31,26 @@ pub fn random_email() -> &'static str {
 #[allow(missing_docs)]
 pub struct TestCtx {
     pub state: State,
+    pub emails: Arc<Mutex<Mails>>,
 }
 
 impl Default for TestCtx {
     fn default() -> Self {
-        let state = State::new_mock();
+        let account_service = AccountService::new(MockAccountRepoImpl::boxed_new());
+        let token_service =
+            TokenService::new(MockTokenRepoImpl::boxed_new(), b"secret123".to_vec());
+        let (emails, mail_client) = MockMailClientImpl::boxed_new();
+        let capcha_client = MockCaptchaClientImpl::boxed_new();
 
-        Self { state }
+        Self {
+            state: State {
+                account_service: account_service.into(),
+                token_service: token_service.into(),
+                mail_client: mail_client.into(),
+                captcha_client: capcha_client.into(),
+            },
+            emails,
+        }
     }
 }
 
@@ -100,7 +117,7 @@ impl TestCtx {
 
     /// Get the last email sent to the account.
     pub async fn last_email(&self, account_id: AccountId) -> mails::Template {
-        let emails = self.state.emails.lock().await;
+        let emails = self.emails.lock().await;
         let mailbox = emails.get(&account_id).unwrap();
 
         mailbox.last().unwrap().clone()

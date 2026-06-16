@@ -1,7 +1,7 @@
 mod accounts;
 mod token_revocation;
 
-use crate::{AccountRepoImpl, CaptchaClientImpl, TokenRepoImpl};
+use crate::{AccountRepoImpl, CaptchaClientImpl, Config, TokenRepoImpl};
 use accounts::{account_creation, account_creation_data_race, email_change};
 use token_revocation::{token_revocation, token_revocation_data_race};
 
@@ -116,4 +116,23 @@ async fn cloudflare_captcha() {
             .validate("123".into())
             .await
     );
+}
+
+// Test validity of .env.example
+#[test]
+fn config_from_example_env() {
+    dotenvy::from_path(".env.example").unwrap();
+
+    Config::from_env();
+}
+
+// Bootstrap all services and clients, for testing .env
+#[tokio::test]
+#[ignore]
+async fn state_from_env() {
+    dotenvy::dotenv().unwrap();
+
+    let config = Config::from_env();
+
+    config.bootstrap().await;
 }
