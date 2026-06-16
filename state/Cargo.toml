@@ -9,11 +9,14 @@ async-trait = { workspace = true }
 sqlx = { workspace = true, features = ["postgres", "chrono", "macros", "runtime-tokio"] }
 redis = { workspace = true, features = ["aio", "tokio-comp"] }
 
-dotenvy = { workspace = true }
-
 tracing = { workspace = true }
 
+dotenvy = { workspace = true }
+
 service = { path = "../service/" }
+
+# Client-specific utilities
+cf-turnstile = "0.2.0"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["full"] }

@@ -12,12 +12,6 @@ impl AccountService {
         Self { repo }
     }
 
-    /// Returns the underlying repository.
-    #[cfg(any(feature = "testutil", test))]
-    pub fn repo(&self) -> &dyn AccountRepo {
-        self.repo.as_ref()
-    }
-
     /// Signup a new account
     #[tracing::instrument(skip_all)]
     pub async fn signup(&self, signup_dto: dto::request::Signup) -> ServiceResult<AccountId> {
