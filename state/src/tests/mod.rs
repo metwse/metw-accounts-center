@@ -16,8 +16,14 @@ use service::{
 use sqlx::PgPool;
 use std::sync::Arc;
 
+// NOTE: Tests that reading environment variables MUST USE serial_test::serial.
+// This is because different tests reading different .env files causes a data
+// race.
+//
+// TODO: Write a draft about this problem.
+
 async fn default_db() -> PgPool {
-    dotenvy::dotenv().ok();
+    dotenvy::dotenv_override().ok();
 
     PgPool::connect(&std::env::var("DATABASE_URL").unwrap())
         .await
@@ -25,7 +31,7 @@ async fn default_db() -> PgPool {
 }
 
 async fn default_redis() -> MultiplexedConnection {
-    dotenvy::dotenv().ok();
+    dotenvy::dotenv_override().ok();
 
     redis::Client::open(std::env::var("REDIS_URL").unwrap())
         .unwrap()
@@ -52,6 +58,7 @@ async fn mock_account_creation() -> ServiceResult<()> {
 #[tokio::test(flavor = "multi_thread")]
 #[test_log::test]
 #[ignore]
+#[serial_test::serial]
 async fn db_account_creation() -> ServiceResult<()> {
     let pool = default_db().await;
 
@@ -82,6 +89,7 @@ async fn mock_token_revocation() -> RepoResult<()> {
 #[tokio::test(flavor = "multi_thread")]
 #[test_log::test]
 #[ignore]
+#[serial_test::serial]
 async fn redis_token_revocation() -> RepoResult<()> {
     let redis = default_redis().await;
 
@@ -120,8 +128,9 @@ async fn cloudflare_captcha() {
 
 // Test validity of .env.example
 #[test]
+#[serial_test::serial]
 fn config_from_example_env() {
-    dotenvy::from_path(".env.example").unwrap();
+    dotenvy::from_path_override(".env.example").unwrap();
 
     Config::from_env();
 }
@@ -129,8 +138,9 @@ fn config_from_example_env() {
 // Bootstrap all services and clients, for testing .env
 #[tokio::test]
 #[ignore]
+#[serial_test::serial]
 async fn state_from_env() {
-    dotenvy::dotenv().unwrap();
+    dotenvy::dotenv_override().unwrap();
 
     let config = Config::from_env();
 

@@ -3055,6 +3055,7 @@ dependencies = [
  "futures-util",
  "redis",
  "serde",
+ "serial_test",
  "service",
  "sqlx",
  "test-log",
