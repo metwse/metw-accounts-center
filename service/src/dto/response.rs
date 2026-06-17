@@ -27,8 +27,8 @@ pub struct Keys {
     pub encrypted_master_key: Vec<u8>,
 }
 
-impl From<repo::Keys> for Keys {
-    fn from(value: repo::Keys) -> Self {
+impl From<repo::OwnedKeys> for Keys {
+    fn from(value: repo::OwnedKeys) -> Self {
         Self {
             identity_key: value.identity_key,
             encrypted_private_key: value.encrypted_private_key,

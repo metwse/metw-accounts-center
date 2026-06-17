@@ -26,9 +26,9 @@ impl AccountRepo for AccountRepoImpl {
         ))
     }
 
-    async fn get_login_by_email(&self, email: &str) -> RepoResult<Option<dto::repo::Login>> {
+    async fn get_login_by_email(&self, email: &str) -> RepoResult<Option<dto::repo::OwnedLogin>> {
         let login = sqlx::query_as!(
-            dto::repo::Login,
+            dto::repo::OwnedLogin,
             "SELECT id, password_hash FROM accounts
                 WHERE id = (SELECT account_id FROM emails WHERE email = $1)",
             email
@@ -39,9 +39,12 @@ impl AccountRepo for AccountRepoImpl {
         Ok(login?)
     }
 
-    async fn get_login_by_username(&self, username: &str) -> RepoResult<Option<dto::repo::Login>> {
+    async fn get_login_by_username(
+        &self,
+        username: &str,
+    ) -> RepoResult<Option<dto::repo::OwnedLogin>> {
         let login = sqlx::query_as!(
-            dto::repo::Login,
+            dto::repo::OwnedLogin,
             "SELECT id, password_hash FROM accounts
                 WHERE id = (SELECT account_id FROM usernames WHERE username = $1 AND expires_at IS NULL)",
             username
@@ -98,9 +101,9 @@ impl AccountRepo for AccountRepoImpl {
         Ok(emails?)
     }
 
-    async fn get_keys(&self, id: AccountId) -> RepoResult<Option<dto::repo::Keys>> {
+    async fn get_keys(&self, id: AccountId) -> RepoResult<Option<dto::repo::OwnedKeys>> {
         let keys = sqlx::query_as!(
-            dto::repo::Keys,
+            dto::repo::OwnedKeys,
             "SELECT identity_key, encrypted_private_key, encrypted_master_key FROM accounts
                 WHERE id = $1",
             id as _

@@ -37,7 +37,7 @@ impl AuthenticationHandler {
         let email = signup_dto.email.clone();
         let username = signup_dto.username.clone();
 
-        let account_id = self.0.account_service.signup(signup_dto).await?;
+        let account_id = self.0.account_service.signup(&signup_dto).await?;
 
         let signup_jwt = self.0.token_service.sign(&Token::new(
             account_id,
@@ -68,7 +68,7 @@ impl AuthenticationHandler {
         let account_id = self
             .0
             .account_service
-            .login_with_username(login_dto)
+            .login_with_username(&login_dto)
             .await?;
 
         Ok(self.login(account_id))
@@ -82,7 +82,7 @@ impl AuthenticationHandler {
     ) -> HandlerResult<String> {
         login_dto.validate()?;
 
-        let account_id = self.0.account_service.login_with_email(login_dto).await?;
+        let account_id = self.0.account_service.login_with_email(&login_dto).await?;
 
         Ok(self.login(account_id))
     }

@@ -14,7 +14,7 @@ impl AccountService {
 
     /// Signup a new account
     #[tracing::instrument(skip_all)]
-    pub async fn signup(&self, signup_dto: dto::request::Signup) -> ServiceResult<AccountId> {
+    pub async fn signup(&self, signup_dto: &dto::request::Signup) -> ServiceResult<AccountId> {
         if self.repo.is_username_taken(&signup_dto.username).await? {
             return Err(ServiceError::UsernameTaken);
         }
@@ -23,14 +23,14 @@ impl AccountService {
             return Err(ServiceError::EmailTaken);
         }
 
-        let password_hash = password::hash(signup_dto.client_password_hash).await;
+        let password_hash = password::hash(&signup_dto.client_password_hash).await;
 
         let mut transaction = self.repo.begin_transaction().await?;
 
         let keys = dto::repo::Keys {
-            identity_key: signup_dto.keys.identity_key,
-            encrypted_private_key: signup_dto.keys.encrypted_private_key,
-            encrypted_master_key: signup_dto.keys.encrypted_master_key,
+            identity_key: &signup_dto.keys.identity_key,
+            encrypted_private_key: &signup_dto.keys.encrypted_private_key,
+            encrypted_master_key: &signup_dto.keys.encrypted_master_key,
         };
 
         let id = AccountId::unique();
@@ -53,13 +53,13 @@ impl AccountService {
     /// For use with login.
     async fn login(
         &self,
-        client_password_hash: String,
-        login: dto::repo::Login,
+        client_password_hash: &str,
+        login: &dto::repo::OwnedLogin,
     ) -> ServiceResult<AccountId> {
         if let Some(flags) = self.repo.get_account_flags(login.id).await?
             && flags.is_verified
         {
-            if password::check(client_password_hash, login.password_hash).await {
+            if password::check(client_password_hash, &login.password_hash).await {
                 Ok(login.id)
             } else {
                 Err(ServiceError::InvalidCredentials)
@@ -73,20 +73,20 @@ impl AccountService {
     #[tracing::instrument(skip_all)]
     pub async fn login_with_email(
         &self,
-        credentials: dto::request::LoginWithEmail,
+        credentials: &dto::request::LoginWithEmail,
     ) -> ServiceResult<AccountId> {
         let Some(login) = self.repo.get_login_by_email(&credentials.email).await? else {
             return Err(ServiceError::InvalidCredentials);
         };
 
-        self.login(credentials.client_password_hash, login).await
+        self.login(&credentials.client_password_hash, &login).await
     }
 
     /// Log into the account
     #[tracing::instrument(skip_all)]
     pub async fn login_with_username(
         &self,
-        credentials: dto::request::LoginWithUsername,
+        credentials: &dto::request::LoginWithUsername,
     ) -> ServiceResult<AccountId> {
         let Some(login) = self
             .repo
@@ -96,7 +96,7 @@ impl AccountService {
             return Err(ServiceError::InvalidCredentials);
         };
 
-        self.login(credentials.client_password_hash, login).await
+        self.login(&credentials.client_password_hash, &login).await
     }
 
     /// Fetch the account details.
@@ -128,13 +128,13 @@ impl AccountService {
     }
 
     /// Wheter or not the username has been taken.
-    pub async fn is_username_taken(&self, username: String) -> ServiceResult<bool> {
-        Ok(self.repo.is_username_taken(&username).await?)
+    pub async fn is_username_taken(&self, username: &str) -> ServiceResult<bool> {
+        Ok(self.repo.is_username_taken(username).await?)
     }
 
     /// Wheter or not the email has been taken.
-    pub async fn is_email_taken(&self, email: String) -> ServiceResult<bool> {
-        Ok(self.repo.is_email_taken(&email).await?)
+    pub async fn is_email_taken(&self, email: &str) -> ServiceResult<bool> {
+        Ok(self.repo.is_email_taken(email).await?)
     }
 
     /// Remove a secondary email.
@@ -142,9 +142,9 @@ impl AccountService {
     pub async fn remove_email_if_not_primary(
         &self,
         id: AccountId,
-        email: String,
+        email: &str,
     ) -> ServiceResult<()> {
-        if self.repo.remove_email_if_not_primary(id, &email).await? {
+        if self.repo.remove_email_if_not_primary(id, email).await? {
             Ok(())
         } else {
             Err(ServiceError::CannotDeletePrimaryEmail)
@@ -153,8 +153,8 @@ impl AccountService {
 
     /// Returns true if the email has been taken by the given account.
     #[tracing::instrument(skip_all, fields(id))]
-    pub async fn is_email_taken_by(&self, id: AccountId, email: String) -> ServiceResult<bool> {
-        Ok(self.repo.is_email_taken_by(id, &email).await?)
+    pub async fn is_email_taken_by(&self, id: AccountId, email: &str) -> ServiceResult<bool> {
+        Ok(self.repo.is_email_taken_by(id, email).await?)
     }
 
     /// Primary mail of the account.
@@ -165,10 +165,10 @@ impl AccountService {
 
     /// Add the email as a secondary email to the account.
     #[tracing::instrument(skip_all, fields(id))]
-    pub async fn auth_add_email(&self, id: AccountId, email: String) -> ServiceResult<()> {
+    pub async fn auth_add_email(&self, id: AccountId, email: &str) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
         transaction
-            .add_email(id, &email, false)
+            .add_email(id, email, false)
             .await
             .map_err(|_| ServiceError::EmailAddFailed)?;
         transaction.commit().await?;
@@ -181,12 +181,12 @@ impl AccountService {
     pub async fn auth_change_primary_email(
         &self,
         id: AccountId,
-        current_primary_email: String,
-        new_primary_email: String,
+        current_primary_email: &str,
+        new_primary_email: &str,
     ) -> ServiceResult<()> {
         if self
             .repo
-            .set_primary_email_if_current_is(id, &current_primary_email, &new_primary_email)
+            .set_primary_email_if_current_is(id, current_primary_email, new_primary_email)
             .await?
         {
             Ok(())
@@ -197,10 +197,10 @@ impl AccountService {
 
     /// Complete signup by adding the email and activating the account.
     #[tracing::instrument(skip_all, fields(id))]
-    pub async fn auth_complete_signup(&self, id: AccountId, email: String) -> ServiceResult<()> {
+    pub async fn auth_complete_signup(&self, id: AccountId, email: &str) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
         transaction
-            .add_email(id, &email, true)
+            .add_email(id, email, true)
             .await
             .map_err(|_| ServiceError::SignupCompleteFailed)?;
         transaction.set_verified_flag(id, true).await?;

@@ -47,41 +47,33 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
 
     // Sign up the account. User cannot log into the account as it is not
     // verified.
-    assert!(
-        !account_service
-            .is_username_taken(username.to_string())
-            .await?
-    );
-    assert!(!account_service.is_email_taken(email.to_string()).await?);
-    let account_id = account_service.signup(signup_dto.clone()).await?;
-    assert!(
-        account_service
-            .is_username_taken(username.to_string())
-            .await?
-    );
-    assert!(!account_service.is_email_taken(email.to_string()).await?);
+    assert!(!account_service.is_username_taken(username).await?);
+    assert!(!account_service.is_email_taken(email).await?);
+    let account_id = account_service.signup(&signup_dto).await?;
+    assert!(account_service.is_username_taken(username).await?);
+    assert!(!account_service.is_email_taken(email).await?);
 
     // We will not able to activate this account as the email will be taken
     // from the other account.
     signup_dto.username = username2.to_string();
-    let taken_email_cannot_verify_account_id = account_service.signup(signup_dto.clone()).await?;
+    let taken_email_cannot_verify_account_id = account_service.signup(&signup_dto).await?;
 
     signup_dto.email = another_email.to_string();
     assert_matches!(
-        account_service.signup(signup_dto.clone()).await,
+        account_service.signup(&signup_dto).await,
         Err(ServiceError::UsernameTaken)
     );
 
     assert_matches!(
         account_service
-            .login_with_email(login_with_email_dto.clone())
+            .login_with_email(&login_with_email_dto)
             .await,
         Err(ServiceError::InvalidCredentials)
     );
 
     assert_matches!(
         account_service
-            .login_with_username(login_with_username_dto.clone())
+            .login_with_username(&login_with_username_dto)
             .await,
         Err(ServiceError::AccountNotVerified)
     );
@@ -89,25 +81,25 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
     // Complete sign up and enable the account. Now user can log into its
     // account.
     account_service
-        .auth_complete_signup(account_id, email.to_string())
+        .auth_complete_signup(account_id, email)
         .await?;
-    assert!(account_service.is_email_taken(email.to_string()).await?);
+    assert!(account_service.is_email_taken(email).await?);
 
     assert!(
         account_service
-            .login_with_email(login_with_email_dto)
+            .login_with_email(&login_with_email_dto)
             .await?
             == account_id
     );
     assert!(
         account_service
-            .login_with_username(login_with_username_dto)
+            .login_with_username(&login_with_username_dto)
             .await?
             == account_id
     );
     assert_matches!(
         account_service
-            .login_with_username(login_with_incorrect_password)
+            .login_with_username(&login_with_incorrect_password)
             .await,
         Err(ServiceError::InvalidCredentials)
     );
@@ -116,7 +108,7 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
     signup_dto.email = email.to_string();
     signup_dto.username = another_username.to_string();
     assert_matches!(
-        account_service.signup(signup_dto.clone()).await,
+        account_service.signup(&signup_dto).await,
         Err(ServiceError::EmailTaken)
     );
 
@@ -124,7 +116,7 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
     // will be garbage-collected.
     assert_matches!(
         account_service
-            .auth_complete_signup(taken_email_cannot_verify_account_id, email.to_string())
+            .auth_complete_signup(taken_email_cannot_verify_account_id, email)
             .await,
         Err(ServiceError::SignupCompleteFailed)
     );
@@ -164,7 +156,7 @@ pub async fn account_creation_data_race(
     let mut signup_futures = Vec::with_capacity(16);
 
     for _ in 0..16 {
-        signup_futures.push(account_service.signup(signup_dto.clone()));
+        signup_futures.push(account_service.signup(&signup_dto));
     }
 
     let signup_results = futures_util::future::join_all(signup_futures).await;
@@ -179,7 +171,7 @@ pub async fn email_change(
     account_service: Arc<AccountService>,
 ) -> ServiceResult<()> {
     let account_id = account_service
-        .login_with_username(dto::request::LoginWithUsername {
+        .login_with_username(&dto::request::LoginWithUsername {
             username: username.to_string(),
             client_password_hash: "passwd".to_string(),
         })
@@ -194,26 +186,18 @@ pub async fn email_change(
     let email3 = random_email();
 
     // Add the email.
-    account_service
-        .auth_add_email(account_id, email2.to_string())
-        .await?;
+    account_service.auth_add_email(account_id, email2).await?;
 
     // Adding the same email failed because we already added one.
     assert_matches!(
-        account_service
-            .auth_add_email(account_id, email2.to_string())
-            .await,
+        account_service.auth_add_email(account_id, email2).await,
         Err(ServiceError::EmailAddFailed)
     );
 
     // email3 is not added yet.
     assert_matches!(
         account_service
-            .auth_change_primary_email(
-                account_id,
-                current_primary_email.clone(),
-                email3.to_string()
-            )
+            .auth_change_primary_email(account_id, &current_primary_email, email3)
             .await,
         Err(ServiceError::ChangePrimaryEmailFailed)
     );
@@ -221,11 +205,7 @@ pub async fn email_change(
     // email2 is not primary.
     assert_matches!(
         account_service
-            .auth_change_primary_email(
-                account_id,
-                email2.to_string(),
-                current_primary_email.clone(),
-            )
+            .auth_change_primary_email(account_id, email2, &current_primary_email,)
             .await,
         Err(ServiceError::ChangePrimaryEmailFailed)
     );
@@ -233,37 +213,31 @@ pub async fn email_change(
     // Try to remove current primary email.
     assert_matches!(
         account_service
-            .remove_email_if_not_primary(account_id, current_primary_email.clone())
+            .remove_email_if_not_primary(account_id, &current_primary_email)
             .await,
         Err(ServiceError::CannotDeletePrimaryEmail)
     );
 
     // Set the email2 primary.
     account_service
-        .auth_change_primary_email(
-            account_id,
-            current_primary_email.clone(),
-            email2.to_string(),
-        )
+        .auth_change_primary_email(account_id, &current_primary_email, email2)
         .await?;
 
-    account_service
-        .auth_add_email(account_id, email3.to_string())
-        .await?;
+    account_service.auth_add_email(account_id, email3).await?;
 
     // Remove the old primary email.
     account_service
-        .remove_email_if_not_primary(account_id, current_primary_email.clone())
+        .remove_email_if_not_primary(account_id, &current_primary_email)
         .await?;
 
     assert!(
         !account_service
-            .is_email_taken_by(account_id, current_primary_email)
+            .is_email_taken_by(account_id, &current_primary_email)
             .await?
     );
     assert!(
         account_service
-            .is_email_taken_by(account_id, email3.to_string())
+            .is_email_taken_by(account_id, email3)
             .await?
     );
 

@@ -40,7 +40,7 @@ impl PersonalHandler {
 
         let email = email.email;
 
-        if self.0.account_service.is_email_taken(email.clone()).await? {
+        if self.0.account_service.is_email_taken(&email).await? {
             return Err(ServiceError::EmailTaken)?;
         }
 
@@ -75,7 +75,7 @@ impl PersonalHandler {
 
         self.0
             .account_service
-            .remove_email_if_not_primary(id, email)
+            .remove_email_if_not_primary(id, &email)
             .await?;
 
         Ok(())
@@ -102,7 +102,7 @@ impl PersonalHandler {
         if !self
             .0
             .account_service
-            .is_email_taken_by(id, new_primary_email.clone())
+            .is_email_taken_by(id, &new_primary_email)
             .await?
         {
             return Err(ServiceError::EmailNotFound)?;

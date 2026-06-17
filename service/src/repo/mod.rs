@@ -22,12 +22,15 @@ pub trait AccountRepo: Send + Sync {
     ///
     /// Returns Argon2-hashed password with account id. Higher layers shall do
     /// hash verifications.
-    async fn get_login_by_email(&self, email: &str) -> RepoResult<Option<dto::repo::Login>>;
+    async fn get_login_by_email(&self, email: &str) -> RepoResult<Option<dto::repo::OwnedLogin>>;
 
     /// Get password by username.
     ///
     /// The behavior is exactly the same with `get_login_by_email`.
-    async fn get_login_by_username(&self, username: &str) -> RepoResult<Option<dto::repo::Login>>;
+    async fn get_login_by_username(
+        &self,
+        username: &str,
+    ) -> RepoResult<Option<dto::repo::OwnedLogin>>;
 
     /// Get primary username if, exists.
     ///
@@ -53,7 +56,7 @@ pub trait AccountRepo: Send + Sync {
     async fn get_secondary_emails(&self, id: AccountId) -> RepoResult<Vec<String>>;
 
     /// Get account keys - the key bundle of the account.
-    async fn get_keys(&self, id: AccountId) -> RepoResult<Option<dto::repo::Keys>>;
+    async fn get_keys(&self, id: AccountId) -> RepoResult<Option<dto::repo::OwnedKeys>>;
 
     /// Get account flags.
     async fn get_account_flags(&self, id: AccountId) -> RepoResult<Option<entity::AccountFlags>>;

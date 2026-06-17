@@ -33,11 +33,11 @@ impl AccountRepo for MockAccountRepoImpl {
         }))
     }
 
-    async fn get_login_by_email(&self, email: &str) -> RepoResult<Option<dto::repo::Login>> {
+    async fn get_login_by_email(&self, email: &str) -> RepoResult<Option<dto::repo::OwnedLogin>> {
         let state = self.lock_state().await;
 
         if let Some(email_entity) = state.emails.get(email) {
-            Ok(Some(dto::repo::Login {
+            Ok(Some(dto::repo::OwnedLogin {
                 id: email_entity.account_id,
                 password_hash: state.accounts[&email_entity.account_id]
                     .password_hash
@@ -48,13 +48,16 @@ impl AccountRepo for MockAccountRepoImpl {
         }
     }
 
-    async fn get_login_by_username(&self, username: &str) -> RepoResult<Option<dto::repo::Login>> {
+    async fn get_login_by_username(
+        &self,
+        username: &str,
+    ) -> RepoResult<Option<dto::repo::OwnedLogin>> {
         let state = self.lock_state().await;
 
         if let Some(username_entity) = state.usernames.get(username)
             && username_entity.expires_at.is_none()
         {
-            Ok(Some(dto::repo::Login {
+            Ok(Some(dto::repo::OwnedLogin {
                 id: username_entity.account_id,
                 password_hash: state.accounts[&username_entity.account_id]
                     .password_hash
@@ -120,11 +123,11 @@ impl AccountRepo for MockAccountRepoImpl {
         Ok(secondary_emails)
     }
 
-    async fn get_keys(&self, id: AccountId) -> RepoResult<Option<dto::repo::Keys>> {
+    async fn get_keys(&self, id: AccountId) -> RepoResult<Option<dto::repo::OwnedKeys>> {
         let state = self.lock_state().await;
 
         if let Some(account_entity) = state.accounts.get(&id) {
-            Ok(Some(dto::repo::Keys {
+            Ok(Some(dto::repo::OwnedKeys {
                 identity_key: account_entity.identity_key.clone(),
                 encrypted_private_key: account_entity.encrypted_private_key.clone(),
                 encrypted_master_key: account_entity.encrypted_master_key.clone(),
@@ -246,9 +249,9 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         account_entity.id = id;
 
         account_entity.password_hash = password_hash.to_string();
-        account_entity.identity_key = keys.identity_key.clone();
-        account_entity.encrypted_private_key = keys.encrypted_private_key.clone();
-        account_entity.encrypted_master_key = keys.encrypted_master_key.clone();
+        account_entity.identity_key = keys.identity_key.to_vec();
+        account_entity.encrypted_private_key = keys.encrypted_private_key.to_vec();
+        account_entity.encrypted_master_key = keys.encrypted_master_key.to_vec();
 
         Ok(())
     }
