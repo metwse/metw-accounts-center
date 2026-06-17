@@ -42,7 +42,7 @@ impl JsonWebSignature {
 
         let payload = biscuit::ClaimsSet::<PrivateClaims> {
             registered: biscuit::RegisteredClaims {
-                expiry: Some((now + token.valid_for).into()),
+                expiry: Some((now + token.lifetime).into()),
                 not_before: Some(now.into()),
                 issued_at: Some(now.into()),
                 ..Default::default()
@@ -101,18 +101,14 @@ impl JsonWebSignature {
         let payload = token.payload().unwrap();
         let expiry = *payload.registered.expiry.unwrap();
 
-        let valid_for = if expiry > now + Duration::seconds(60) {
+        let lifetime = if expiry > now + Duration::seconds(60) {
             (expiry - now).to_std().unwrap()
         } else {
             std::time::Duration::from_secs(60)
         };
 
         Some((
-            Token {
-                id: payload.private.id,
-                scope: payload.private.scope.clone(),
-                valid_for,
-            },
+            Token::new_with_lifetime(payload.private.id, payload.private.scope.clone(), lifetime),
             signature,
         ))
     }

@@ -17,15 +17,11 @@ async fn token_service() -> ServiceResult<()> {
 
     let token_service = TokenService::new(repo, "supersecret1234".into());
 
-    let token1 = Token::new(
-        0.into(),
-        TokenScope::Authenticate,
-        Duration::from_secs(1000),
-    );
+    let token1 = Token::new_with_lifetime(0.into(), TokenScope::Session, Duration::from_secs(1000));
 
-    let token2 = Token::new(0.into(), TokenScope::Authenticate, Duration::from_secs(0));
+    let token2 = Token::new_with_lifetime(0.into(), TokenScope::Session, Duration::from_secs(0));
 
-    let token3 = Token::new(2.into(), TokenScope::Authenticate, Duration::from_secs(40));
+    let token3 = Token::new_with_lifetime(2.into(), TokenScope::Session, Duration::from_secs(40));
 
     let signed1 = token_service.sign(&token1);
     let signed2 = token_service.sign(&token2);
@@ -84,7 +80,7 @@ async fn token_service_expired() -> ServiceResult<()> {
 
     let token_service = TokenService::new(repo, "supersecret1234".into());
 
-    let token = Token::new(3.into(), TokenScope::Authenticate, Duration::from_secs(40));
+    let token = Token::new_with_lifetime(3.into(), TokenScope::Session, Duration::from_secs(40));
 
     let signed = token_service.sign(&token);
 
@@ -108,7 +104,7 @@ async fn token_service_toctou() -> ServiceResult<()> {
 
     let token_service = Arc::new(TokenService::new(repo, "supersecret1234".into()));
 
-    let token = Token::new(3.into(), TokenScope::Authenticate, Duration::from_secs(40));
+    let token = Token::new_with_lifetime(3.into(), TokenScope::Session, Duration::from_secs(40));
 
     let signed = token_service.sign(&token);
 

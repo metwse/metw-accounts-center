@@ -1,5 +1,3 @@
-use validator::Validate;
-
 use super::{HandlerError, HandlerResult};
 use crate::{
     dto,
@@ -8,10 +6,7 @@ use crate::{
     token::{Token, TokenScope},
     util::mails,
 };
-use std::time::Duration;
-
-static SIGNUP_TOKEN_VALID_FOR: Duration = Duration::from_secs(60 * 60 * 24);
-static LOGIN_TOKEN_VALID_FOR: Duration = Duration::from_secs(60 * 60 * 24 * 7);
+use validator::Validate;
 
 /// Gateway handlers for creating accouts or logging into accounts.
 pub struct AuthenticationHandler(pub State);
@@ -22,7 +17,7 @@ impl AuthenticationHandler {
     pub async fn auth(self, base64_encoded_token: String) -> HandlerResult<AccountId> {
         let token = self.0.token_service.verify(&base64_encoded_token).await?;
 
-        if let TokenScope::Authenticate = token.scope {
+        if let TokenScope::Session = token.scope {
             Ok(token.id)
         } else {
             Err(HandlerError::Unauthorized)
@@ -39,17 +34,16 @@ impl AuthenticationHandler {
 
         let account_id = self.0.account_service.signup(&signup_dto).await?;
 
-        let signup_jwt = self.0.token_service.sign(&Token::new(
+        let complete_signup_jwt = self.0.token_service.sign(&Token::new(
             account_id,
-            TokenScope::Signup {
+            TokenScope::CompleteSignup {
                 email: email.clone(),
             },
-            SIGNUP_TOKEN_VALID_FOR,
         ));
 
-        let template = mails::Template::Signup {
+        let template = mails::Template::ConfirmSignup {
             username,
-            signup_jwt,
+            token: complete_signup_jwt,
         };
 
         self.0.mail_client.send(email, account_id, template).await;
@@ -90,10 +84,8 @@ impl AuthenticationHandler {
     fn login(self, account_id: AccountId) -> String {
         tracing::trace!(%account_id);
 
-        self.0.token_service.sign(&Token::new(
-            account_id,
-            TokenScope::Authenticate,
-            LOGIN_TOKEN_VALID_FOR,
-        ))
+        self.0
+            .token_service
+            .sign(&Token::new(account_id, TokenScope::Session))
     }
 }

@@ -45,7 +45,7 @@ impl TokenService {
         if let Some((token, signature)) = self.jws.decode(base64_encoded_token) {
             if !self
                 .repo
-                .check_and_revoke(&signature, token.valid_for)
+                .check_and_revoke(&signature, token.lifetime)
                 .await?
             {
                 Ok(token)

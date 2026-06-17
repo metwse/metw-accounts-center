@@ -28,9 +28,9 @@ async fn test_handlers() -> HandlerResult<()> {
 
     // Check sent verification mail.
     {
-        let mails::Template::Signup {
+        let mails::Template::ConfirmSignup {
             username,
-            signup_jwt,
+            token: complete_signup_jwt,
             ..
         } = ctx.last_email(acc1_id).await
         else {
@@ -39,19 +39,19 @@ async fn test_handlers() -> HandlerResult<()> {
 
         assert!(username == acc1_username);
 
-        let signup_token = ctx.state.token_service.verify(&signup_jwt).await?;
+        let signup_token = ctx.state.token_service.verify(&complete_signup_jwt).await?;
 
         // Now the account is verified and we can log into it.
         AuthorizationHandler(ctx.state.clone())
-            .auth(signup_jwt.clone())
+            .auth(complete_signup_jwt.clone())
             .await?;
 
         assert!(signup_token.id == acc1_id);
-        assert_matches!(signup_token.scope, TokenScope::Signup { .. });
+        assert_matches!(signup_token.scope, TokenScope::CompleteSignup { .. });
 
-        let mails::Template::Signup {
+        let mails::Template::ConfirmSignup {
             username: username2,
-            signup_jwt: signup_jwt2,
+            token: complete_signup_jwt2,
             ..
         } = ctx.last_email(acc2_id).await
         else {
@@ -63,13 +63,13 @@ async fn test_handlers() -> HandlerResult<()> {
         // Provide authorization token to authentication handler
         assert_matches!(
             AuthenticationHandler(ctx.state.clone())
-                .auth(signup_jwt2.clone())
+                .auth(complete_signup_jwt2.clone())
                 .await,
             Err(HandlerError::Unauthorized)
         );
 
         AuthorizationHandler(ctx.state.clone())
-            .auth(signup_jwt2.clone())
+            .auth(complete_signup_jwt2.clone())
             .await?;
     }
 
@@ -129,9 +129,9 @@ async fn test_handlers() -> HandlerResult<()> {
 
     // Validate the new email.
     {
-        let mails::Template::AddEmail {
+        let mails::Template::ConfirmNewEmail {
             email,
-            add_email_jwt,
+            token: add_email_jwt,
             ..
         } = ctx.last_email(acc1_id).await
         else {
@@ -161,8 +161,8 @@ async fn test_handlers() -> HandlerResult<()> {
         .await?;
 
     {
-        let mails::Template::SetPrimaryEmail {
-            set_primary_mail_jwt,
+        let mails::Template::ConfirmPrimaryEmailChange {
+            token: change_primary_mail_jwt,
             ..
         } = ctx.last_email(acc1_id).await
         else {
@@ -171,12 +171,12 @@ async fn test_handlers() -> HandlerResult<()> {
 
         ctx.state
             .token_service
-            .verify(&set_primary_mail_jwt)
+            .verify(&change_primary_mail_jwt)
             .await?;
 
         // Change the primary mail.
         AuthorizationHandler(ctx.state.clone())
-            .auth(set_primary_mail_jwt.clone())
+            .auth(change_primary_mail_jwt.clone())
             .await?;
     }
 

@@ -14,9 +14,11 @@ impl AuthorizationHandler {
         trace!(account_id = %token.id, variant = token.scope.variant_name());
 
         match token.scope {
-            TokenScope::Authenticate => Err(HandlerError::Unauthorized),
+            TokenScope::Session | TokenScope::PendingActivationSession => {
+                Err(HandlerError::Unauthorized)
+            }
 
-            TokenScope::AddEmail(email) => {
+            TokenScope::AddEmail { email } => {
                 self.0
                     .account_service
                     .auth_add_email(token.id, &email)
@@ -25,7 +27,7 @@ impl AuthorizationHandler {
                 Ok(())
             }
 
-            TokenScope::SetPrimaryEmail {
+            TokenScope::ChangePrimaryEmail {
                 current_primary_email,
                 new_primary_email,
             } => {
@@ -37,7 +39,7 @@ impl AuthorizationHandler {
                 Ok(())
             }
 
-            TokenScope::Signup { email } => {
+            TokenScope::CompleteSignup { email } => {
                 self.0
                     .account_service
                     .auth_complete_signup(token.id, &email)

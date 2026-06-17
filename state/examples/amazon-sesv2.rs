@@ -32,9 +32,9 @@ async fn main() {
         .send(
             dest.clone(),
             0.into(),
-            service::util::mails::Template::AddEmail {
+            service::util::mails::Template::ConfirmNewEmail {
                 email: dest,
-                add_email_jwt: "none".to_string(),
+                token: "none".to_string(),
             },
         )
         .await;

@@ -104,7 +104,7 @@
 //!
 //! | Condition | Error Type |
 //! |--|--|
-//! | Token scope is not [`TokenScope::Authenticate`] | [`HandlerError::Unauthorized`] |
+//! | Token scope is not [`TokenScope::Session`] | [`HandlerError::Unauthorized`] |
 //! | JWT-related issue (triggered from TokenService) | [`HandlerError::Service`] |
 //!
 //! - Request validation happens at the handlers. Everything coming from the
@@ -120,7 +120,7 @@
 //! [`HandlerError::Unauthorized`]: service::handlers::HandlerError::Unauthorized
 //! [`HandlerError::Service`]: service::handlers::HandlerError::Service
 //!
-//! [`TokenScope::Authenticate`]: service::token::TokenScope::Authenticate
+//! [`TokenScope::Session`]: service::token::TokenScope::Session
 //! [`dto::request`]: service::dto::request
 //!
 //! [`AuthenticationHandler::auth`]: service::handlers::AuthenticationHandler::auth

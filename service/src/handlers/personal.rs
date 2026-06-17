@@ -1,5 +1,3 @@
-use validator::Validate;
-
 use super::{HandlerError, HandlerResult};
 use crate::{
     dto,
@@ -9,18 +7,15 @@ use crate::{
     token::{Token, TokenScope},
     util::mails,
 };
-use std::time::Duration;
-
-static ADD_EMAIL_TOKEN_VALID_FOR: Duration = Duration::from_secs(60 * 60);
-static SET_PRIMARY_MAIL_VALID_FOR: Duration = Duration::from_secs(60 * 10);
+use validator::Validate;
 
 /// Account handlers that does not require escalated privileges.
 ///
 /// This handlers *should be* protected using tokens with
-/// [`TokenScope::Authenticate`], `id` parameters in methods of this struct
+/// [`TokenScope::Session`], `id` parameters in methods of this struct
 /// extracted from that token.
 ///
-/// [`TokenScope::Authenticate`]: crate::token::TokenScope::Authenticate
+/// [`TokenScope::Session`]: crate::token::TokenScope::Session
 pub struct PersonalHandler(pub State);
 
 impl PersonalHandler {
@@ -46,13 +41,14 @@ impl PersonalHandler {
 
         let add_email_jwt = self.0.token_service.sign(&Token::new(
             id,
-            TokenScope::AddEmail(email.clone()),
-            ADD_EMAIL_TOKEN_VALID_FOR,
+            TokenScope::AddEmail {
+                email: email.clone(),
+            },
         ));
 
-        let template = mails::Template::AddEmail {
+        let template = mails::Template::ConfirmNewEmail {
             email: email.clone(),
-            add_email_jwt,
+            token: add_email_jwt,
         };
 
         self.0.mail_client.send(email, id, template).await;
@@ -108,19 +104,18 @@ impl PersonalHandler {
             return Err(ServiceError::EmailNotFound)?;
         };
 
-        let set_primary_mail_jwt = self.0.token_service.sign(&Token::new(
+        let change_primary_email_jwt = self.0.token_service.sign(&Token::new(
             id,
-            TokenScope::SetPrimaryEmail {
+            TokenScope::ChangePrimaryEmail {
                 current_primary_email: current_primary_email.clone(),
                 new_primary_email: new_primary_email.clone(),
             },
-            SET_PRIMARY_MAIL_VALID_FOR,
         ));
 
-        let template = mails::Template::SetPrimaryEmail {
+        let template = mails::Template::ConfirmPrimaryEmailChange {
             current_primary_email: current_primary_email.clone(),
             new_primary_email,
-            set_primary_mail_jwt,
+            token: change_primary_email_jwt,
         };
 
         self.0
