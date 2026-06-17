@@ -111,6 +111,9 @@
 //!   user that requires validation *must be* a [`dto::request`] type or a JWT
 //!   string.
 //!
+//! - The handler owns the allocation and passes references to the service
+//!   layer. It, however, transfer ownership of the allocation to `client`s.
+//!
 //! [`handlers`]: service::handlers
 //!
 //! [`ServiceError`]: service::service::ServiceError
@@ -121,3 +124,13 @@
 //! [`dto::request`]: service::dto::request
 //!
 //! [`AuthenticationHandler::auth`]: service::handlers::AuthenticationHandler::auth
+//!
+//!
+//! ## `client`
+//!
+//! [`client`] contains external integrations such as [`CaptchaClient`]. They
+//! typically send requests to external services.
+//!
+//! [`client`]: service::client
+//!
+//! [`CaptchaClient`]: service::client::CaptchaClient

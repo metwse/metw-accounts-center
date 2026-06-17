@@ -55,6 +55,10 @@
 //!
 //! The design principles of metw-accounts-center are specified in the drafts.
 //! - [`acd_1`]: State Abstraction Layers
+//! - [`acd_2`]: Writing Tests
 
 /// # State Abstraction Layers
 pub mod acd_1;
+
+/// # Writing Tests
+pub mod acd_2;

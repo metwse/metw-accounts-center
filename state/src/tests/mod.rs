@@ -16,12 +16,6 @@ use service::{
 use sqlx::PgPool;
 use std::sync::Arc;
 
-// NOTE: Tests that reading environment variables MUST USE serial_test::serial.
-// This is because different tests reading different .env files causes a data
-// race.
-//
-// TODO: Write a draft about this problem.
-
 async fn default_db() -> PgPool {
     dotenvy::dotenv_override().ok();
 

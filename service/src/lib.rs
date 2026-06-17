@@ -73,6 +73,10 @@ pub mod handlers;
 pub mod util;
 
 /// External integrations.
+///
+/// See [`_docs`] for the detailed documentation.
+///
+/// [`_docs`]: ../../_docs/acd_1/index.html#client
 pub mod client;
 
 mod state;
