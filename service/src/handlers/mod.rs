@@ -1,6 +1,7 @@
 mod authentication;
 mod authorization;
-mod personal;
+mod pending_activation_session;
+mod session;
 
 mod error;
 
@@ -9,7 +10,8 @@ mod tests;
 
 pub use authentication::AuthenticationHandler;
 pub use authorization::AuthorizationHandler;
-pub use personal::PersonalHandler;
+pub use pending_activation_session::PendingActivationSessionHandler;
+pub use session::SessionHandler;
 
 pub use error::HandlerError;
 

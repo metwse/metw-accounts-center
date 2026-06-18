@@ -1,9 +1,12 @@
 use super::{HandlerError, HandlerResult};
 use crate::{
     dto,
-    handlers::{AuthenticationHandler, AuthorizationHandler, PersonalHandler},
+    handlers::{
+        AuthenticationHandler, AuthorizationHandler, PendingActivationSessionHandler,
+        SessionHandler,
+    },
     service::ServiceError,
-    testutil::{TestCtx, random_email},
+    testutil::{TestCtx, random_email, random_username},
     token::TokenScope,
     util::mails,
 };
@@ -11,90 +14,216 @@ use std::assert_matches;
 
 #[tokio::test(flavor = "multi_thread")]
 #[test_log::test]
-async fn test_handlers() -> HandlerResult<()> {
+async fn retry_signup_procedure() -> HandlerResult<()> {
+    let ctx = TestCtx::new();
+
+    // Create the account.
+    let (account_id, username, email_unverified) = ctx.signup("passwd").await;
+
+    // Log into the pending activation session.
+    let pending_activation_session_jwt = ctx.login_with_username(username, "passwd").await?;
+    assert!(
+        ctx.login_with_email(email_unverified, "passwd")
+            .await
+            .is_err()
+    );
+
+    let login_account_id = AuthenticationHandler(ctx.state.clone())
+        .auth_pending_activation_session(pending_activation_session_jwt)
+        .await?;
+
+    assert!(account_id == login_account_id);
+
+    let me = SessionHandler(ctx.state.clone()).me(account_id).await?;
+    assert!(me.username.is_some());
+    // No primary email as the account is not verified yet.
+    assert!(me.email.is_none());
+
+    // Resend the signup email.
+    let email = random_email();
+    PendingActivationSessionHandler(ctx.state.clone())
+        .retry_signup(
+            account_id,
+            dto::request::Email {
+                email: email.to_string(),
+            },
+        )
+        .await?;
+
+    let mails::Template::ConfirmSignup {
+        token: complete_signup_jwt,
+        ..
+    } = ctx.last_email(account_id).await
+    else {
+        unreachable!()
+    };
+
+    // Now the second email is added.
+    AuthorizationHandler(ctx.state.clone())
+        .auth(complete_signup_jwt)
+        .await?;
+
+    ctx.login_with_email(email, "passwd").await?;
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[test_log::test]
+async fn signup_and_login() -> HandlerResult<()> {
+    let ctx = TestCtx::new();
+
+    let (account_id, username, email) = ctx.signup("passwd").await;
+
+    let mails::Template::ConfirmSignup {
+        token: complete_signup_jwt,
+        ..
+    } = ctx.last_email(account_id).await
+    else {
+        unreachable!()
+    };
+
+    let me = SessionHandler(ctx.state.clone()).me(account_id).await?;
+    assert!(me.username.is_some());
+    assert!(me.email.is_none());
+
+    // Now the email is added.
+    AuthorizationHandler(ctx.state.clone())
+        .auth(complete_signup_jwt)
+        .await?;
+
+    let me = SessionHandler(ctx.state.clone()).me(account_id).await?;
+    assert!(me.email.unwrap() == email);
+
+    // Try logging in with username and password.
+    let session_jwt_from_email = ctx.login_with_email(email, "passwd").await?;
+    let session_jwt_from_username = ctx.login_with_username(username, "passwd").await?;
+
+    assert!(
+        AuthenticationHandler(ctx.state.clone())
+            .auth_session(session_jwt_from_email.clone())
+            .await?
+            == account_id
+    );
+    assert!(
+        AuthenticationHandler(ctx.state.clone())
+            .auth_session(session_jwt_from_username.clone())
+            .await?
+            == account_id
+    );
+
+    // Check invalid credentials.
+    assert_matches!(
+        ctx.login_with_email(email, "invalid_passwd")
+            .await
+            .unwrap_err(),
+        HandlerError::Service(ServiceError::InvalidCredentials)
+    );
+    assert_matches!(
+        ctx.login_with_email("invalid@email.com", "passwd")
+            .await
+            .unwrap_err(),
+        HandlerError::Service(ServiceError::InvalidCredentials)
+    );
+    assert_matches!(
+        ctx.login_with_username(username, "invalid_passwd")
+            .await
+            .unwrap_err(),
+        HandlerError::Service(ServiceError::InvalidCredentials)
+    );
+    assert_matches!(
+        ctx.login_with_username("invalid_username", "passwd")
+            .await
+            .unwrap_err(),
+        HandlerError::Service(ServiceError::InvalidCredentials)
+    );
+
+    // Provide session tokens to authorization handler.
+    assert_matches!(
+        AuthorizationHandler(ctx.state.clone())
+            .auth(session_jwt_from_email)
+            .await
+            .unwrap_err(),
+        HandlerError::Unauthorized
+    );
+    // Previous AuthorizationHandler call revoked the token. If the JWTs from
+    // username and email logins are the same, then this AuthorizationHandler
+    // call will return Unauthorized.
+    assert_matches!(
+        AuthorizationHandler(ctx.state.clone())
+            .auth(session_jwt_from_username)
+            .await
+            .unwrap_err(),
+        HandlerError::Service(ServiceError::TokenRevoked) | HandlerError::Unauthorized
+    );
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[test_log::test]
+async fn taken_username_or_email() -> HandlerResult<()> {
+    let ctx = TestCtx::new();
+
+    let (_, taken_username, taken_email) = ctx.signup_and_verify_email("passwd").await;
+    let (_, another_taken_username, _) = ctx.signup("passwd").await;
+
+    let mut signup_dto = dto::request::Signup {
+        username: taken_username.to_string(),
+        email: random_email().to_string(),
+        client_password_hash: "passwd".to_string(),
+        keys: dto::request::Keys {
+            identity_key: vec![1],
+            encrypted_master_key: vec![2],
+            encrypted_private_key: vec![2],
+        },
+    };
+
+    assert_matches!(
+        AuthenticationHandler(ctx.state.clone())
+            .signup(signup_dto.clone())
+            .await
+            .unwrap_err(),
+        HandlerError::Service(ServiceError::UsernameTaken),
+    );
+
+    signup_dto.username = another_taken_username.to_string();
+
+    assert_matches!(
+        AuthenticationHandler(ctx.state.clone())
+            .signup(signup_dto.clone())
+            .await
+            .unwrap_err(),
+        HandlerError::Service(ServiceError::UsernameTaken),
+    );
+
+    signup_dto.username = random_username().to_string();
+    signup_dto.email = taken_email.to_string();
+
+    assert_matches!(
+        AuthenticationHandler(ctx.state.clone())
+            .signup(signup_dto.clone())
+            .await
+            .unwrap_err(),
+        HandlerError::Service(ServiceError::EmailTaken),
+    );
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[test_log::test]
+async fn change_primary_email() -> HandlerResult<()> {
     let ctx = TestCtx::new();
 
     // Sign up an account.
-    let (acc1_id, acc1_username, acc1_email) = ctx.signup("passwd1").await;
-    let (acc2_id, acc2_username, acc2_email) = ctx.signup("passwd2").await;
+    let (acccount_id, _, email) = ctx.signup_and_verify_email("passwd1").await;
+    let (_, _, another_accounts_email) = ctx.signup_and_verify_email("passwd2").await;
 
-    PersonalHandler(ctx.state.clone()).me(acc1_id).await?;
-
-    // Try to get non-existent user.
-    assert_matches!(
-        ctx.login_with_username(acc1_username, "passwd1").await,
-        Err(HandlerError::Service(ServiceError::AccountNotVerified))
-    );
-
-    // Check sent verification mail.
-    {
-        let mails::Template::ConfirmSignup {
-            username,
-            token: complete_signup_jwt,
-            ..
-        } = ctx.last_email(acc1_id).await
-        else {
-            unreachable!()
-        };
-
-        assert!(username == acc1_username);
-
-        let signup_token = ctx.state.token_service.verify(&complete_signup_jwt).await?;
-
-        // Now the account is verified and we can log into it.
-        AuthorizationHandler(ctx.state.clone())
-            .auth(complete_signup_jwt.clone())
-            .await?;
-
-        assert!(signup_token.id == acc1_id);
-        assert_matches!(signup_token.scope, TokenScope::CompleteSignup { .. });
-
-        let mails::Template::ConfirmSignup {
-            username: username2,
-            token: complete_signup_jwt2,
-            ..
-        } = ctx.last_email(acc2_id).await
-        else {
-            unreachable!()
-        };
-
-        assert!(username2 == acc2_username);
-
-        // Provide authorization token to authentication handler
-        assert_matches!(
-            AuthenticationHandler(ctx.state.clone())
-                .auth(complete_signup_jwt2.clone())
-                .await,
-            Err(HandlerError::Unauthorized)
-        );
-
-        AuthorizationHandler(ctx.state.clone())
-            .auth(complete_signup_jwt2.clone())
-            .await?;
-    }
-
-    // Try to log in with username & password.
-    AuthenticationHandler(ctx.state.clone())
-        .auth(ctx.login_with_email(acc1_email, "passwd1").await?)
-        .await?;
-
-    AuthenticationHandler(ctx.state.clone())
-        .auth(ctx.login_with_username(acc1_username, "passwd1").await?)
-        .await?;
-
-    // Provide authorization token to authentication handler
-    assert_matches!(
-        AuthorizationHandler(ctx.state.clone())
-            .auth(ctx.login_with_username(acc1_username, "passwd1").await?)
-            .await,
-        Err(HandlerError::Unauthorized)
-    );
-
-    // Add another email to the account.
     let new_email = random_email();
-    PersonalHandler(ctx.state.clone())
+    SessionHandler(ctx.state.clone())
         .add_email(
-            acc1_id,
+            acccount_id,
             dto::request::Email {
                 email: new_email.to_string(),
             },
@@ -103,11 +232,11 @@ async fn test_handlers() -> HandlerResult<()> {
 
     // Cannot add already-taken emails
     assert_matches!(
-        PersonalHandler(ctx.state.clone())
+        SessionHandler(ctx.state.clone())
             .add_email(
-                acc1_id,
+                acccount_id,
                 dto::request::Email {
-                    email: acc2_email.to_string()
+                    email: another_accounts_email.to_string()
                 }
             )
             .await,
@@ -116,11 +245,11 @@ async fn test_handlers() -> HandlerResult<()> {
 
     // Try to add account2's email as primary mail
     assert_matches!(
-        PersonalHandler(ctx.state.clone())
+        SessionHandler(ctx.state.clone())
             .set_primary_mail(
-                acc1_id,
+                acccount_id,
                 dto::request::Email {
-                    email: acc2_email.to_string()
+                    email: new_email.to_string()
                 }
             )
             .await,
@@ -133,7 +262,7 @@ async fn test_handlers() -> HandlerResult<()> {
             email,
             token: add_email_jwt,
             ..
-        } = ctx.last_email(acc1_id).await
+        } = ctx.last_email(acccount_id).await
         else {
             unreachable!()
         };
@@ -145,15 +274,15 @@ async fn test_handlers() -> HandlerResult<()> {
             .auth(add_email_jwt.clone())
             .await?;
 
-        assert!(add_email_token.id == acc1_id);
+        assert!(add_email_token.id == acccount_id);
         assert_matches!(add_email_token.scope, TokenScope::AddEmail { .. });
         assert!(email == new_email);
     }
 
     // Change primary email.
-    PersonalHandler(ctx.state.clone())
+    SessionHandler(ctx.state.clone())
         .set_primary_mail(
-            acc1_id,
+            acccount_id,
             dto::request::Email {
                 email: new_email.to_string(),
             },
@@ -164,7 +293,7 @@ async fn test_handlers() -> HandlerResult<()> {
         let mails::Template::ConfirmPrimaryEmailChange {
             token: change_primary_mail_jwt,
             ..
-        } = ctx.last_email(acc1_id).await
+        } = ctx.last_email(acccount_id).await
         else {
             unreachable!()
         };
@@ -181,20 +310,20 @@ async fn test_handlers() -> HandlerResult<()> {
     }
 
     // Delete the old email.
-    PersonalHandler(ctx.state.clone())
+    SessionHandler(ctx.state.clone())
         .delete_email(
-            acc1_id,
+            acccount_id,
             dto::request::Email {
-                email: acc1_email.to_string(),
+                email: email.to_string(),
             },
         )
         .await?;
 
     // Cannot remove primary email.
     assert!(
-        PersonalHandler(ctx.state.clone())
+        SessionHandler(ctx.state.clone())
             .delete_email(
-                acc1_id,
+                acccount_id,
                 dto::request::Email {
                     email: new_email.to_string()
                 }

@@ -23,14 +23,11 @@ pub enum ServiceError {
     #[error("email not found")]
     EmailNotFound,
 
-    #[error("account not verified")]
-    AccountNotVerified,
-
     #[error("invalid credentials")]
     InvalidCredentials,
 
-    #[error("email add failed")]
-    EmailAddFailed,
+    #[error("add email failed")]
+    AddEmailFailed,
 
     #[error("change primary email failed")]
     ChangePrimaryEmailFailed,

@@ -100,7 +100,7 @@
 //! service calls and either propagates the service results directly or translates
 //! them into specific handler errors based on the business outcome.
 //!
-//! As an example, error conditions in [`AuthenticationHandler::auth`] are:
+//! As an example, error conditions in [`AuthenticationHandler::auth_session`] are:
 //!
 //! | Condition | Error Type |
 //! |--|--|
@@ -123,7 +123,7 @@
 //! [`TokenScope::Session`]: service::token::TokenScope::Session
 //! [`dto::request`]: service::dto::request
 //!
-//! [`AuthenticationHandler::auth`]: service::handlers::AuthenticationHandler::auth
+//! [`AuthenticationHandler::auth_session`]: service::handlers::AuthenticationHandler::auth_session
 //!
 //!
 //! ## `client`

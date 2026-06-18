@@ -71,12 +71,10 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
         Err(ServiceError::InvalidCredentials)
     );
 
-    assert_matches!(
-        account_service
-            .login_with_username(&login_with_username_dto)
-            .await,
-        Err(ServiceError::AccountNotVerified)
-    );
+    // Permit log into the pending activation session.
+    account_service
+        .login_with_username(&login_with_username_dto)
+        .await?;
 
     // Complete sign up and enable the account. Now user can log into its
     // account.
@@ -89,12 +87,14 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
         account_service
             .login_with_email(&login_with_email_dto)
             .await?
+            .id
             == account_id
     );
     assert!(
         account_service
             .login_with_username(&login_with_username_dto)
             .await?
+            .id
             == account_id
     );
     assert_matches!(
@@ -175,7 +175,8 @@ pub async fn email_change(
             username: username.to_string(),
             client_password_hash: "passwd".to_string(),
         })
-        .await?;
+        .await?
+        .id;
 
     let current_primary_email = account_service
         .get_primary_email(account_id)
@@ -191,7 +192,7 @@ pub async fn email_change(
     // Adding the same email failed because we already added one.
     assert_matches!(
         account_service.auth_add_email(account_id, email2).await,
-        Err(ServiceError::EmailAddFailed)
+        Err(ServiceError::AddEmailFailed)
     );
 
     // email3 is not added yet.

@@ -55,17 +55,18 @@ impl AccountService {
         &self,
         client_password_hash: &str,
         login: &dto::repo::OwnedLogin,
-    ) -> ServiceResult<AccountId> {
-        if let Some(flags) = self.repo.get_account_flags(login.id).await?
-            && flags.is_verified
-        {
+    ) -> ServiceResult<dto::service::Login> {
+        if let Some(flags) = self.repo.get_account_flags(login.id).await? {
             if password::check(client_password_hash, &login.password_hash).await {
-                Ok(login.id)
+                Ok(dto::service::Login {
+                    id: login.id,
+                    is_verified: flags.is_verified,
+                })
             } else {
                 Err(ServiceError::InvalidCredentials)
             }
         } else {
-            Err(ServiceError::AccountNotVerified)
+            Err(ServiceError::UnexpectedError("account with no flags"))
         }
     }
 
@@ -74,7 +75,7 @@ impl AccountService {
     pub async fn login_with_email(
         &self,
         credentials: &dto::request::LoginWithEmail,
-    ) -> ServiceResult<AccountId> {
+    ) -> ServiceResult<dto::service::Login> {
         let Some(login) = self.repo.get_login_by_email(&credentials.email).await? else {
             return Err(ServiceError::InvalidCredentials);
         };
@@ -87,7 +88,7 @@ impl AccountService {
     pub async fn login_with_username(
         &self,
         credentials: &dto::request::LoginWithUsername,
-    ) -> ServiceResult<AccountId> {
+    ) -> ServiceResult<dto::service::Login> {
         let Some(login) = self
             .repo
             .get_login_by_username(&credentials.username)
@@ -163,6 +164,12 @@ impl AccountService {
         Ok(self.repo.get_primary_email(id).await?)
     }
 
+    /// Primary username of the account.
+    #[tracing::instrument(skip(self))]
+    pub async fn get_primary_username(&self, id: AccountId) -> ServiceResult<Option<String>> {
+        Ok(self.repo.get_primary_username(id).await?)
+    }
+
     /// Add the email as a secondary email to the account.
     #[tracing::instrument(skip_all, fields(id))]
     pub async fn auth_add_email(&self, id: AccountId, email: &str) -> ServiceResult<()> {
@@ -170,7 +177,7 @@ impl AccountService {
         transaction
             .add_email(id, email, false)
             .await
-            .map_err(|_| ServiceError::EmailAddFailed)?;
+            .map_err(|_| ServiceError::AddEmailFailed)?;
         transaction.commit().await?;
 
         Ok(())
