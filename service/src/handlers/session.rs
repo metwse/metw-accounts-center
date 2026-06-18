@@ -14,11 +14,9 @@ use validator::Validate;
 /// This handlers *should be* protected using tokens with
 /// [`TokenScope::Session`], `id` parameters in methods of this struct
 /// extracted from that token.
-///
-/// [`TokenScope::Session`]: crate::token::TokenScope::Session
-pub struct PersonalHandler(pub State);
+pub struct SessionHandler(pub State);
 
-impl PersonalHandler {
+impl SessionHandler {
     /// GET `/me`
     #[tracing::instrument(skip(self))]
     pub async fn me(self, id: AccountId) -> HandlerResult<dto::response::Account> {

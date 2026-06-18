@@ -1,7 +1,7 @@
 use crate::{
     client::mock::{Mails, MockCaptchaClientImpl, MockMailClientImpl},
     dto,
-    handlers::{AuthenticationHandler, HandlerResult},
+    handlers::{AuthenticationHandler, AuthorizationHandler, HandlerResult},
     id::{AccountId, snowflake},
     repo::mock::{MockAccountRepoImpl, MockTokenRepoImpl},
     service::{AccountService, TokenService},
@@ -31,7 +31,7 @@ pub fn random_email() -> &'static str {
 #[allow(missing_docs)]
 pub struct TestCtx {
     pub state: State,
-    pub emails: Arc<Mutex<Mails>>,
+    emails: Arc<Mutex<Mails>>,
 }
 
 impl Default for TestCtx {
@@ -81,6 +81,29 @@ impl TestCtx {
                     encrypted_master_key: vec![3],
                 },
             })
+            .await
+            .unwrap();
+
+        (account_id, username, email)
+    }
+
+    /// Creates a random account and verifies its email.
+    pub async fn signup_and_verify_email(
+        &self,
+        client_password_hash: &'static str,
+    ) -> (AccountId, &'static str, &'static str) {
+        let (account_id, username, email) = self.signup(client_password_hash).await;
+
+        let mails::Template::ConfirmSignup {
+            token: complete_signup_jwt,
+            ..
+        } = self.last_email(account_id).await
+        else {
+            unreachable!()
+        };
+
+        AuthorizationHandler(self.state.clone())
+            .auth(complete_signup_jwt)
             .await
             .unwrap();
 

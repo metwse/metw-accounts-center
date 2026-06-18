@@ -71,11 +71,11 @@ impl TokenScope {
     /// Duration the token type valid for.
     pub fn lifetime(&self) -> Duration {
         match self {
-            Self::Session => Duration::from_secs(60 * 60 * 24 * 7),
-            Self::PendingActivationSession { .. } => Duration::from_secs(1),
-            Self::AddEmail { .. } => Duration::from_secs(60 * 60),
-            Self::ChangePrimaryEmail { .. } => Duration::from_secs(60 * 10),
-            Self::CompleteSignup { .. } => Duration::from_secs(60 * 60 * 24),
+            Self::Session => Duration::from_hours(24 * 7),
+            Self::PendingActivationSession { .. } => Duration::from_hours(1),
+            Self::AddEmail { .. } => Duration::from_hours(1),
+            Self::ChangePrimaryEmail { .. } => Duration::from_mins(10),
+            Self::CompleteSignup { .. } => Duration::from_hours(1),
         }
     }
 }

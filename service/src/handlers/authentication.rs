@@ -12,12 +12,26 @@ use validator::Validate;
 pub struct AuthenticationHandler(pub State);
 
 impl AuthenticationHandler {
-    /// Verify the authentication token.
+    /// Verify the session token.
     #[tracing::instrument(skip_all)]
-    pub async fn auth(self, base64_encoded_token: String) -> HandlerResult<AccountId> {
+    pub async fn auth_session(self, base64_encoded_token: String) -> HandlerResult<AccountId> {
         let token = self.0.token_service.verify(&base64_encoded_token).await?;
 
         if let TokenScope::Session = token.scope {
+            Ok(token.id)
+        } else {
+            Err(HandlerError::Unauthorized)
+        }
+    }
+    /// Verify the pending activation session token.
+    #[tracing::instrument(skip_all)]
+    pub async fn auth_pending_activation_session(
+        self,
+        base64_encoded_token: String,
+    ) -> HandlerResult<AccountId> {
+        let token = self.0.token_service.verify(&base64_encoded_token).await?;
+
+        if let TokenScope::PendingActivationSession = token.scope {
             Ok(token.id)
         } else {
             Err(HandlerError::Unauthorized)
@@ -59,13 +73,13 @@ impl AuthenticationHandler {
     ) -> HandlerResult<String> {
         login_dto.validate()?;
 
-        let account_id = self
+        let login = self
             .0
             .account_service
             .login_with_username(&login_dto)
             .await?;
 
-        Ok(self.login(account_id))
+        Ok(self.login(login))
     }
 
     /// POST `/login` (with `email`)
@@ -76,16 +90,21 @@ impl AuthenticationHandler {
     ) -> HandlerResult<String> {
         login_dto.validate()?;
 
-        let account_id = self.0.account_service.login_with_email(&login_dto).await?;
+        let login = self.0.account_service.login_with_email(&login_dto).await?;
 
-        Ok(self.login(account_id))
+        Ok(self.login(login))
     }
 
-    fn login(self, account_id: AccountId) -> String {
-        tracing::trace!(%account_id);
+    fn login(self, login: dto::service::Login) -> String {
+        tracing::trace!(%login.id);
 
+        let token_scope = if login.is_verified {
+            TokenScope::Session
+        } else {
+            TokenScope::PendingActivationSession
+        };
         self.0
             .token_service
-            .sign(&Token::new(account_id, TokenScope::Session))
+            .sign(&Token::new(login.id, token_scope))
     }
 }
