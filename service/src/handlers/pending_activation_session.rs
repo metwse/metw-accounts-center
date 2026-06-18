@@ -3,6 +3,7 @@ use crate::{
     dto,
     handlers::HandlerError,
     id::AccountId,
+    service::ServiceError,
     state::State,
     token::{Token, TokenScope},
     util::mails,
@@ -29,6 +30,11 @@ impl PendingActivationSessionHandler {
         email.validate()?;
 
         let email = email.email;
+
+        if self.0.account_service.is_email_taken(&email).await? {
+            return Err(ServiceError::EmailTaken)?;
+        }
+
         let Some(username) = self.0.account_service.get_primary_username(id).await? else {
             return Err(HandlerError::UnexpectedError("account with no username"));
         };
