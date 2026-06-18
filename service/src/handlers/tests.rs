@@ -17,6 +17,8 @@ use std::assert_matches;
 async fn retry_signup_procedure() -> HandlerResult<()> {
     let ctx = TestCtx::new();
 
+    let (_, _, taken_email) = ctx.signup_and_verify_email("passwd1").await;
+
     // Create the account.
     let (account_id, username, email_unverified) = ctx.signup("passwd").await;
 
@@ -40,6 +42,19 @@ async fn retry_signup_procedure() -> HandlerResult<()> {
     assert!(me.email.is_none());
 
     // Resend the signup email.
+    assert_matches!(
+        PendingActivationSessionHandler(ctx.state.clone())
+            .retry_signup(
+                account_id,
+                dto::request::Email {
+                    email: taken_email.to_string(),
+                },
+            )
+            .await
+            .unwrap_err(),
+        HandlerError::Service(ServiceError::EmailTaken)
+    );
+
     let email = random_email();
     PendingActivationSessionHandler(ctx.state.clone())
         .retry_signup(
@@ -155,6 +170,38 @@ async fn signup_and_login() -> HandlerResult<()> {
             .await
             .unwrap_err(),
         HandlerError::Service(ServiceError::TokenRevoked) | HandlerError::Unauthorized
+    );
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[test_log::test]
+async fn logout() -> HandlerResult<()> {
+    let ctx = TestCtx::new();
+
+    let (_, username, _) = ctx.signup_and_verify_email("passwd").await;
+
+    let session_jwt = ctx.login_with_username(username, "passwd").await?;
+
+    AuthenticationHandler(ctx.state.clone())
+        .logout(session_jwt.clone())
+        .await?;
+
+    assert_matches!(
+        AuthenticationHandler(ctx.state.clone())
+            .logout(session_jwt.clone())
+            .await
+            .unwrap_err(),
+        HandlerError::Service(ServiceError::TokenRevoked)
+    );
+
+    assert_matches!(
+        AuthenticationHandler(ctx.state.clone())
+            .auth_session(session_jwt.clone())
+            .await
+            .unwrap_err(),
+        HandlerError::Service(ServiceError::TokenRevoked)
     );
 
     Ok(())

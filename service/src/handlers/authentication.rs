@@ -107,4 +107,11 @@ impl AuthenticationHandler {
             .token_service
             .sign(&Token::new(login.id, token_scope))
     }
+
+    /// POST `/logout`
+    pub async fn logout(self, base64_encoded_token: String) -> HandlerResult<()> {
+        self.0.token_service.revoke(&base64_encoded_token).await?;
+
+        Ok(())
+    }
 }
