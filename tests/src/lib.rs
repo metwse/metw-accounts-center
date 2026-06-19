@@ -15,3 +15,9 @@
 //! ```
 //!
 //! See [`ACD-2`](_docs::acd_2) for test guideline.
+
+/// Account service tests.
+pub mod account_service;
+
+/// Token repository tests.
+pub mod token_repo;

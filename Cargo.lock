@@ -3159,6 +3159,16 @@ name = "tests"
 version = "0.0.0"
 dependencies = [
  "_docs",
+ "dotenvy",
+ "futures-util",
+ "redis",
+ "serial_test",
+ "service",
+ "sqlx",
+ "state",
+ "test-log",
+ "tokio",
+ "tracing-subscriber",
 ]
 
 [[package]]

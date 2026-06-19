@@ -5,13 +5,9 @@ use service::{
 };
 use std::{assert_matches, sync::Arc};
 
-// Those tests uses *account service*, as covering each and every branch of
-// account repository without a service would be extremely hard.
-
-// Returns username.
-// Account credentials are:
-//  username: <random>
-//  client_password_hash: passwd
+/// Create an account and return its username.
+///
+/// Account's `client_password_hash` is `passwd`.
 pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceResult<&'static str> {
     let username = random_username();
     let username2 = random_username();
@@ -135,7 +131,8 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
     Ok(username)
 }
 
-// Only one account should be created.
+/// Concurrently try to register 16 accounts with same username/password. Only
+/// one of the account should be created.
 pub async fn account_creation_data_race(
     account_service: Arc<AccountService>,
 ) -> ServiceResult<&'static str> {
@@ -166,6 +163,7 @@ pub async fn account_creation_data_race(
     Ok(username)
 }
 
+/// Change email.
 pub async fn email_change(
     username: &'static str,
     account_service: Arc<AccountService>,
@@ -243,4 +241,60 @@ pub async fn email_change(
     );
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{account_creation, account_creation_data_race, email_change};
+    use service::{
+        repo::mock::MockAccountRepoImpl,
+        service::{AccountService, ServiceResult},
+    };
+    use sqlx::PgPool;
+    use state::AccountRepoImpl;
+    use std::sync::Arc;
+
+    async fn default_db() -> PgPool {
+        dotenvy::dotenv_override().ok();
+
+        PgPool::connect(&std::env::var("DATABASE_URL").unwrap())
+            .await
+            .unwrap()
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    #[test_log::test]
+    async fn mock_account_creation() -> ServiceResult<()> {
+        let account_service = Arc::new(AccountService::new(MockAccountRepoImpl::boxed_new()));
+
+        account_creation_data_race(account_service.clone()).await?;
+
+        account_creation(account_service.clone()).await?;
+        let username1 = account_creation(account_service.clone()).await?;
+
+        email_change(username1, account_service).await?;
+
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    #[test_log::test]
+    #[ignore]
+    #[serial_test::serial]
+    async fn db_account_creation() -> ServiceResult<()> {
+        let pool = default_db().await;
+
+        let account_service = Arc::new(AccountService::new(AccountRepoImpl::boxed_new(
+            pool.clone(),
+        )));
+
+        account_creation_data_race(account_service.clone()).await?;
+
+        account_creation(account_service.clone()).await?;
+        let username1 = account_creation(account_service.clone()).await?;
+
+        email_change(username1, account_service).await?;
+
+        Ok(())
+    }
 }

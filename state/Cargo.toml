@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 async-trait = { workspace = true }
 
-sqlx = { workspace = true, features = ["postgres", "chrono", "macros", "runtime-tokio"] }
+sqlx = { workspace = true, features = ["postgres", "macros"] }
 redis = { workspace = true, features = ["aio", "tokio-comp"] }
 
 tracing = { workspace = true }
@@ -22,7 +22,7 @@ envy = { workspace = true }
 cf-turnstile = { version = "0.2.0", features = ["native-tls"], default-features = false }
 
 aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
-aws-credential-types = { version = "1.2.4" }
+aws-credential-types = "1.2.4"
 aws-sdk-sesv2 = "1.123.0"
 
 [dev-dependencies]
@@ -34,7 +34,7 @@ serial_test = { workspace = true }
 
 tracing-subscriber = { workspace = true, features = ["fmt"] }
 
-service = { path = "../service/", features = ["mock", "testutil"] }
+service = { path = "../service/" }
 
 [lints]
 workspace = true

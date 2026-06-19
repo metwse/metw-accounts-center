@@ -4,7 +4,22 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
+tokio = { workspace = true, features = ["full"] }
+futures-util = { workspace = true }
+
+sqlx = { workspace = true, features = ["postgres", "runtime-tokio"] }
+redis = { workspace = true, features = ["aio", "tokio-comp"] }
+
+test-log = { workspace = true, features = ["trace"] }
+serial_test = { workspace = true }
+
+tracing-subscriber = { workspace = true, features = ["fmt"] }
+
+dotenvy = { workspace = true }
+
 _docs = { path = "../_docs/" }
+state = { path = "../state/" }
+service = { path = "../service/", features = ["mock", "testutil"] }
 
 [lints]
 workspace = true

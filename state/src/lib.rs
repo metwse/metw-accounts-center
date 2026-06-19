@@ -14,9 +14,6 @@ mod mail_client;
 mod account_repo;
 mod token_repo;
 
-#[cfg(test)]
-mod tests;
-
 pub use captcha_client::CaptchaClientImpl;
 pub use mail_client::MailClientImpl;
 
@@ -59,9 +56,7 @@ pub struct Config {
 impl Config {
     /// Reads the environment variables and returns a Config struct.
     pub fn from_env() -> Self {
-        envy::from_env::<Self>().unwrap_or_else(|err| {
-            panic!("could not load config: {err}");
-        })
+        envy::from_env::<Self>().unwrap()
     }
 }
 
@@ -113,5 +108,31 @@ impl Config {
             mail_client: mail_client.into(),
             captcha_client: captcha_client.into(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Config;
+
+    // Test validity of the .env.example file
+    #[test]
+    #[serial_test::serial]
+    fn config_from_example_env() {
+        dotenvy::from_path_override("../.env.example").unwrap();
+
+        Config::from_env();
+    }
+
+    // Bootstrap all services and clients, for testing .env
+    #[tokio::test]
+    #[ignore]
+    #[serial_test::serial]
+    async fn state_from_env() {
+        dotenvy::dotenv_override().unwrap();
+
+        let config = Config::from_env();
+
+        config.bootstrap().await;
     }
 }
