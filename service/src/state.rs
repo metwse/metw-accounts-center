@@ -7,7 +7,7 @@ use std::sync::Arc;
 /// Application-wide state.
 #[allow(missing_docs)]
 #[derive(Clone)]
-pub struct State {
+pub struct AppState {
     pub account_service: Arc<AccountService>,
     pub token_service: Arc<TokenService>,
     pub mail_client: Arc<dyn MailClient>,

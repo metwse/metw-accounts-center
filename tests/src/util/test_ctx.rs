@@ -1,5 +1,5 @@
 use service::{
-    State,
+    AppState,
     client::mock::{Mails, MockCaptchaClientImpl, MockMailClientImpl},
     dto,
     handlers::{AuthenticationHandler, AuthorizationHandler, HandlerResult},
@@ -18,7 +18,7 @@ use tokio::sync::Mutex;
 /// Test repositories, handlers and clients.
 #[allow(missing_docs)]
 pub struct TestCtx {
-    pub state: State,
+    pub state: AppState,
     emails: Arc<Mutex<Mails>>,
 }
 
@@ -31,7 +31,7 @@ impl Default for TestCtx {
         let capcha_client = MockCaptchaClientImpl::boxed_new();
 
         Self {
-            state: State {
+            state: AppState {
                 account_service: account_service.into(),
                 token_service: token_service.into(),
                 mail_client: mail_client.into(),

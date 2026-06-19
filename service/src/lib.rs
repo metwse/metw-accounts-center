@@ -17,8 +17,9 @@
 //! - [`handlers`]: The final level of abstraction to manipulate the
 //!   application state. This layer is a transport-agnostic front end for
 //!   the microservice.
-//! - [`State`]: The application state contains the services constructed from
-//!   repositories and clients. Handlers require a state instance to construct.
+//! - [`AppState`]: The application state contains the services constructed
+//!   from repositories and clients. Handlers require a state instance to
+//!   construct.
 //!
 //! ### Supporting Modules
 //!
@@ -89,7 +90,7 @@ mod state;
 
 pub use util::{id, token};
 
-pub use state::State;
+pub use state::AppState;
 
 /// Test utilities.
 #[cfg(any(feature = "testutil", test))]

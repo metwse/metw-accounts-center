@@ -22,7 +22,7 @@ pub use token_repo::TokenRepoImpl;
 
 use serde::Deserialize;
 use service::{
-    State,
+    AppState,
     service::{AccountService, TokenService},
 };
 
@@ -61,8 +61,8 @@ impl Config {
 }
 
 impl Config {
-    /// Initialize the [`service`] [`State`] from config.
-    pub async fn bootstrap(self) -> State {
+    /// Initialize the [`service`] [`AppState`] from config.
+    pub async fn bootstrap(self) -> AppState {
         let pgpool = sqlx::PgPool::connect(&self.database_url).await.unwrap();
 
         let account_service = AccountService::new(AccountRepoImpl::boxed_new(pgpool));
@@ -102,7 +102,7 @@ impl Config {
 
         let captcha_client = CaptchaClientImpl::boxed_new(self.cloudflare_turnstile_secret);
 
-        State {
+        AppState {
             account_service: account_service.into(),
             token_service: token_service.into(),
             mail_client: mail_client.into(),

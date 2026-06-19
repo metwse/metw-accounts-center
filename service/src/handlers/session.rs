@@ -3,7 +3,7 @@ use crate::{
     dto,
     id::AccountId,
     service::ServiceError,
-    state::State,
+    state::AppState,
     token::{Token, TokenScope},
     util::mails,
 };
@@ -14,7 +14,7 @@ use validator::Validate;
 /// This handlers *should be* protected using tokens with
 /// [`TokenScope::Session`], `id` parameters in methods of this struct
 /// extracted from that token.
-pub struct SessionHandler(pub State);
+pub struct SessionHandler(pub AppState);
 
 impl SessionHandler {
     /// Returns account details.

@@ -1,11 +1,12 @@
 [workspace]
 resolver = "3"
-members = ["_docs", "service", "state", "tests"]
+members = ["_docs", "app", "service", "state", "tests"]
 
 [workspace.dependencies]
 # async runtime&utility
 tokio = "1"
 async-trait = "0.1"
+axum = "0.8"
 
 # repository
 sqlx = "0.8"

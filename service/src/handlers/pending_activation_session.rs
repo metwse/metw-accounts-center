@@ -4,7 +4,7 @@ use crate::{
     handlers::HandlerError,
     id::AccountId,
     service::ServiceError,
-    state::State,
+    state::AppState,
     token::{Token, TokenScope},
     util::mails,
 };
@@ -17,7 +17,7 @@ use validator::Validate;
 /// details.
 ///
 /// [`SessionHandler`]: super::SessionHandler
-pub struct PendingActivationSessionHandler(pub State);
+pub struct PendingActivationSessionHandler(pub AppState);
 
 impl PendingActivationSessionHandler {
     /// Resends the sign up email.

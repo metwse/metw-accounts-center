@@ -2,14 +2,14 @@ use super::{HandlerError, HandlerResult};
 use crate::{
     dto,
     id::AccountId,
-    state::State,
+    state::AppState,
     token::{Token, TokenScope},
     util::mails,
 };
 use validator::Validate;
 
 /// Gateway handlers for creating accouts or logging into accounts.
-pub struct AuthenticationHandler(pub State);
+pub struct AuthenticationHandler(pub AppState);
 
 impl AuthenticationHandler {
     /// Verify the session token.

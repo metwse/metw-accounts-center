@@ -1,9 +1,9 @@
 use super::{HandlerError, HandlerResult};
-use crate::{state::State, token::TokenScope};
+use crate::{state::AppState, token::TokenScope};
 use tracing::trace;
 
 /// Account handlers that **does require** escalated privileges.
-pub struct AuthorizationHandler(pub State);
+pub struct AuthorizationHandler(pub AppState);
 
 impl AuthorizationHandler {
     /// Handle privileged tokens.

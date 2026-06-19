@@ -1,0 +1,21 @@
+[package]
+name = "app"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+tokio = { workspace = true, features = ["net", "rt", "rt-multi-thread"] }
+axum = { workspace = true }
+
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+dotenvy = { workspace = true }
+
+serde = { workspace = true, features = ["derive"] }
+
+state = { path = "../state/" }
+service = { path = "../service/" }
+
+[lints]
+workspace = true
