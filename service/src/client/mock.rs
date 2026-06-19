@@ -5,7 +5,9 @@ use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 use tracing::debug;
 
-pub(crate) type Mails = HashMap<AccountId, Vec<mails::Template>>;
+/// Mock mailbox.
+#[cfg(feature = "mock")]
+pub type Mails = HashMap<AccountId, Vec<mails::Template>>;
 
 /// Mock mail client implementation.
 #[derive(Default)]

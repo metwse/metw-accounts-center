@@ -246,26 +246,16 @@ pub async fn email_change(
 #[cfg(test)]
 mod tests {
     use super::{account_creation, account_creation_data_race, email_change};
+    use crate::util::pg_pool_from_env;
     use service::{
-        repo::mock::MockAccountRepoImpl,
+        repo::{AccountRepo, mock::MockAccountRepoImpl},
         service::{AccountService, ServiceResult},
     };
-    use sqlx::PgPool;
     use state::AccountRepoImpl;
     use std::sync::Arc;
 
-    async fn default_db() -> PgPool {
-        dotenvy::dotenv_override().ok();
-
-        PgPool::connect(&std::env::var("DATABASE_URL").unwrap())
-            .await
-            .unwrap()
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    #[test_log::test]
-    async fn mock_account_creation() -> ServiceResult<()> {
-        let account_service = Arc::new(AccountService::new(MockAccountRepoImpl::boxed_new()));
+    async fn testsuite(account_repo: Box<dyn AccountRepo>) -> ServiceResult<()> {
+        let account_service = Arc::new(AccountService::new(account_repo));
 
         account_creation_data_race(account_service.clone()).await?;
 
@@ -275,26 +265,21 @@ mod tests {
         email_change(username1, account_service).await?;
 
         Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    #[test_log::test]
+    async fn mock_account_repo() -> ServiceResult<()> {
+        testsuite(MockAccountRepoImpl::boxed_new()).await
     }
 
     #[tokio::test(flavor = "multi_thread")]
     #[test_log::test]
     #[ignore]
     #[serial_test::serial]
-    async fn db_account_creation() -> ServiceResult<()> {
-        let pool = default_db().await;
+    async fn account_repo() -> ServiceResult<()> {
+        let pool = pg_pool_from_env().await;
 
-        let account_service = Arc::new(AccountService::new(AccountRepoImpl::boxed_new(
-            pool.clone(),
-        )));
-
-        account_creation_data_race(account_service.clone()).await?;
-
-        account_creation(account_service.clone()).await?;
-        let username1 = account_creation(account_service.clone()).await?;
-
-        email_change(username1, account_service).await?;
-
-        Ok(())
+        testsuite(AccountRepoImpl::boxed_new(pool)).await
     }
 }

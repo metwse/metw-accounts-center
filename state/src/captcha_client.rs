@@ -33,3 +33,28 @@ impl CaptchaClient for CaptchaClientImpl {
         validated.success
     }
 }
+
+#[cfg(test)]
+#[tokio::test]
+#[ignore]
+async fn cloudflare_captcha() {
+    const ALWAYS_PASS: &str = "1x0000000000000000000000000000000AA";
+    const ALWAYS_FAIL: &str = "2x0000000000000000000000000000000AA";
+    const ALWAYS_FAIL_ALREADY_SPENT: &str = "3x0000000000000000000000000000000AA";
+
+    assert!(
+        CaptchaClientImpl::boxed_new(ALWAYS_PASS.into())
+            .validate("123".into())
+            .await
+    );
+    assert!(
+        !CaptchaClientImpl::boxed_new(ALWAYS_FAIL.into())
+            .validate("123".into())
+            .await
+    );
+    assert!(
+        !CaptchaClientImpl::boxed_new(ALWAYS_FAIL_ALREADY_SPENT.into())
+            .validate("123".into())
+            .await
+    );
+}

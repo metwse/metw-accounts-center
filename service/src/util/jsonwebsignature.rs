@@ -6,7 +6,7 @@ use biscuit::{JWT, jwa, jws};
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 
-#[cfg(any(feature = "testutil", test))]
+#[cfg(test)]
 use std::sync::Mutex;
 
 /// JSON web signature (JWS).
@@ -20,12 +20,12 @@ struct PrivateClaims {
     id: AccountId,
 }
 
-#[cfg(not(any(feature = "testutil", test)))]
+#[cfg(not(test))]
 static NOW: fn() -> DateTime<Utc> = Utc::now;
-#[cfg(any(feature = "testutil", test))]
+#[cfg(test)]
 static NOW: fn() -> DateTime<Utc> = JsonWebSignature::injected_now;
 
-#[cfg(any(feature = "testutil", test))]
+#[cfg(test)]
 static INJECTED_NOW: Mutex<Option<DateTime<Utc>>> = Mutex::new(None);
 
 impl JsonWebSignature {
@@ -113,13 +113,13 @@ impl JsonWebSignature {
         ))
     }
 
-    #[cfg(any(feature = "testutil", test))]
+    #[cfg(test)]
     #[allow(missing_docs)]
     pub fn inject_now(date_time: Option<DateTime<Utc>>) {
         *INJECTED_NOW.lock().unwrap() = date_time
     }
 
-    #[cfg(any(feature = "testutil", test))]
+    #[cfg(test)]
     fn injected_now() -> DateTime<Utc> {
         if let Some(now) = *INJECTED_NOW.lock().unwrap() {
             now

@@ -14,10 +14,18 @@
 //! cargo run --example amazon-sesv2
 //! ```
 //!
-//! See [`ACD-2`](_docs::acd_2) for test guideline.
+//! See [`ACD-2`] for test guideline.
+//!
+//! [`ACD-2`]: ../_docs/acd_2/index.html
 
 /// Account service tests.
 pub mod account_service;
 
 /// Token repository tests.
 pub mod token_repo;
+
+/// Hander tests.
+pub mod handlers;
+
+/// Common test utilities.
+pub mod util;
