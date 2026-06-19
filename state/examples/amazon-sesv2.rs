@@ -33,6 +33,7 @@ async fn main() {
             dest.clone(),
             0.into(),
             service::util::mails::Template::ConfirmNewEmail {
+                username: "metw".to_string(),
                 email: dest,
                 token: "none".to_string(),
             },
