@@ -12,7 +12,35 @@ pub use error::RepoError;
 /// Repository result type.
 pub type RepoResult<T> = Result<T, RepoError>;
 
-/// Persistent account storage.
+/// Represents the data access layer for account entities.
+///
+/// Entities managed by this repository are [`Account`], [`AccountFlags`],
+/// [`Username`], and [`Email`].
+///
+/// [`Account`]: crate::entity::Account
+/// [`AccountFlags`]: crate::entity::AccountFlags
+/// [`Username`]: crate::entity::Username
+/// [`Email`]: crate::entity::Email
+///
+///
+/// # Invariants
+///
+/// | ID | Constraint | Field |
+/// |--|--|--|
+/// | `I-AR-1` | unique | `accounts.id` |
+/// | `I-AR-2` | unique | `accounts.id, username, username.is_primary == true` |
+/// | `I-AR-3` | unique | `accounts.id, email, email.is_primary == true` |
+/// | `I-AR-4` | check | `username.is_primary == true NAND username.is_expires IS NOT NULL` |
+/// | `I-AR-5` | check | `username == lower(username)` |
+/// | `I-AR-6` | check | `email == lower(email)` |
+/// | `I-AR-7` | unique | `username` |
+/// | `I-AR-8` | unique | `email` |
+///
+/// | ID | Relation | From | To |
+/// |--|--|--|--|
+/// | `R-AR-1`| one-to-many | `account.id` | `email` |
+/// | `R-AR-2`| one-to-many | `account.id` | `username` |
+/// | `R-AR-3`| one-to-exactly one | `account.id` | `account_flags.id` |
 #[async_trait]
 pub trait AccountRepo: Send + Sync {
     /// Begin a new transactional unit.
@@ -120,7 +148,7 @@ pub trait AccountRepoTransaction: Send + Sync {
     async fn set_verified_flag(&mut self, id: AccountId, is_verified: bool) -> RepoResult<()>;
 }
 
-/// Token provider holds data temporarily.
+/// Token revocation state.
 #[async_trait]
 pub trait TokenRepo: Send + Sync {
     /// Atomic operation for checking the revocation and doing it.

@@ -20,7 +20,11 @@ use validator::Validate;
 pub struct PendingActivationSessionHandler(pub State);
 
 impl PendingActivationSessionHandler {
-    /// POST `/retry-signup`
+    /// Resends the sign up email.
+    ///
+    /// Sends a [`ConfirmSignup`] email.
+    ///
+    /// [`ConfirmSignup`]: mails::Template::ConfirmSignup
     #[tracing::instrument(skip(self))]
     pub async fn retry_signup(
         self,

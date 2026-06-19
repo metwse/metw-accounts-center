@@ -48,25 +48,31 @@ pub mod entity;
 /// this module
 pub mod dto;
 
-/// Low-level definitions for application storage.
+/// The data access layer.
 ///
-/// See [`_docs`] for the detailed documentation.
+/// See [`ACD-1`] for the detailed documentation.
 ///
-/// [`_docs`]: ../../_docs/acd_1/index.html#repo
+/// [`ACD-1`]: ../../_docs/acd_1/index.html#repo
+///
+/// # Invariants
+///
+/// Trait implementations MUST guarantee the data integrity constraints
+/// documented in repository traits. IDs assigned to the constraints to make
+/// it easier to refer to them in the documentation.
 pub mod repo;
 
-/// An interface for manipulating a repo.
+/// An interface for manipulating a repository.
 ///
-/// See [`_docs`] for the detailed documentation.
+/// See [`ACD-1`] for the detailed documentation.
 ///
-/// [`_docs`]: ../../_docs/acd_1/index.html#service
+/// [`ACD-1`]: ../../_docs/acd_1/index.html#service
 pub mod service;
 
-/// An interface for manipulating the entire application state.
+/// An interface for manipulating the application state.
 ///
-/// See [`_docs`] for the detailed documentation.
+/// See [`ACD-1`] for the detailed documentation.
 ///
-/// [`_docs`]: ../../_docs/acd_1/index.html#handlers
+/// [`ACD-1`]: ../../_docs/acd_1/index.html#handlers
 pub mod handlers;
 
 /// Miscellaneous utilities.
@@ -74,9 +80,9 @@ pub mod util;
 
 /// External integrations.
 ///
-/// See [`_docs`] for the detailed documentation.
+/// See [`ACD-1`] for the detailed documentation.
 ///
-/// [`_docs`]: ../../_docs/acd_1/index.html#client
+/// [`ACD-1`]: ../../_docs/acd_1/index.html#client
 pub mod client;
 
 mod state;

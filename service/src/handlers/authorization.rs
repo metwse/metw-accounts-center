@@ -7,6 +7,8 @@ pub struct AuthorizationHandler(pub State);
 
 impl AuthorizationHandler {
     /// Handle privileged tokens.
+    ///
+    /// See [`TokenScope`].
     #[tracing::instrument(skip_all)]
     pub async fn auth(self, base64_encoded_token: String) -> HandlerResult<()> {
         let token = self.0.token_service.revoke(&base64_encoded_token).await?;

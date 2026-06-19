@@ -12,7 +12,7 @@ impl AccountService {
         Self { repo }
     }
 
-    /// Signup a new account
+    /// Sign up a new account.
     #[tracing::instrument(skip_all)]
     pub async fn signup(&self, signup_dto: &dto::request::Signup) -> ServiceResult<AccountId> {
         if self.repo.is_username_taken(&signup_dto.username).await? {

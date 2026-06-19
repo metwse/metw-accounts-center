@@ -6,16 +6,25 @@
 #[allow(missing_docs)]
 #[derive(Clone, Debug)]
 pub enum Template {
+    /// See [`CompleteSignup`].
+    ///
+    /// [`CompleteSignup`]: `crate::token::TokenScope::CompleteSignup`
     ConfirmSignup {
         username: String,
         token: String,
     },
 
+    /// See [`AddEmail`].
+    ///
+    /// [`AddEmail`]: `crate::token::TokenScope::AddEmail`
     ConfirmNewEmail {
         email: String,
         token: String,
     },
 
+    /// See [`ChangePrimaryEmail`].
+    ///
+    /// [`ChangePrimaryEmail`]: `crate::token::TokenScope::ChangePrimaryEmail`
     ConfirmPrimaryEmailChange {
         current_primary_email: String,
         new_primary_email: String,

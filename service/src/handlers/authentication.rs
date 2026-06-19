@@ -38,7 +38,11 @@ impl AuthenticationHandler {
         }
     }
 
-    /// POST `/signup`
+    /// Signs up a new account.
+    ///
+    /// Creates an unverified account and sends a [`ConfirmSignup`] email.
+    ///
+    /// [`ConfirmSignup`]: mails::Template::ConfirmSignup
     #[tracing::instrument(skip_all, fields(username = signup_dto.username, email = signup_dto.email))]
     pub async fn signup(self, signup_dto: dto::request::Signup) -> HandlerResult<AccountId> {
         signup_dto.validate()?;
@@ -65,7 +69,8 @@ impl AuthenticationHandler {
         Ok(account_id)
     }
 
-    /// POST `/login` (with `username`)
+    /// Returns a session JWT, with [`TokenScope::Session`] or
+    /// [`TokenScope::PendingActivationSession`] scope.
     #[tracing::instrument(skip_all, fields(username = login_dto.username))]
     pub async fn login_by_username(
         self,
@@ -82,7 +87,8 @@ impl AuthenticationHandler {
         Ok(self.login(login))
     }
 
-    /// POST `/login` (with `email`)
+    /// Returns a session JWT, with [`TokenScope::Session`] or
+    /// [`TokenScope::PendingActivationSession`] scope.
     #[tracing::instrument(skip_all, fields(email = login_dto.email))]
     pub async fn login_by_email(
         self,
@@ -108,7 +114,10 @@ impl AuthenticationHandler {
             .sign(&Token::new(login.id, token_scope))
     }
 
-    /// POST `/logout`
+    /// Revokes the JWT.
+    ///
+    /// Both the session tokens and authorization tokens can be revoked using
+    /// this.
     pub async fn logout(self, base64_encoded_token: String) -> HandlerResult<()> {
         self.0.token_service.revoke(&base64_encoded_token).await?;
 

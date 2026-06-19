@@ -19,18 +19,41 @@ pub struct Token {
 pub enum TokenScope {
     /// Permit logins.
     Session,
+
     /// Retry signup session.
     PendingActivationSession,
 
     /// The email to the account.
+    ///
+    /// Integrity Note: Emails are unique, as defined in [`I-AR-5`] and
+    /// [`I-AR-8`]. There may be more than one AddEmail token for the same
+    /// address, but only the first evaluated token will be successful.
+    ///
+    /// [`I-AR-5`]: crate::repo::AccountRepo#invariants
+    /// [`I-AR-8`]: crate::repo::AccountRepo#invariants
     AddEmail { email: String },
+
     /// Allow changing account's primary email address to given address.
+    ///
+    /// Integrity Note: An account can have at most one primary email, as
+    /// defined in [`I-AR-3`]. There may be more than one ChangePrimaryEmail
+    /// token, but only the token that changes the primary email from the
+    /// current one to the new one will be successful.
+    ///
+    /// [`I-AR-3`]: crate::repo::AccountRepo#invariants
     ChangePrimaryEmail {
         current_primary_email: String,
         new_primary_email: String,
     },
-    /// Enable account and add first primary email. This scope is present in
-    /// email sent in signup procedure.
+
+    /// Enable account and add first primary email.
+    ///
+    /// Integrity Note: An account can have at most one primary email, as
+    /// defined in [`I-AR-3`]. More than one CompleteSignup token may be valid
+    /// at any time, but only one of them will be successful based on the
+    /// invariant.
+    ///
+    /// [`I-AR-3`]: crate::repo::AccountRepo#invariants
     CompleteSignup { email: String },
 }
 

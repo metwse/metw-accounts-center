@@ -17,16 +17,15 @@ use validator::Validate;
 pub struct SessionHandler(pub State);
 
 impl SessionHandler {
-    /// GET `/me`
+    /// Returns account details.
     #[tracing::instrument(skip(self))]
     pub async fn me(self, id: AccountId) -> HandlerResult<dto::response::Account> {
         Ok(self.0.account_service.me(id).await?)
     }
 
-    /// POST `/me/emails`
+    /// Sends [`ConfirmNewEmail`] to add requested email.
     ///
-    /// Add a new email to the account. Sends verification code to requested
-    /// email.
+    /// [`ConfirmNewEmail`]: mails::Template::ConfirmNewEmail
     #[tracing::instrument(skip(self))]
     pub async fn add_email(self, id: AccountId, email: dto::request::Email) -> HandlerResult<()> {
         email.validate()?;
@@ -54,9 +53,7 @@ impl SessionHandler {
         Ok(())
     }
 
-    /// DELETE `/me/emails/<email>`
-    ///
-    /// Remove the email if it is not primary email.
+    /// Removes the email if it is not account's primary email.
     #[tracing::instrument(skip(self))]
     pub async fn delete_email(
         self,
@@ -75,9 +72,9 @@ impl SessionHandler {
         Ok(())
     }
 
-    /// POST `/me/emails/<email>/set-primary`
+    /// Sends [`ConfirmPrimaryEmailChange`] email to current primary email.
     ///
-    /// Set the email as account's primary mail.
+    /// [`ConfirmPrimaryEmailChange`]: mails::Template::ConfirmPrimaryEmailChange
     #[tracing::instrument(skip(self))]
     pub async fn set_primary_mail(
         self,
