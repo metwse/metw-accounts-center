@@ -5,9 +5,6 @@ mod session;
 
 mod error;
 
-#[cfg(test)]
-mod tests;
-
 pub use authentication::AuthenticationHandler;
 pub use authorization::AuthorizationHandler;
 pub use pending_activation_session::PendingActivationSessionHandler;

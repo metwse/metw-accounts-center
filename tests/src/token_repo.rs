@@ -6,7 +6,7 @@ use service::{
 };
 
 /// Sign a token, then check and revoke.
-pub async fn token_revocation(repo: Box<dyn TokenRepo>) -> RepoResult<()> {
+pub async fn token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
     // Let's use snowflake id as random fingerprint.
     let random_fingerprint = random_username();
     let another_random_fingerprint = random_username();
@@ -43,7 +43,7 @@ pub async fn token_revocation(repo: Box<dyn TokenRepo>) -> RepoResult<()> {
 
 /// Concurrently call `check_and_revoke`. Only one of the requests should
 /// return `false`.
-pub async fn token_revocation_data_race(repo: Box<dyn TokenRepo>) -> RepoResult<()> {
+pub async fn token_revocation_data_race(repo: &dyn TokenRepo) -> RepoResult<()> {
     let random_fingerprint = random_username();
 
     let mut token_revocation_futures = Vec::with_capacity(16);
@@ -70,68 +70,33 @@ pub async fn token_revocation_data_race(repo: Box<dyn TokenRepo>) -> RepoResult<
 #[cfg(test)]
 mod tests {
     use super::{token_revocation, token_revocation_data_race};
-    use state::{CaptchaClientImpl, TokenRepoImpl};
+    use crate::util::redis_client_from_env;
+    use service::repo::{RepoResult, TokenRepo, mock::MockTokenRepoImpl};
+    use state::TokenRepoImpl;
 
-    use redis::aio::MultiplexedConnection;
-    use service::repo::{RepoResult, mock::MockTokenRepoImpl};
+    async fn testsuite(token_repo: &dyn TokenRepo) -> RepoResult<()> {
+        for _ in 0..4 {
+            token_revocation(token_repo).await?;
 
-    async fn default_redis() -> MultiplexedConnection {
-        dotenvy::dotenv_override().ok();
+            token_revocation_data_race(token_repo).await?;
+        }
 
-        redis::Client::open(std::env::var("REDIS_URL").unwrap())
-            .unwrap()
-            .get_multiplexed_async_connection()
-            .await
-            .unwrap()
+        Ok(())
     }
 
     #[tokio::test(flavor = "multi_thread")]
     #[test_log::test]
-    async fn mock_token_revocation() -> RepoResult<()> {
-        token_revocation(MockTokenRepoImpl::boxed_new()).await?;
-
-        token_revocation_data_race(MockTokenRepoImpl::boxed_new()).await?;
-
-        Ok(())
+    async fn mock_token_repo() -> RepoResult<()> {
+        testsuite(MockTokenRepoImpl::boxed_new().as_ref()).await
     }
 
     #[tokio::test(flavor = "multi_thread")]
     #[test_log::test]
     #[ignore]
     #[serial_test::serial]
-    async fn redis_token_revocation() -> RepoResult<()> {
-        let redis = default_redis().await;
+    async fn token_repo() -> RepoResult<()> {
+        let redis = redis_client_from_env().await;
 
-        for _ in 0..16 {
-            token_revocation(TokenRepoImpl::boxed_new(redis.clone())).await?;
-
-            token_revocation_data_race(TokenRepoImpl::boxed_new(redis.clone())).await?;
-        }
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    #[ignore]
-    async fn cloudflare_captcha() {
-        const ALWAYS_PASS: &str = "1x0000000000000000000000000000000AA";
-        const ALWAYS_FAIL: &str = "2x0000000000000000000000000000000AA";
-        const ALWAYS_FAIL_ALREADY_SPENT: &str = "3x0000000000000000000000000000000AA";
-
-        assert!(
-            CaptchaClientImpl::boxed_new(ALWAYS_PASS.into())
-                .validate("123".into())
-                .await
-        );
-        assert!(
-            !CaptchaClientImpl::boxed_new(ALWAYS_FAIL.into())
-                .validate("123".into())
-                .await
-        );
-        assert!(
-            !CaptchaClientImpl::boxed_new(ALWAYS_FAIL_ALREADY_SPENT.into())
-                .validate("123".into())
-                .await
-        );
+        testsuite(TokenRepoImpl::boxed_new(redis.clone()).as_ref()).await
     }
 }

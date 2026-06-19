@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 service = { path = "../service/", features = ["mock", "testutil"] }
 state = { path = "../state/" }
+tests = { path = "../tests/" }

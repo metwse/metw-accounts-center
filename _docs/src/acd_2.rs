@@ -11,3 +11,9 @@
 //! - Use `#[ignored]` for tests that require a live production database or an
 //!   external client, and write tests within examples for those that require
 //!   human interaction.
+//!
+//! - Write tests that require repository access in the [`tests`] module, see
+//!   its documentation for details.
+//!
+//!
+//! [`tests`]: tests

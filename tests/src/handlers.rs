@@ -1,22 +1,19 @@
-use super::{HandlerError, HandlerResult};
-use crate::{
+use crate::util::TestCtx;
+use service::{
     dto,
     handlers::{
-        AuthenticationHandler, AuthorizationHandler, PendingActivationSessionHandler,
-        SessionHandler,
+        AuthenticationHandler, AuthorizationHandler, HandlerError, HandlerResult,
+        PendingActivationSessionHandler, SessionHandler,
     },
     service::ServiceError,
-    testutil::{TestCtx, random_email, random_username},
+    testutil::{random_email, random_username},
     token::TokenScope,
     util::mails,
 };
 use std::assert_matches;
 
-#[tokio::test(flavor = "multi_thread")]
-#[test_log::test]
-async fn retry_signup_procedure() -> HandlerResult<()> {
-    let ctx = TestCtx::new();
-
+/// Completes sign up with pending activation session.
+pub async fn retry_signup(ctx: &TestCtx) -> HandlerResult<()> {
     let (_, _, taken_email) = ctx.signup_and_verify_email("passwd1").await;
 
     // Create the account.
@@ -83,11 +80,8 @@ async fn retry_signup_procedure() -> HandlerResult<()> {
     Ok(())
 }
 
-#[tokio::test(flavor = "multi_thread")]
-#[test_log::test]
-async fn signup_and_login() -> HandlerResult<()> {
-    let ctx = TestCtx::new();
-
+/// Sign up an account and log into it.
+pub async fn signup_and_login(ctx: &TestCtx) -> HandlerResult<()> {
     let (account_id, username, email) = ctx.signup("passwd").await;
 
     let mails::Template::ConfirmSignup {
@@ -175,11 +169,8 @@ async fn signup_and_login() -> HandlerResult<()> {
     Ok(())
 }
 
-#[tokio::test(flavor = "multi_thread")]
-#[test_log::test]
-async fn logout() -> HandlerResult<()> {
-    let ctx = TestCtx::new();
-
+/// Log out session.
+pub async fn logout(ctx: &TestCtx) -> HandlerResult<()> {
     let (_, username, _) = ctx.signup_and_verify_email("passwd").await;
 
     let session_jwt = ctx.login_with_username(username, "passwd").await?;
@@ -207,11 +198,8 @@ async fn logout() -> HandlerResult<()> {
     Ok(())
 }
 
-#[tokio::test(flavor = "multi_thread")]
-#[test_log::test]
-async fn taken_username_or_email() -> HandlerResult<()> {
-    let ctx = TestCtx::new();
-
+/// Try to sign up with already taken username or email.
+pub async fn taken_username_or_email(ctx: &TestCtx) -> HandlerResult<()> {
     let (_, taken_username, taken_email) = ctx.signup_and_verify_email("passwd").await;
     let (_, another_taken_username, _) = ctx.signup("passwd").await;
 
@@ -258,11 +246,8 @@ async fn taken_username_or_email() -> HandlerResult<()> {
     Ok(())
 }
 
-#[tokio::test(flavor = "multi_thread")]
-#[test_log::test]
-async fn change_primary_email() -> HandlerResult<()> {
-    let ctx = TestCtx::new();
-
+/// Change primary email and remove the old email.
+pub async fn change_primary_email(ctx: &TestCtx) -> HandlerResult<()> {
     // Sign up an account.
     let (acccount_id, _, email) = ctx.signup_and_verify_email("passwd1").await;
     let (_, _, another_accounts_email) = ctx.signup_and_verify_email("passwd2").await;
@@ -380,4 +365,50 @@ async fn change_primary_email() -> HandlerResult<()> {
     );
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        change_primary_email, logout, retry_signup, signup_and_login, taken_username_or_email,
+    };
+    use crate::util::{TestCtx, pg_pool_from_env, redis_client_from_env};
+    use service::handlers::HandlerResult;
+    use state::{AccountRepoImpl, TokenRepoImpl};
+
+    async fn testsuite(ctx: &TestCtx) -> HandlerResult<()> {
+        for _ in 0..4 {
+            retry_signup(ctx).await?;
+            signup_and_login(ctx).await?;
+            logout(ctx).await?;
+            taken_username_or_email(ctx).await?;
+            change_primary_email(ctx).await?;
+        }
+
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    #[test_log::test]
+    async fn mock_repo() -> HandlerResult<()> {
+        testsuite(&TestCtx::new()).await
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    #[test_log::test]
+    #[ignore]
+    #[serial_test::serial]
+    async fn repo() -> HandlerResult<()> {
+        let pg_pool = pg_pool_from_env().await;
+        let redis = redis_client_from_env().await;
+
+        let account_repo = AccountRepoImpl::boxed_new(pg_pool);
+        let token_repo = TokenRepoImpl::boxed_new(redis);
+
+        let ctx = TestCtx::new()
+            .with_account_repo(account_repo)
+            .with_token_repo(token_repo);
+
+        testsuite(&ctx).await
+    }
 }
