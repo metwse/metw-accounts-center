@@ -9,18 +9,12 @@ pub enum Template {
     /// See [`CompleteSignup`].
     ///
     /// [`CompleteSignup`]: `crate::token::TokenScope::CompleteSignup`
-    ConfirmSignup {
-        username: String,
-        token: String,
-    },
+    ConfirmSignup { username: String, token: String },
 
     /// See [`AddEmail`].
     ///
     /// [`AddEmail`]: `crate::token::TokenScope::AddEmail`
-    ConfirmNewEmail {
-        email: String,
-        token: String,
-    },
+    ConfirmNewEmail { email: String, token: String },
 
     /// See [`ChangePrimaryEmail`].
     ///

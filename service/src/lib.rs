@@ -8,7 +8,7 @@
 //! ## System Design
 //!
 //! This project strictly adheres to the [Separation of Concerns][SoC] (SoC)
-//! principle. The service abstraction levels are:
+//! principle. The service abstraction layers are:
 //! - [`repo`]: Defines traits for application storage, database, and cache
 //!   access.
 //! - [`service`]: Provides an interface for manipulating application state.
@@ -25,9 +25,9 @@
 //! [`client`] is used for external integrations (e.g., mail provider,
 //! CAPTCHA).
 //!
-//! To ensure type-safety, the [`dto`] module defines the interface to
-//! communicate with `handlers`. [`dto::repo`] and [`entity`] are used for
-//! internal communication between `service` and `repo` layers.
+//! The [`dto`] module defines the interface to communicate with `handlers`.
+//! [`dto::service`], [`dto::repo`] and [`entity`] are used for internal
+//! communication between `service` and `repo` layers.
 //!
 //! [`util`] is used for miscellaneous utilities that do not fit into
 //! categories above. Check out documentations of the `util` for details.

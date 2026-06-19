@@ -8,19 +8,20 @@
 //!   authentication authority.
 //! - End-to-End Encryption (E2EE): Users have a public-private key pair
 //!   and a master key. Their master keys and private keys are stored on the
-//!   server, encrypted on the client side.
+//!   server, encrypted client-side.
 //!
 //! Non-Goals:
-//! - This microservice must not be extended with non-authentication features;
-//!   profiles, posts, shares, etc., are out of scope for this service.
+//! - This microservice must not be extended with non-authentication features:
+//!   Profiles, posts, shares, and similar concepts are out of scope for this
+//!   service.
 //!
 //!
-//! ## The Ultimate Goal: E2EE-Authentication
+//! ## Architecture: E2EE-Authentication
 //!
 //! Account public keys are served publicly. When users log into their accounts,
-//! they are essentially retrieving their own private keys. This private key
-//! is used for OAuth2-like flows, where the users themselves authorize other
-//! applications.
+//! they retrieve their encrypted private keys from the server and decrypt them
+//! locally. This private key is then used for OAuth2-like flows, where the
+//! users directly authorize other applications.
 //!
 //! ```txt
 //! +-- CLIENT - (Account Creation) --------------------------------+
@@ -51,11 +52,31 @@
 //! ```
 //!
 //!
+//! # Setup
+//!
+//! Required environment variables for repository and client setup are listed
+//! in fields of [`Config`](state::Config) struct.
+//!
+//! Once you have prepared the `.env` file, run the database migrations via:
+//! ```sh
+//! cd state/
+//!
+//! cargo sqlx migrate run
+//! ```
+//! (See the related
+//! [sqlx-cli](https://github.com/transact-rs/sqlx/tree/main/sqlx-cli#create-and-run-migrations)
+//! documentation)
+//!
+//! > **Important:** To ensure application security, carefully read the
+//! > [Setup Recommendations](state#setup-recommendations)
+//! > section.
+//!
+//!
 //! # Drafts
 //!
 //! The design principles of metw-accounts-center are specified in the drafts.
-//! - [`acd_1`]: State Abstraction Layers
-//! - [`acd_2`]: Writing Tests
+//! - [`ACD-1`](acd_1): State Abstraction Layers
+//! - [`ACD-2`](acd_2): Writing Tests
 
 /// # State Abstraction Layers
 pub mod acd_1;

@@ -1,7 +1,7 @@
 //!
 //! The points you should keep in mind when writing a test are:
 //!
-//! - Tests that reading environment variables MUST USE serial_test::serial.
+//! - Tests that reading environment variables MUST USE `serial_test::serial`.
 //!   This is because different tests reading different .env files causes a
 //!   data race.
 //!

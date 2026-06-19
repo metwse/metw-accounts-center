@@ -1,0 +1,10 @@
+[package]
+name = "tests"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+_docs = { path = "../_docs/" }
+
+[lints]
+workspace = true

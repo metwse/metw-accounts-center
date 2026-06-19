@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["_docs", "service", "state"]
+members = ["_docs", "service", "state", "tests"]
 
 [workspace.dependencies]
 # async runtime&utility
