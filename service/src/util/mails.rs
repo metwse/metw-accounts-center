@@ -14,12 +14,17 @@ pub enum Template {
     /// See [`AddEmail`].
     ///
     /// [`AddEmail`]: `crate::token::TokenScope::AddEmail`
-    ConfirmNewEmail { email: String, token: String },
+    ConfirmNewEmail {
+        username: String,
+        email: String,
+        token: String,
+    },
 
     /// See [`ChangePrimaryEmail`].
     ///
     /// [`ChangePrimaryEmail`]: `crate::token::TokenScope::ChangePrimaryEmail`
     ConfirmPrimaryEmailChange {
+        username: String,
         current_primary_email: String,
         new_primary_email: String,
         token: String,
@@ -42,15 +47,20 @@ impl Template {
             Self::ConfirmSignup { username, token } => format!(
                 "Hello {username}! Please verify your account by clicking: {callback_url}?token={token}"
             ),
-            Self::ConfirmNewEmail { email, token } => format!(
-                "To add <{email}> as a secondary email to your account, please click the link: {callback_url}?token={token}"
+            Self::ConfirmNewEmail {
+                username,
+                email,
+                token,
+            } => format!(
+                "To add <{email}> as a secondary email to your account @{username}, please click the link: {callback_url}?token={token}"
             ),
             Self::ConfirmPrimaryEmailChange {
+                username,
                 current_primary_email,
                 new_primary_email,
                 token,
             } => format!(
-                "Please confirm your account's primary email change (from <{current_primary_email}> to <{new_primary_email}>) by clicking the link: {callback_url}?token={token}"
+                "Hello {username}, please confirm your account's primary email change (from <{current_primary_email}> to <{new_primary_email}>) by clicking the link: {callback_url}?token={token}"
             ),
         }
     }

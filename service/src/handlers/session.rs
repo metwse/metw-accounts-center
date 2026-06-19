@@ -36,6 +36,10 @@ impl SessionHandler {
             return Err(ServiceError::EmailTaken)?;
         }
 
+        let Some(username) = self.0.account_service.get_primary_username(id).await? else {
+            return Err(HandlerError::UnexpectedError("account with no username"))?;
+        };
+
         let add_email_jwt = self.0.token_service.sign(&Token::new(
             id,
             TokenScope::AddEmail {
@@ -44,6 +48,7 @@ impl SessionHandler {
         ));
 
         let template = mails::Template::ConfirmNewEmail {
+            username,
             email: email.clone(),
             token: add_email_jwt,
         };
@@ -90,6 +95,10 @@ impl SessionHandler {
             return Err(HandlerError::UnexpectedError("account with no email"));
         };
 
+        let Some(username) = self.0.account_service.get_primary_username(id).await? else {
+            return Err(HandlerError::UnexpectedError("account with no username"))?;
+        };
+
         if !self
             .0
             .account_service
@@ -108,6 +117,7 @@ impl SessionHandler {
         ));
 
         let template = mails::Template::ConfirmPrimaryEmailChange {
+            username,
             current_primary_email: current_primary_email.clone(),
             new_primary_email,
             token: change_primary_email_jwt,
