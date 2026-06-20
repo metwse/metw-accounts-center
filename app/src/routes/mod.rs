@@ -7,3 +7,6 @@ pub use authentication::authentication_routes;
 pub use authorization::authorization_routes;
 pub use pending_activation_session::pending_activation_session_routes;
 pub use session::session_routes;
+
+// TODO: utoipa docs
+// TODO: tests

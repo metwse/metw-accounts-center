@@ -33,7 +33,7 @@ impl AccountRepo for MockAccountRepoImpl {
         }))
     }
 
-    async fn get_login_by_email(&self, email: &str) -> RepoResult<Option<dto::repo::OwnedLogin>> {
+    async fn get_login_with_email(&self, email: &str) -> RepoResult<Option<dto::repo::OwnedLogin>> {
         let state = self.lock_state().await;
 
         if let Some(email_entity) = state.emails.get(email) {
@@ -48,7 +48,7 @@ impl AccountRepo for MockAccountRepoImpl {
         }
     }
 
-    async fn get_login_by_username(
+    async fn get_login_with_username(
         &self,
         username: &str,
     ) -> RepoResult<Option<dto::repo::OwnedLogin>> {

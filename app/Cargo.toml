@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 tokio = { workspace = true, features = ["net", "rt", "rt-multi-thread"] }
-axum = { workspace = true }
+axum = { workspace = true, features = ["macros"] }
 
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }

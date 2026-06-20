@@ -119,7 +119,7 @@ impl TestCtx {
         client_password_hash: &'static str,
     ) -> HandlerResult<String> {
         AuthenticationHandler(self.state.clone())
-            .login_by_username(dto::request::LoginWithUsername {
+            .login_with_username(dto::request::LoginWithUsername {
                 username: username.to_string(),
                 client_password_hash: client_password_hash.to_string(),
             })
@@ -133,7 +133,7 @@ impl TestCtx {
         client_password_hash: &'static str,
     ) -> HandlerResult<String> {
         AuthenticationHandler(self.state.clone())
-            .login_by_email(dto::request::LoginWithEmail {
+            .login_with_email(dto::request::LoginWithEmail {
                 email: email.to_string(),
                 client_password_hash: client_password_hash.to_string(),
             })

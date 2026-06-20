@@ -1,3 +1,4 @@
+use serde::Deserialize;
 use std::sync::LazyLock;
 use validator::Validate;
 
@@ -15,7 +16,7 @@ fn validate_lowercase(s: &str) -> Result<(), validator::ValidationError> {
 }
 
 /// Sign up a new account.
-#[derive(Validate, Debug, Clone)]
+#[derive(Validate, Debug, Clone, Deserialize)]
 pub struct Signup {
     /// Username.
     #[validate(length(min = 2, max = 20), regex(path = *USERNAME_REGEX))]
@@ -33,7 +34,7 @@ pub struct Signup {
 }
 
 /// Login into the account.
-#[derive(Validate, Debug, Clone)]
+#[derive(Validate, Debug, Clone, Deserialize)]
 pub struct LoginWithUsername {
     /// Username.
     #[validate(length(min = 2, max = 20), regex(path = *USERNAME_REGEX))]
@@ -45,7 +46,7 @@ pub struct LoginWithUsername {
 }
 
 /// Login into the account.
-#[derive(Validate, Debug, Clone)]
+#[derive(Validate, Debug, Clone, Deserialize)]
 pub struct LoginWithEmail {
     /// Email.
     #[validate(email, custom(function = validate_lowercase))]
@@ -57,7 +58,7 @@ pub struct LoginWithEmail {
 }
 
 /// Roll keys, change password, master key or key pair.
-#[derive(Validate, Debug, Clone)]
+#[derive(Validate, Debug, Clone, Deserialize)]
 pub struct KeyRoll {
     /// Argon2-hashed password. Password will not be changed if its empty.
     #[validate(length(max = 128))]
@@ -69,7 +70,7 @@ pub struct KeyRoll {
 }
 
 /// Account's criptographic keys.
-#[derive(Validate, Debug, Clone)]
+#[derive(Validate, Debug, Clone, Deserialize)]
 pub struct Keys {
     /// Curve25519 public key in der format.
     #[validate(length(max = 2048))]
@@ -83,7 +84,7 @@ pub struct Keys {
 }
 
 /// Request only containing an email.
-#[derive(Validate, Debug, Clone)]
+#[derive(Validate, Debug, Clone, Deserialize)]
 pub struct Email {
     /// Email.
     #[validate(email, custom(function = validate_lowercase))]

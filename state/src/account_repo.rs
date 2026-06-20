@@ -26,7 +26,7 @@ impl AccountRepo for AccountRepoImpl {
         ))
     }
 
-    async fn get_login_by_email(&self, email: &str) -> RepoResult<Option<dto::repo::OwnedLogin>> {
+    async fn get_login_with_email(&self, email: &str) -> RepoResult<Option<dto::repo::OwnedLogin>> {
         let login = sqlx::query_as!(
             dto::repo::OwnedLogin,
             "SELECT id, password_hash FROM accounts
@@ -39,7 +39,7 @@ impl AccountRepo for AccountRepoImpl {
         Ok(login?)
     }
 
-    async fn get_login_by_username(
+    async fn get_login_with_username(
         &self,
         username: &str,
     ) -> RepoResult<Option<dto::repo::OwnedLogin>> {

@@ -72,7 +72,7 @@ impl AuthenticationHandler {
     /// Returns a session JWT, with [`TokenScope::Session`] or
     /// [`TokenScope::PendingActivationSession`] scope.
     #[tracing::instrument(skip_all, fields(username = login_dto.username))]
-    pub async fn login_by_username(
+    pub async fn login_with_username(
         self,
         login_dto: dto::request::LoginWithUsername,
     ) -> HandlerResult<String> {
@@ -90,7 +90,7 @@ impl AuthenticationHandler {
     /// Returns a session JWT, with [`TokenScope::Session`] or
     /// [`TokenScope::PendingActivationSession`] scope.
     #[tracing::instrument(skip_all, fields(email = login_dto.email))]
-    pub async fn login_by_email(
+    pub async fn login_with_email(
         self,
         login_dto: dto::request::LoginWithEmail,
     ) -> HandlerResult<String> {

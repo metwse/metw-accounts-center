@@ -76,7 +76,7 @@ impl AccountService {
         &self,
         credentials: &dto::request::LoginWithEmail,
     ) -> ServiceResult<dto::service::Login> {
-        let Some(login) = self.repo.get_login_by_email(&credentials.email).await? else {
+        let Some(login) = self.repo.get_login_with_email(&credentials.email).await? else {
             return Err(ServiceError::InvalidCredentials);
         };
 
@@ -91,7 +91,7 @@ impl AccountService {
     ) -> ServiceResult<dto::service::Login> {
         let Some(login) = self
             .repo
-            .get_login_by_username(&credentials.username)
+            .get_login_with_username(&credentials.username)
             .await?
         else {
             return Err(ServiceError::InvalidCredentials);

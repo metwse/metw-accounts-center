@@ -50,12 +50,12 @@ pub trait AccountRepo: Send + Sync {
     ///
     /// Returns Argon2-hashed password with account id. Higher layers shall do
     /// hash verifications.
-    async fn get_login_by_email(&self, email: &str) -> RepoResult<Option<dto::repo::OwnedLogin>>;
+    async fn get_login_with_email(&self, email: &str) -> RepoResult<Option<dto::repo::OwnedLogin>>;
 
     /// Get password by username.
     ///
-    /// The behavior is exactly the same with `get_login_by_email`.
-    async fn get_login_by_username(
+    /// The behavior is exactly the same with `get_login_with_email`.
+    async fn get_login_with_username(
         &self,
         username: &str,
     ) -> RepoResult<Option<dto::repo::OwnedLogin>>;
