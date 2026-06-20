@@ -16,7 +16,7 @@ impl AuthorizationHandler {
         trace!(account_id = %token.id, variant = token.scope.variant_name());
 
         match token.scope {
-            TokenScope::Session | TokenScope::PendingActivationSession => {
+            TokenScope::Session | TokenScope::EmailVerificationSession => {
                 Err(HandlerError::Unauthorized)
             }
 

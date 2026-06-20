@@ -21,7 +21,7 @@ pub enum TokenScope {
     Session,
 
     /// Retry signup session.
-    PendingActivationSession,
+    EmailVerificationSession,
 
     /// The email to the account.
     ///
@@ -84,7 +84,7 @@ impl TokenScope {
     pub fn variant_name(&self) -> &'static str {
         match self {
             Self::Session => "session",
-            Self::PendingActivationSession { .. } => "pending-activation-session",
+            Self::EmailVerificationSession { .. } => "pending-activation-session",
             Self::AddEmail { .. } => "add-email",
             Self::ChangePrimaryEmail { .. } => "change-primary-email",
             Self::CompleteSignup { .. } => "complete-signup",
@@ -95,7 +95,7 @@ impl TokenScope {
     pub fn lifetime(&self) -> Duration {
         match self {
             Self::Session => Duration::from_hours(24 * 7),
-            Self::PendingActivationSession { .. } => Duration::from_hours(1),
+            Self::EmailVerificationSession { .. } => Duration::from_hours(1),
             Self::AddEmail { .. } => Duration::from_hours(1),
             Self::ChangePrimaryEmail { .. } => Duration::from_mins(10),
             Self::CompleteSignup { .. } => Duration::from_hours(1),

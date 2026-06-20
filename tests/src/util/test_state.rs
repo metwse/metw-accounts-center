@@ -17,12 +17,12 @@ use tokio::sync::Mutex;
 
 /// Test repositories, handlers and clients.
 #[allow(missing_docs)]
-pub struct TestCtx {
+pub struct TestState {
     pub state: AppState,
     emails: Arc<Mutex<Mails>>,
 }
 
-impl Default for TestCtx {
+impl Default for TestState {
     fn default() -> Self {
         let account_service = AccountService::new(MockAccountRepoImpl::boxed_new());
         let token_service =
@@ -42,7 +42,7 @@ impl Default for TestCtx {
     }
 }
 
-impl TestCtx {
+impl TestState {
     /// Creates a new test context.
     pub fn new() -> Self {
         Self::default()
@@ -72,7 +72,7 @@ impl TestCtx {
         let username = random_username();
         let email = random_email();
 
-        let account_id = AuthenticationHandler(self.state.clone())
+        let email_verification_jwt = AuthenticationHandler(self.state.clone())
             .signup(dto::request::Signup {
                 client_password_hash: client_password_hash.to_string(),
                 username: username.to_string(),
@@ -85,6 +85,14 @@ impl TestCtx {
             })
             .await
             .unwrap();
+
+        let account_id = self
+            .state
+            .token_service
+            .verify(&email_verification_jwt.token)
+            .await
+            .unwrap()
+            .id;
 
         (account_id, username, email)
     }
@@ -124,6 +132,7 @@ impl TestCtx {
                 client_password_hash: client_password_hash.to_string(),
             })
             .await
+            .map(|jwt| jwt.token)
     }
 
     /// Login with email.
@@ -138,6 +147,7 @@ impl TestCtx {
                 client_password_hash: client_password_hash.to_string(),
             })
             .await
+            .map(|jwt| jwt.token)
     }
 
     /// Get the last email sent to the account.

@@ -9,7 +9,7 @@ use service::AppState;
 use std::time::Instant;
 
 use crate::routes::{
-    authentication_routes, authorization_routes, pending_activation_session_routes, session_routes,
+    authentication_routes, authorization_routes, email_verification_session_routes, session_routes,
 };
 
 /// API routes.
@@ -52,6 +52,6 @@ pub fn app(state: AppState) -> Router {
         .with_state(state.clone())
         .merge(authentication_routes(state.clone()))
         .merge(authorization_routes(state.clone()))
-        .merge(pending_activation_session_routes(state.clone()))
+        .merge(email_verification_session_routes(state.clone()))
         .merge(session_routes(state))
 }

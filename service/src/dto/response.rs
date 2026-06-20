@@ -21,6 +21,12 @@ pub struct Account {
     pub keys: Keys,
 }
 
+/// JWT, usually returned after sign up or log in.
+#[derive(Debug, Serialize)]
+pub struct Jwt {
+    pub token: String,
+}
+
 #[derive(Debug, Serialize)]
 pub struct Keys {
     pub identity_key: Vec<u8>,

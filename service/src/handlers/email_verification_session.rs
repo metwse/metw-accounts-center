@@ -13,13 +13,13 @@ use validator::Validate;
 /// Account handlers before the email verification.
 ///
 /// This handlers *should be* protected using tokens with
-/// [`TokenScope::PendingActivationSession`]. See [`SessionHandler`] for
+/// [`TokenScope::EmailVerificationSession`]. See [`SessionHandler`] for
 /// details.
 ///
 /// [`SessionHandler`]: super::SessionHandler
-pub struct PendingActivationSessionHandler(pub AppState);
+pub struct EmailVerificationSessionHandler(pub AppState);
 
-impl PendingActivationSessionHandler {
+impl EmailVerificationSessionHandler {
     /// Resends the sign up email.
     ///
     /// Sends a [`ConfirmSignup`] email.

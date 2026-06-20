@@ -25,13 +25,13 @@ impl AuthenticationHandler {
     }
     /// Verify the pending activation session token.
     #[tracing::instrument(skip_all)]
-    pub async fn auth_pending_activation_session(
+    pub async fn auth_email_verification_session(
         self,
         base64_encoded_token: String,
     ) -> HandlerResult<AccountId> {
         let token = self.0.token_service.verify(&base64_encoded_token).await?;
 
-        if let TokenScope::PendingActivationSession = token.scope {
+        if let TokenScope::EmailVerificationSession = token.scope {
             Ok(token.id)
         } else {
             Err(HandlerError::Unauthorized)
@@ -44,7 +44,10 @@ impl AuthenticationHandler {
     ///
     /// [`ConfirmSignup`]: mails::Template::ConfirmSignup
     #[tracing::instrument(skip_all, fields(username = signup_dto.username, email = signup_dto.email))]
-    pub async fn signup(self, signup_dto: dto::request::Signup) -> HandlerResult<AccountId> {
+    pub async fn signup(
+        self,
+        signup_dto: dto::request::Signup,
+    ) -> HandlerResult<dto::response::Jwt> {
         signup_dto.validate()?;
 
         let email = signup_dto.email.clone();
@@ -59,6 +62,11 @@ impl AuthenticationHandler {
             },
         ));
 
+        let email_verification_session_jwt = self.0.token_service.sign(&Token::new(
+            account_id,
+            TokenScope::EmailVerificationSession,
+        ));
+
         let template = mails::Template::ConfirmSignup {
             username,
             token: complete_signup_jwt,
@@ -66,16 +74,18 @@ impl AuthenticationHandler {
 
         self.0.mail_client.send(email, account_id, template).await;
 
-        Ok(account_id)
+        Ok(dto::response::Jwt {
+            token: email_verification_session_jwt,
+        })
     }
 
     /// Returns a session JWT, with [`TokenScope::Session`] or
-    /// [`TokenScope::PendingActivationSession`] scope.
+    /// [`TokenScope::EmailVerificationSession`] scope.
     #[tracing::instrument(skip_all, fields(username = login_dto.username))]
     pub async fn login_with_username(
         self,
         login_dto: dto::request::LoginWithUsername,
-    ) -> HandlerResult<String> {
+    ) -> HandlerResult<dto::response::Jwt> {
         login_dto.validate()?;
 
         let login = self
@@ -88,12 +98,12 @@ impl AuthenticationHandler {
     }
 
     /// Returns a session JWT, with [`TokenScope::Session`] or
-    /// [`TokenScope::PendingActivationSession`] scope.
+    /// [`TokenScope::EmailVerificationSession`] scope.
     #[tracing::instrument(skip_all, fields(email = login_dto.email))]
     pub async fn login_with_email(
         self,
         login_dto: dto::request::LoginWithEmail,
-    ) -> HandlerResult<String> {
+    ) -> HandlerResult<dto::response::Jwt> {
         login_dto.validate()?;
 
         let login = self.0.account_service.login_with_email(&login_dto).await?;
@@ -101,17 +111,21 @@ impl AuthenticationHandler {
         Ok(self.login(login))
     }
 
-    fn login(self, login: dto::service::Login) -> String {
+    fn login(self, login: dto::service::Login) -> dto::response::Jwt {
         tracing::trace!(%login.id);
 
         let token_scope = if login.is_email_verified {
             TokenScope::Session
         } else {
-            TokenScope::PendingActivationSession
+            TokenScope::EmailVerificationSession
         };
-        self.0
-            .token_service
-            .sign(&Token::new(login.id, token_scope))
+
+        dto::response::Jwt {
+            token: self
+                .0
+                .token_service
+                .sign(&Token::new(login.id, token_scope)),
+        }
     }
 
     /// Revokes the JWT.

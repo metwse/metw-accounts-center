@@ -42,7 +42,7 @@ pub async fn auth_session(
 }
 
 /// Authenticate the login session before email verification.
-pub async fn auth_pending_activation_session(
+pub async fn auth_email_verification_session(
     State(state): State<AppState>,
     mut req: Request,
     next: Next,
@@ -52,7 +52,7 @@ pub async fn auth_pending_activation_session(
     };
 
     match AuthenticationHandler(state)
-        .auth_pending_activation_session(token.to_string())
+        .auth_email_verification_session(token.to_string())
         .await
     {
         Ok(id) => {
