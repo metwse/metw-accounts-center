@@ -278,7 +278,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
     // Try to add account2's email as primary mail
     assert_matches!(
         SessionHandler(ctx.state.clone())
-            .set_primary_mail(
+            .set_primary_email(
                 acccount_id,
                 dto::request::Email {
                     email: new_email.to_string()
@@ -313,7 +313,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
 
     // Change primary email.
     SessionHandler(ctx.state.clone())
-        .set_primary_mail(
+        .set_primary_email(
             acccount_id,
             dto::request::Email {
                 email: new_email.to_string(),
@@ -323,7 +323,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
 
     {
         let mails::Template::ConfirmPrimaryEmailChange {
-            token: change_primary_mail_jwt,
+            token: change_primary_email_jwt,
             ..
         } = ctx.last_email(acccount_id).await
         else {
@@ -332,12 +332,12 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
 
         ctx.state
             .token_service
-            .verify(&change_primary_mail_jwt)
+            .verify(&change_primary_email_jwt)
             .await?;
 
         // Change the primary mail.
         AuthorizationHandler(ctx.state.clone())
-            .auth(change_primary_mail_jwt.clone())
+            .auth(change_primary_email_jwt.clone())
             .await?;
     }
 

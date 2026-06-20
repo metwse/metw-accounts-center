@@ -1,8 +1,9 @@
 use super::repo;
 use serde::Serialize;
+use utoipa::ToSchema;
 
 /// Account entity returned to user after authentication.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct Account {
     /// Unique user id.
     pub id: i64,
@@ -22,12 +23,12 @@ pub struct Account {
 }
 
 /// JWT, usually returned after sign up or log in.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct Jwt {
     pub token: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct Keys {
     pub identity_key: Vec<u8>,
     pub encrypted_private_key: Vec<u8>,

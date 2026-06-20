@@ -20,11 +20,11 @@ impl MockMailClientImpl {
     pub fn boxed_new() -> (Arc<Mutex<Mails>>, Box<dyn MailClient>) {
         let mail_client = Self::default();
 
-        (mail_client.get_mails(), Box::new(mail_client))
+        (mail_client.get_emails(), Box::new(mail_client))
     }
 
-    /// Get mail entries.
-    pub fn get_mails(&self) -> Arc<Mutex<Mails>> {
+    /// Get email entries.
+    pub fn get_emails(&self) -> Arc<Mutex<Mails>> {
         Arc::clone(&self.mails)
     }
 }

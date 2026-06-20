@@ -32,6 +32,18 @@ async fn main() {
 
     let state = config.bootstrap().await;
 
+    #[cfg(debug_assertions)]
+    let app = {
+        use tower_http::cors::{AllowHeaders, AllowMethods, Any, CorsLayer};
+
+        let cors = CorsLayer::new()
+            .allow_methods(AllowMethods::any())
+            .allow_origin(Any)
+            .allow_headers(AllowHeaders::any());
+
+        app(state).layer(cors)
+    };
+    #[cfg(not(debug_assertions))]
     let app = app(state);
 
     axum::serve(listener, app).await.unwrap();

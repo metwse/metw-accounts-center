@@ -214,7 +214,7 @@ pub async fn email_change(
         account_service
             .remove_email_if_not_primary(account_id, &current_primary_email)
             .await,
-        Err(ServiceError::CannotDeletePrimaryEmail)
+        Err(ServiceError::CannotDeletePrimaryEmailOrEmailNotFound)
     );
 
     // Set the email2 primary.

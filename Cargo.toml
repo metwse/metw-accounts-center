@@ -5,8 +5,11 @@ members = ["_docs", "app", "service", "state", "tests"]
 [workspace.dependencies]
 # async runtime&utility
 tokio = "1"
+tower-http = "0.7"
 async-trait = "0.1"
 axum = "0.8"
+
+utoipa = "5.5"
 
 # repository
 sqlx = "0.8"
