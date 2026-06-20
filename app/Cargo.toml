@@ -5,7 +5,10 @@ edition = "2024"
 
 [dependencies]
 tokio = { workspace = true, features = ["net", "rt", "rt-multi-thread"] }
+tower-http = { workspace = true, features = ["cors", "trace"] }
 axum = { workspace = true, features = ["macros"] }
+
+utoipa = { workspace = true, features = ["axum_extras"] }
 
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }

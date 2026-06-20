@@ -9,6 +9,7 @@ use service::{
     AppState,
     handlers::{AuthenticationHandler, HandlerError},
 };
+use utoipa::{Modify, openapi};
 
 fn extract_token(req: &Request) -> Option<String> {
     req.headers()
@@ -61,5 +62,34 @@ pub async fn auth_email_verification_session(
             Ok(next.run(req).await)
         }
         Err(_) => Err(HandlerError::Unauthorized)?,
+    }
+}
+
+/// utoipa modifiers for middleware documentations.
+pub struct ApiDocSecurityAddon;
+
+impl Modify for ApiDocSecurityAddon {
+    fn modify(&self, openapi: &mut openapi::OpenApi) {
+        if let Some(components) = openapi.components.as_mut() {
+            components.add_security_scheme(
+                "session_jwt",
+                openapi::security::SecurityScheme::Http(
+                    openapi::security::HttpBuilder::new()
+                        .scheme(openapi::security::HttpAuthScheme::Bearer)
+                        .bearer_format("JWT")
+                        .build(),
+                ),
+            );
+
+            components.add_security_scheme(
+                "email_verification_session_jwt",
+                openapi::security::SecurityScheme::Http(
+                    openapi::security::HttpBuilder::new()
+                        .scheme(openapi::security::HttpAuthScheme::Bearer)
+                        .bearer_format("JWT")
+                        .build(),
+                ),
+            );
+        }
     }
 }

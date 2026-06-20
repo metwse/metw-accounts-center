@@ -15,8 +15,8 @@ pub enum ServiceError {
     #[error("email taken")]
     EmailTaken,
 
-    #[error("cannot delete primary email")]
-    CannotDeletePrimaryEmail,
+    #[error("cannot delete primary email or email not found")]
+    CannotDeletePrimaryEmailOrEmailNotFound,
 
     #[error("account not found")]
     AccountNotFound,

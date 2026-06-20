@@ -1,12 +1,8 @@
-mod authentication;
-mod authorization;
-mod email_verification_session;
-mod session;
+#![allow(missing_docs)]
 
-pub use authentication::authentication_routes;
-pub use authorization::authorization_routes;
-pub use email_verification_session::email_verification_session_routes;
-pub use session::session_routes;
+pub mod authentication;
+pub mod authorization;
+pub mod email_verification_session;
+pub mod session;
 
-// TODO: utoipa docs
 // TODO: tests

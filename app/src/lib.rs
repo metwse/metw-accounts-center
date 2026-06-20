@@ -6,11 +6,9 @@
 use axum::{Json, Router, routing::get};
 use serde::Serialize;
 use service::AppState;
-use std::time::Instant;
-
-use crate::routes::{
-    authentication_routes, authorization_routes, email_verification_session_routes, session_routes,
-};
+use tower_http::trace::TraceLayer;
+use std::{sync::LazyLock, time::Instant};
+use utoipa::{OpenApi, ToSchema};
 
 /// API routes.
 pub mod routes;
@@ -21,10 +19,26 @@ pub mod middleware;
 /// API results.
 pub mod res;
 
+/// OpenAPI documentation.
+#[derive(OpenApi)]
+#[openapi(
+    info(description = "metw-accounts-center API"),
+    servers((url = "http://localhost:3781", description = "Local server")),
+    external_docs(url = "https://metwse.github.io/metw-accounts-center/", description = "Crate documentation"),
+    paths(get_status),
+    nest(
+        (path = "/", api = routes::authentication::ApiDoc, tags = ["authentication"]),
+        (path = "/", api = routes::authorization::ApiDoc, tags = ["authorization"]),
+        (path = "/me", api = routes::session::ApiDoc, tags = ["session"]),
+        (path = "/", api = routes::email_verification_session::ApiDoc, tags = ["email_verification_session"])
+    )
+)]
+pub struct ApiDoc;
+
 /// Application status
-#[derive(Serialize)]
-pub struct AppStatus {
-    /// Message to clients.
+#[derive(Serialize, ToSchema)]
+struct AppStatus {
+    /// Status message.
     pub message: String,
     /// JavaScript that should be executed by clients if present.
     pub patch: Option<String>,
@@ -32,26 +46,33 @@ pub struct AppStatus {
     pub uptime: u64,
 }
 
+static STARTUP_TIME: LazyLock<Instant> = LazyLock::new(Instant::now);
+
+#[utoipa::path(
+    get, path = "/",
+    responses(
+        (status = OK, body = AppStatus)
+    )
+)]
+async fn get_status() -> Json<AppStatus> {
+    Json(AppStatus {
+        message: "OK".to_string(),
+        patch: None,
+        uptime: Instant::now().duration_since(*STARTUP_TIME).as_secs(),
+    })
+}
+
 /// Constructs the web API.
 pub fn app(state: AppState) -> Router {
-    Router::new()
-        .route(
-            "/",
-            get({
-                let startup_time = Instant::now();
+    let _ = *STARTUP_TIME;
 
-                async move || {
-                    Json(AppStatus {
-                        message: "OK".to_string(),
-                        patch: None,
-                        uptime: Instant::now().duration_since(startup_time).as_secs(),
-                    })
-                }
-            }),
-        )
+    Router::new()
+        .route("/", get(get_status))
+        .route("/openapi.json", get(async || Json(ApiDoc::openapi())))
         .with_state(state.clone())
-        .merge(authentication_routes(state.clone()))
-        .merge(authorization_routes(state.clone()))
-        .merge(email_verification_session_routes(state.clone()))
-        .merge(session_routes(state))
+        .merge(routes::authentication::routes(state.clone()))
+        .merge(routes::authorization::routes(state.clone()))
+        .merge(routes::email_verification_session::routes(state.clone()))
+        .merge(routes::session::routes(state))
+        .layer(TraceLayer::new_for_http())
 }

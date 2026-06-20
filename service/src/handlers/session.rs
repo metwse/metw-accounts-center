@@ -86,7 +86,7 @@ impl SessionHandler {
     ///
     /// [`ConfirmPrimaryEmailChange`]: mails::Template::ConfirmPrimaryEmailChange
     #[tracing::instrument(skip(self))]
-    pub async fn set_primary_mail(
+    pub async fn set_primary_email(
         self,
         id: AccountId,
         new_primary_email: dto::request::Email,
@@ -109,6 +109,10 @@ impl SessionHandler {
         let Some(username) = username_res? else {
             return Err(HandlerError::UnexpectedError("account with no username"))?;
         };
+
+        if current_primary_email == new_primary_email {
+            return Err(HandlerError::AlreadyPrimaryEmail)?;
+        }
 
         if !self
             .0

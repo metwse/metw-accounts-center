@@ -13,6 +13,9 @@ pub enum HandlerError {
     #[error("validation error: {0}")]
     Validation(#[from] ValidationErrors),
 
+    #[error("already primary email")]
+    AlreadyPrimaryEmail,
+
     #[error("unauthorized")]
     Unauthorized,
 

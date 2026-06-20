@@ -154,7 +154,7 @@ impl AccountService {
         if self.repo.remove_email_if_not_primary(id, email).await? {
             Ok(())
         } else {
-            Err(ServiceError::CannotDeletePrimaryEmail)
+            Err(ServiceError::CannotDeletePrimaryEmailOrEmailNotFound)
         }
     }
 

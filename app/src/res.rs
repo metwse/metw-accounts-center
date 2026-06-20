@@ -78,6 +78,7 @@ impl AppError {
                 HandlerError::Validation(..) => StatusCode::BAD_REQUEST,
                 HandlerError::Unauthorized => StatusCode::UNAUTHORIZED,
                 HandlerError::UnexpectedError(..) => StatusCode::CONFLICT,
+                HandlerError::AlreadyPrimaryEmail => StatusCode::BAD_REQUEST,
             },
         }
     }
