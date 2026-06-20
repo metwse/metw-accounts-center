@@ -1,10 +1,11 @@
 use thiserror::Error;
 
 /// Repository error reporting
+///
+/// The internal errors must be redacted before returning to the public.
 #[derive(Error, Debug)]
 #[allow(missing_docs)]
 pub enum RepoError {
-    // The internal errors must be redacted before returning to the public.
     #[error("internal error: {0}")]
     Internal(&'static str),
 
@@ -13,7 +14,4 @@ pub enum RepoError {
 
     #[error("internal redis error: {0}")]
     InternalRedis(#[from] redis::RedisError),
-
-    #[error("error details are redacted")]
-    Redacted,
 }

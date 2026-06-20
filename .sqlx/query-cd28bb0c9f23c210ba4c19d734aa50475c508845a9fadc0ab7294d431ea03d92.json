@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE account_flags SET is_verified = $1 WHERE id = $2",
+  "query": "UPDATE account_flags SET is_email_verified = $1 WHERE id = $2",
   "describe": {
     "columns": [],
     "parameters": {
@@ -11,5 +11,5 @@
     },
     "nullable": []
   },
-  "hash": "6b08313e7febdec1ed1b400ad426e5d97043caf7a8d04f437bebc15f020f1bac"
+  "hash": "cd28bb0c9f23c210ba4c19d734aa50475c508845a9fadc0ab7294d431ea03d92"
 }

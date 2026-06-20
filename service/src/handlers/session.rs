@@ -32,11 +32,16 @@ impl SessionHandler {
 
         let email = email.email;
 
-        if self.0.account_service.is_email_taken(&email).await? {
+        let (is_email_taken_res, username_res) = tokio::join!(
+            self.0.account_service.is_email_taken(&email),
+            self.0.account_service.get_primary_username(id)
+        );
+
+        if is_email_taken_res? {
             return Err(ServiceError::EmailTaken)?;
         }
 
-        let Some(username) = self.0.account_service.get_primary_username(id).await? else {
+        let Some(username) = username_res? else {
             return Err(HandlerError::UnexpectedError("account with no username"))?;
         };
 
@@ -90,12 +95,18 @@ impl SessionHandler {
 
         let new_primary_email = new_primary_email.email;
 
-        let Some(current_primary_email) = self.0.account_service.get_primary_email(id).await?
-        else {
-            return Err(HandlerError::UnexpectedError("account with no email"));
+        let (current_primary_email_res, username_res) = tokio::join!(
+            self.0.account_service.get_primary_email(id),
+            self.0.account_service.get_primary_username(id)
+        );
+
+        let Some(current_primary_email) = current_primary_email_res? else {
+            return Err(HandlerError::UnexpectedError(
+                "account with no primary email",
+            ))?;
         };
 
-        let Some(username) = self.0.account_service.get_primary_username(id).await? else {
+        let Some(username) = username_res? else {
             return Err(HandlerError::UnexpectedError("account with no username"))?;
         };
 

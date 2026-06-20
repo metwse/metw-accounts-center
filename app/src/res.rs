@@ -1,8 +1,8 @@
 // TODO: Better error handling
 
-use std::ops::Deref;
 use axum::response::IntoResponse;
 use service::handlers::{HandlerError, HandlerResult};
+use std::ops::Deref;
 
 pub struct AppResult<T>(Result<T, HandlerError>);
 

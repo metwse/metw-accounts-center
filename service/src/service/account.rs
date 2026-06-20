@@ -53,20 +53,16 @@ impl AccountService {
     /// For use with login.
     async fn login(
         &self,
+        login_credentails: &dto::repo::OwnedLoginCredentials,
         client_password_hash: &str,
-        login: &dto::repo::OwnedLogin,
     ) -> ServiceResult<dto::service::Login> {
-        if let Some(flags) = self.repo.get_account_flags(login.id).await? {
-            if password::check(client_password_hash, &login.password_hash).await {
-                Ok(dto::service::Login {
-                    id: login.id,
-                    is_verified: flags.is_verified,
-                })
-            } else {
-                Err(ServiceError::InvalidCredentials)
-            }
+        if password::check(client_password_hash, &login_credentails.password_hash).await {
+            Ok(dto::service::Login {
+                id: login_credentails.id,
+                is_email_verified: login_credentails.is_email_verified,
+            })
         } else {
-            Err(ServiceError::UnexpectedError("account with no flags"))
+            Err(ServiceError::InvalidCredentials)
         }
     }
 
@@ -76,11 +72,16 @@ impl AccountService {
         &self,
         credentials: &dto::request::LoginWithEmail,
     ) -> ServiceResult<dto::service::Login> {
-        let Some(login) = self.repo.get_login_with_email(&credentials.email).await? else {
+        let Some(login_credentails) = self
+            .repo
+            .get_login_credentials_by_email(&credentials.email)
+            .await?
+        else {
             return Err(ServiceError::InvalidCredentials);
         };
 
-        self.login(&credentials.client_password_hash, &login).await
+        self.login(&login_credentails, &credentials.client_password_hash)
+            .await
     }
 
     /// Log into the account
@@ -91,13 +92,13 @@ impl AccountService {
     ) -> ServiceResult<dto::service::Login> {
         let Some(login) = self
             .repo
-            .get_login_with_username(&credentials.username)
+            .get_login_credentials_by_username(&credentials.username)
             .await?
         else {
             return Err(ServiceError::InvalidCredentials);
         };
 
-        self.login(&credentials.client_password_hash, &login).await
+        self.login(&login, &credentials.client_password_hash).await
     }
 
     /// Fetch the account details.
@@ -210,7 +211,7 @@ impl AccountService {
             .add_email(id, email, true)
             .await
             .map_err(|_| ServiceError::SignupCompleteFailed)?;
-        transaction.set_verified_flag(id, true).await?;
+        transaction.set_is_email_verified_flag(id, true).await?;
         transaction.commit().await?;
 
         Ok(())

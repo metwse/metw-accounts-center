@@ -1,9 +1,8 @@
-use std::time::{self, Duration};
-
 use service::{
     repo::{RepoResult, TokenRepo},
     testutil::random_username,
 };
+use std::time::{self, Duration};
 
 /// Sign a token, then check and revoke.
 pub async fn token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {

@@ -26,11 +26,15 @@ impl AccountRepo for AccountRepoImpl {
         ))
     }
 
-    async fn get_login_with_email(&self, email: &str) -> RepoResult<Option<dto::repo::OwnedLogin>> {
+    async fn get_login_credentials_by_email(
+        &self,
+        email: &str,
+    ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
         let login = sqlx::query_as!(
-            dto::repo::OwnedLogin,
-            "SELECT id, password_hash FROM accounts
-                WHERE id = (SELECT account_id FROM emails WHERE email = $1)",
+            dto::repo::OwnedLoginCredentials,
+            r#"SELECT id, password_hash, true AS "is_email_verified!"
+                FROM accounts
+                WHERE id = (SELECT account_id FROM emails WHERE email = $1)"#,
             email
         )
         .fetch_optional(&self.pool)
@@ -39,14 +43,17 @@ impl AccountRepo for AccountRepoImpl {
         Ok(login?)
     }
 
-    async fn get_login_with_username(
+    async fn get_login_credentials_by_username(
         &self,
         username: &str,
-    ) -> RepoResult<Option<dto::repo::OwnedLogin>> {
+    ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
         let login = sqlx::query_as!(
-            dto::repo::OwnedLogin,
-            "SELECT id, password_hash FROM accounts
-                WHERE id = (SELECT account_id FROM usernames WHERE username = $1 AND expires_at IS NULL)",
+            dto::repo::OwnedLoginCredentials,
+            r#"SELECT id, password_hash,
+                    (SELECT is_email_verified FROM account_flags
+                        WHERE account_flags.id = accounts.id) AS "is_email_verified!"
+                FROM accounts
+                WHERE id = (SELECT account_id FROM usernames WHERE username = $1 AND expires_at IS NULL)"#,
             username
         )
         .fetch_optional(&self.pool)
@@ -117,7 +124,7 @@ impl AccountRepo for AccountRepoImpl {
     async fn get_account_flags(&self, id: AccountId) -> RepoResult<Option<entity::AccountFlags>> {
         let flags = sqlx::query_as!(
             entity::AccountFlags,
-            "SELECT id, is_verified FROM account_flags
+            "SELECT id, is_email_verified FROM account_flags
                 WHERE id = $1",
             id as _
         )
@@ -265,7 +272,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
 
     async fn insert_default_flags(&mut self, id: AccountId) -> RepoResult<()> {
         sqlx::query!(
-            "INSERT INTO account_flags (id, is_verified) VALUES ($1, false)",
+            "INSERT INTO account_flags (id, is_email_verified) VALUES ($1, false)",
             id as _
         )
         .execute(&mut *self.tx)
@@ -307,10 +314,14 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         Ok(())
     }
 
-    async fn set_verified_flag(&mut self, id: AccountId, is_verified: bool) -> RepoResult<()> {
+    async fn set_is_email_verified_flag(
+        &mut self,
+        id: AccountId,
+        is_email_verified: bool,
+    ) -> RepoResult<()> {
         sqlx::query!(
-            "UPDATE account_flags SET is_verified = $1 WHERE id = $2",
-            is_verified,
+            "UPDATE account_flags SET is_email_verified = $1 WHERE id = $2",
+            is_email_verified,
             id as _
         )
         .execute(&mut *self.tx)

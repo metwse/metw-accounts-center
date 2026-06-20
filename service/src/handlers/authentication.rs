@@ -104,7 +104,7 @@ impl AuthenticationHandler {
     fn login(self, login: dto::service::Login) -> String {
         tracing::trace!(%login.id);
 
-        let token_scope = if login.is_verified {
+        let token_scope = if login.is_email_verified {
             TokenScope::Session
         } else {
             TokenScope::PendingActivationSession

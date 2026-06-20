@@ -20,7 +20,7 @@ CREATE TABLE accounts
 CREATE TABLE account_flags
 (
     id bigint NOT NULL,
-    is_verified bool NOT NULL,
+    is_email_verified bool NOT NULL,
 
     CONSTRAINT account_flags_id_pkey
         PRIMARY KEY (id),

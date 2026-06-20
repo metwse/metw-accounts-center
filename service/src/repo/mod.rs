@@ -50,15 +50,19 @@ pub trait AccountRepo: Send + Sync {
     ///
     /// Returns Argon2-hashed password with account id. Higher layers shall do
     /// hash verifications.
-    async fn get_login_with_email(&self, email: &str) -> RepoResult<Option<dto::repo::OwnedLogin>>;
+    async fn get_login_credentials_by_email(
+        &self,
+        email: &str,
+    ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>>;
 
     /// Get password by username.
     ///
-    /// The behavior is exactly the same with `get_login_with_email`.
-    async fn get_login_with_username(
+    /// The behavior is exactly the same with `get_login_with_email`, but also
+    /// includes a flag to check wheter account's email is verified.
+    async fn get_login_credentials_by_username(
         &self,
         username: &str,
-    ) -> RepoResult<Option<dto::repo::OwnedLogin>>;
+    ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>>;
 
     /// Get primary username if, exists.
     ///
@@ -144,8 +148,12 @@ pub trait AccountRepoTransaction: Send + Sync {
         is_primary: bool,
     ) -> RepoResult<()>;
 
-    /// Set the verified flag of account.
-    async fn set_verified_flag(&mut self, id: AccountId, is_verified: bool) -> RepoResult<()>;
+    /// Set the is email verified flag of the account.
+    async fn set_is_email_verified_flag(
+        &mut self,
+        id: AccountId,
+        is_email_verified: bool,
+    ) -> RepoResult<()>;
 }
 
 /// Token revocation state.

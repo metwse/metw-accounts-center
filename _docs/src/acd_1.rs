@@ -42,7 +42,7 @@
 //!
 //! - [`RepoError`] is an internal error used only for tracing and
 //!   observability. This error must not be returned directly to the user; it
-//!   must be mapped to [`RepoError::Redacted`].
+//!   must be *redacted*.
 //!
 //! [`repo`]: service::repo
 //!
@@ -50,7 +50,6 @@
 //! [`AccountRepoTransaction`]: service::repo::AccountRepoTransaction
 //!
 //! [`RepoError`]: service::repo::RepoError
-//! [`RepoError::Redacted`]: service::repo::RepoError::Redacted
 //!
 //! [`set_primary_email_if_current_is`]: service::repo::AccountRepo::set_primary_email_if_current_is
 //! [`get_account_flags`]: service::repo::AccountRepo::get_account_flags

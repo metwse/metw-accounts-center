@@ -40,7 +40,4 @@ pub enum ServiceError {
 
     #[error("token revoked")]
     TokenRevoked,
-
-    #[error("unexpected error: {0}")]
-    UnexpectedError(&'static str),
 }

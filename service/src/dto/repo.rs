@@ -14,7 +14,8 @@ pub struct OwnedKeys {
 }
 
 #[derive(FromRow)]
-pub struct OwnedLogin {
+pub struct OwnedLoginCredentials {
     pub id: AccountId,
+    pub is_email_verified: bool,
     pub password_hash: String,
 }

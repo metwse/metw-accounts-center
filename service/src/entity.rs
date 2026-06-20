@@ -30,7 +30,7 @@ pub struct AccountFlags {
     pub id: AccountId,
 
     /// Whether or not the account has been verified.
-    pub is_verified: bool,
+    pub is_email_verified: bool,
 }
 
 /// Usernames or username aliases assigned to an account.

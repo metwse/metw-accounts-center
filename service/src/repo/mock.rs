@@ -33,35 +33,44 @@ impl AccountRepo for MockAccountRepoImpl {
         }))
     }
 
-    async fn get_login_with_email(&self, email: &str) -> RepoResult<Option<dto::repo::OwnedLogin>> {
+    async fn get_login_credentials_by_email(
+        &self,
+        email: &str,
+    ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
         let state = self.lock_state().await;
 
         if let Some(email_entity) = state.emails.get(email) {
-            Ok(Some(dto::repo::OwnedLogin {
+            Ok(Some(dto::repo::OwnedLoginCredentials {
                 id: email_entity.account_id,
                 password_hash: state.accounts[&email_entity.account_id]
                     .password_hash
                     .clone(),
+                is_email_verified: true,
             }))
         } else {
             Ok(None)
         }
     }
 
-    async fn get_login_with_username(
+    async fn get_login_credentials_by_username(
         &self,
         username: &str,
-    ) -> RepoResult<Option<dto::repo::OwnedLogin>> {
+    ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
         let state = self.lock_state().await;
 
         if let Some(username_entity) = state.usernames.get(username)
             && username_entity.expires_at.is_none()
         {
-            Ok(Some(dto::repo::OwnedLogin {
+            Ok(Some(dto::repo::OwnedLoginCredentials {
                 id: username_entity.account_id,
                 password_hash: state.accounts[&username_entity.account_id]
                     .password_hash
                     .clone(),
+                is_email_verified: state
+                    .account_flags
+                    .get(&username_entity.account_id)
+                    .unwrap()
+                    .is_email_verified,
             }))
         } else {
             Ok(None)
@@ -261,7 +270,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
             id,
             entity::AccountFlags {
                 id,
-                is_verified: false,
+                is_email_verified: false,
             },
         );
 
@@ -310,9 +319,13 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         }
     }
 
-    async fn set_verified_flag(&mut self, id: AccountId, is_verified: bool) -> RepoResult<()> {
+    async fn set_is_email_verified_flag(
+        &mut self,
+        id: AccountId,
+        is_email_verified: bool,
+    ) -> RepoResult<()> {
         if let Some(account_flags_entity) = self.state.account_flags.get_mut(&id) {
-            account_flags_entity.is_verified = is_verified;
+            account_flags_entity.is_email_verified = is_email_verified;
 
             Ok(())
         } else {

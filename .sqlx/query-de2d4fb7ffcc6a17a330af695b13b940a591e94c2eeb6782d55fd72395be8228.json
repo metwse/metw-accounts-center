@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO account_flags (id, is_email_verified) VALUES ($1, false)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "de2d4fb7ffcc6a17a330af695b13b940a591e94c2eeb6782d55fd72395be8228"
+}
