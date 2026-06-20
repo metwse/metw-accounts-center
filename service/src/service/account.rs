@@ -15,12 +15,17 @@ impl AccountService {
     /// Sign up a new account.
     #[tracing::instrument(skip_all)]
     pub async fn signup(&self, signup_dto: &dto::request::Signup) -> ServiceResult<AccountId> {
-        if self.repo.is_username_taken(&signup_dto.username).await? {
-            return Err(ServiceError::UsernameTaken);
+        let (is_email_taken_res, is_username_taken_rs) = tokio::join!(
+            self.repo.is_email_taken(&signup_dto.email),
+            self.repo.is_username_taken(&signup_dto.username)
+        );
+
+        if is_email_taken_res? {
+            return Err(ServiceError::EmailTaken);
         }
 
-        if self.repo.is_email_taken(&signup_dto.email).await? {
-            return Err(ServiceError::EmailTaken);
+        if is_username_taken_rs? {
+            return Err(ServiceError::UsernameTaken);
         }
 
         let password_hash = password::hash(&signup_dto.client_password_hash).await;

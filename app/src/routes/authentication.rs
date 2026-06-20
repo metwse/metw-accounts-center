@@ -1,12 +1,12 @@
 use crate::res::{AppJson, AppResult};
 use axum::{Router, extract::State, routing::post};
-use service::{AppState, dto, handlers::AuthenticationHandler, id::AccountId};
+use service::{AppState, dto, handlers::AuthenticationHandler};
 
 #[axum::debug_handler]
 async fn signup(
     State(state): State<AppState>,
     AppJson(signup_dto): AppJson<dto::request::Signup>,
-) -> AppResult<AccountId> {
+) -> AppResult<dto::response::Jwt> {
     Ok(AppJson(
         AuthenticationHandler(state).signup(signup_dto).await?,
     ))
@@ -15,7 +15,7 @@ async fn signup(
 async fn login_with_username(
     State(state): State<AppState>,
     AppJson(login_dto): AppJson<dto::request::LoginWithUsername>,
-) -> AppResult<String> {
+) -> AppResult<dto::response::Jwt> {
     Ok(AppJson(
         AuthenticationHandler(state)
             .login_with_username(login_dto)
@@ -26,7 +26,7 @@ async fn login_with_username(
 async fn login_with_email(
     State(state): State<AppState>,
     AppJson(login_dto): AppJson<dto::request::LoginWithEmail>,
-) -> AppResult<String> {
+) -> AppResult<dto::response::Jwt> {
     Ok(AppJson(
         AuthenticationHandler(state)
             .login_with_email(login_dto)

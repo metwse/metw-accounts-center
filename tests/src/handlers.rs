@@ -1,9 +1,9 @@
-use crate::util::TestCtx;
+use crate::util::TestState;
 use service::{
     dto,
     handlers::{
-        AuthenticationHandler, AuthorizationHandler, HandlerError, HandlerResult,
-        PendingActivationSessionHandler, SessionHandler,
+        AuthenticationHandler, AuthorizationHandler, EmailVerificationSessionHandler, HandlerError,
+        HandlerResult, SessionHandler,
     },
     service::ServiceError,
     testutil::{random_email, random_username},
@@ -13,14 +13,14 @@ use service::{
 use std::assert_matches;
 
 /// Completes sign up with pending activation session.
-pub async fn retry_signup(ctx: &TestCtx) -> HandlerResult<()> {
+pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
     let (_, _, taken_email) = ctx.signup_and_verify_email("passwd1").await;
 
     // Create the account.
     let (account_id, username, email_unverified) = ctx.signup("passwd").await;
 
     // Log into the pending activation session.
-    let pending_activation_session_jwt = ctx.login_with_username(username, "passwd").await?;
+    let email_verification_session_jwt = ctx.login_with_username(username, "passwd").await?;
     assert!(
         ctx.login_with_email(email_unverified, "passwd")
             .await
@@ -28,7 +28,7 @@ pub async fn retry_signup(ctx: &TestCtx) -> HandlerResult<()> {
     );
 
     let login_account_id = AuthenticationHandler(ctx.state.clone())
-        .auth_pending_activation_session(pending_activation_session_jwt)
+        .auth_email_verification_session(email_verification_session_jwt)
         .await?;
 
     assert!(account_id == login_account_id);
@@ -40,7 +40,7 @@ pub async fn retry_signup(ctx: &TestCtx) -> HandlerResult<()> {
 
     // Resend the signup email.
     assert_matches!(
-        PendingActivationSessionHandler(ctx.state.clone())
+        EmailVerificationSessionHandler(ctx.state.clone())
             .retry_signup(
                 account_id,
                 dto::request::Email {
@@ -53,7 +53,7 @@ pub async fn retry_signup(ctx: &TestCtx) -> HandlerResult<()> {
     );
 
     let email = random_email();
-    PendingActivationSessionHandler(ctx.state.clone())
+    EmailVerificationSessionHandler(ctx.state.clone())
         .retry_signup(
             account_id,
             dto::request::Email {
@@ -81,7 +81,7 @@ pub async fn retry_signup(ctx: &TestCtx) -> HandlerResult<()> {
 }
 
 /// Sign up an account and log into it.
-pub async fn signup_and_login(ctx: &TestCtx) -> HandlerResult<()> {
+pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
     let (account_id, username, email) = ctx.signup("passwd").await;
 
     let mails::Template::ConfirmSignup {
@@ -170,7 +170,7 @@ pub async fn signup_and_login(ctx: &TestCtx) -> HandlerResult<()> {
 }
 
 /// Log out session.
-pub async fn logout(ctx: &TestCtx) -> HandlerResult<()> {
+pub async fn logout(ctx: &TestState) -> HandlerResult<()> {
     let (_, username, _) = ctx.signup_and_verify_email("passwd").await;
 
     let session_jwt = ctx.login_with_username(username, "passwd").await?;
@@ -199,7 +199,7 @@ pub async fn logout(ctx: &TestCtx) -> HandlerResult<()> {
 }
 
 /// Try to sign up with already taken username or email.
-pub async fn taken_username_or_email(ctx: &TestCtx) -> HandlerResult<()> {
+pub async fn taken_username_or_email(ctx: &TestState) -> HandlerResult<()> {
     let (_, taken_username, taken_email) = ctx.signup_and_verify_email("passwd").await;
     let (_, another_taken_username, _) = ctx.signup("passwd").await;
 
@@ -247,7 +247,7 @@ pub async fn taken_username_or_email(ctx: &TestCtx) -> HandlerResult<()> {
 }
 
 /// Change primary email and remove the old email.
-pub async fn change_primary_email(ctx: &TestCtx) -> HandlerResult<()> {
+pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
     // Sign up an account.
     let (acccount_id, _, email) = ctx.signup_and_verify_email("passwd1").await;
     let (_, _, another_accounts_email) = ctx.signup_and_verify_email("passwd2").await;
@@ -372,11 +372,11 @@ mod tests {
     use super::{
         change_primary_email, logout, retry_signup, signup_and_login, taken_username_or_email,
     };
-    use crate::util::{TestCtx, pg_pool_from_env, redis_client_from_env};
+    use crate::util::{TestState, pg_pool_from_env, redis_client_from_env};
     use service::handlers::HandlerResult;
     use state::{AccountRepoImpl, TokenRepoImpl};
 
-    async fn testsuite(ctx: &TestCtx) -> HandlerResult<()> {
+    async fn testsuite(ctx: &TestState) -> HandlerResult<()> {
         for _ in 0..4 {
             retry_signup(ctx).await?;
             signup_and_login(ctx).await?;
@@ -391,7 +391,7 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     #[test_log::test]
     async fn mock_repo() -> HandlerResult<()> {
-        testsuite(&TestCtx::new()).await
+        testsuite(&TestState::new()).await
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -405,7 +405,7 @@ mod tests {
         let account_repo = AccountRepoImpl::boxed_new(pg_pool);
         let token_repo = TokenRepoImpl::boxed_new(redis);
 
-        let ctx = TestCtx::new()
+        let ctx = TestState::new()
             .with_account_repo(account_repo)
             .with_token_repo(token_repo);
 

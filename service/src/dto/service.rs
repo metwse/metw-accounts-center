@@ -3,10 +3,10 @@ use crate::id::AccountId;
 /// Password verified login.
 ///
 /// `is_email_verified` determines session type: [`Session`] if true,
-/// [`PendingActivationSession`] otherwise.
+/// [`EmailVerificationSession`] otherwise.
 ///
 /// [`Session`]: crate::token::TokenScope::Session
-/// [`PendingActivationSession`]: crate::token::TokenScope::PendingActivationSession
+/// [`EmailVerificationSession`]: crate::token::TokenScope::EmailVerificationSession
 #[derive(Debug)]
 pub struct Login {
     pub id: AccountId,

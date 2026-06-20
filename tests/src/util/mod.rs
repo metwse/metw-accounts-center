@@ -1,6 +1,6 @@
-mod test_ctx;
+mod test_state;
 
-pub use test_ctx::TestCtx;
+pub use test_state::TestState;
 
 /// Creates a PostgreSQL connection pool from `DATABASE_URL` enviroment
 /// variable.
