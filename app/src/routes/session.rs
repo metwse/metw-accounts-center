@@ -1,6 +1,6 @@
-use crate::res::AppResult;
+use crate::res::{AppJson, AppResult};
 use axum::{
-    Extension, Json, Router,
+    Extension, Router,
     extract::State,
     middleware,
     routing::{delete, get, post},
@@ -11,34 +11,35 @@ async fn me(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
 ) -> AppResult<dto::response::Account> {
-    SessionHandler(state).me(id).await.into()
+    Ok(AppJson(SessionHandler(state).me(id).await?))
 }
 
 async fn add_email(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
-    Json(email): Json<dto::request::Email>,
+    AppJson(email): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
-    SessionHandler(state).add_email(id, email).await.into()
+    Ok(AppJson(SessionHandler(state).add_email(id, email).await?))
 }
 
 async fn delete_email(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
-    Json(email): Json<dto::request::Email>,
+    AppJson(email): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
-    SessionHandler(state).delete_email(id, email).await.into()
+    Ok(AppJson(
+        SessionHandler(state).delete_email(id, email).await?,
+    ))
 }
 
 async fn set_primary_email(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
-    Json(email): Json<dto::request::Email>,
+    AppJson(email): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
-    SessionHandler(state)
-        .set_primary_mail(id, email)
-        .await
-        .into()
+    Ok(AppJson(
+        SessionHandler(state).set_primary_mail(id, email).await?,
+    ))
 }
 
 /// See [`SessionHandler`].

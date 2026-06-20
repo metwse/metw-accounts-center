@@ -1,9 +1,10 @@
 use crate::service::ServiceError;
+use serde::Serialize;
 use thiserror::Error;
 use validator::ValidationErrors;
 
 /// Handler error reporting.
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Serialize)]
 #[allow(missing_docs)]
 pub enum HandlerError {
     #[error("{0}")]

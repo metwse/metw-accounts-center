@@ -1,16 +1,18 @@
-use crate::res::AppResult;
-use axum::{Extension, Json, Router, extract::State, middleware, routing::post};
+use crate::res::{AppJson, AppResult};
+use axum::{Extension, Router, extract::State, middleware, routing::post};
 use service::{AppState, dto, handlers::PendingActivationSessionHandler, id::AccountId};
 
+#[axum::debug_handler]
 async fn retry_signup(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
-    Json(email): Json<dto::request::Email>,
+    AppJson(email): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
-    PendingActivationSessionHandler(state)
-        .retry_signup(id, email)
-        .await
-        .into()
+    Ok(AppJson(
+        PendingActivationSessionHandler(state)
+            .retry_signup(id, email)
+            .await?,
+    ))
 }
 
 /// See [`PendingActivationSessionHandler`].

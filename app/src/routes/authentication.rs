@@ -1,36 +1,41 @@
-use crate::res::AppResult;
-use axum::{Json, Router, extract::State, routing::post};
-use service::{AppState, dto, handlers::AuthenticationHandler, id};
+use crate::res::{AppJson, AppResult};
+use axum::{Router, extract::State, routing::post};
+use service::{AppState, dto, handlers::AuthenticationHandler, id::AccountId};
 
+#[axum::debug_handler]
 async fn signup(
     State(state): State<AppState>,
-    Json(signup_dto): Json<dto::request::Signup>,
-) -> AppResult<id::AccountId> {
-    AuthenticationHandler(state).signup(signup_dto).await.into()
+    AppJson(signup_dto): AppJson<dto::request::Signup>,
+) -> AppResult<AccountId> {
+    Ok(AppJson(
+        AuthenticationHandler(state).signup(signup_dto).await?,
+    ))
 }
 
 async fn login_with_username(
     State(state): State<AppState>,
-    Json(login_dto): Json<dto::request::LoginWithUsername>,
+    AppJson(login_dto): AppJson<dto::request::LoginWithUsername>,
 ) -> AppResult<String> {
-    AuthenticationHandler(state)
-        .login_with_username(login_dto)
-        .await
-        .into()
+    Ok(AppJson(
+        AuthenticationHandler(state)
+            .login_with_username(login_dto)
+            .await?,
+    ))
 }
 
 async fn login_with_email(
     State(state): State<AppState>,
-    Json(login_dto): Json<dto::request::LoginWithEmail>,
+    AppJson(login_dto): AppJson<dto::request::LoginWithEmail>,
 ) -> AppResult<String> {
-    AuthenticationHandler(state)
-        .login_with_email(login_dto)
-        .await
-        .into()
+    Ok(AppJson(
+        AuthenticationHandler(state)
+            .login_with_email(login_dto)
+            .await?,
+    ))
 }
 
-async fn logout(State(state): State<AppState>, Json(token): Json<String>) -> AppResult<()> {
-    AuthenticationHandler(state).logout(token).await.into()
+async fn logout(State(state): State<AppState>, AppJson(token): AppJson<String>) -> AppResult<()> {
+    Ok(AppJson(AuthenticationHandler(state).logout(token).await?))
 }
 
 /// See [`AuthenticationHandler`].

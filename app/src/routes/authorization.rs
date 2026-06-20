@@ -1,9 +1,9 @@
-use crate::res::AppResult;
-use axum::{Json, Router, extract::State, routing::post};
+use crate::res::{AppJson, AppResult};
+use axum::{Router, extract::State, routing::post};
 use service::{AppState, handlers::AuthorizationHandler};
 
-async fn auth(State(state): State<AppState>, Json(token): Json<String>) -> AppResult<()> {
-    AuthorizationHandler(state).auth(token).await.into()
+async fn auth(State(state): State<AppState>, AppJson(token): AppJson<String>) -> AppResult<()> {
+    Ok(AppJson(AuthorizationHandler(state).auth(token).await?))
 }
 
 /// See [`AuthorizationHandler`].

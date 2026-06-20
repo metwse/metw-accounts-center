@@ -10,12 +10,16 @@ axum = { workspace = true, features = ["macros"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 
+thiserror = { workspace = true }
 dotenvy = { workspace = true }
 
 serde = { workspace = true, features = ["derive"] }
 
 state = { path = "../state/" }
 service = { path = "../service/" }
+
+[features]
+transparent-errors = []
 
 [lints]
 workspace = true

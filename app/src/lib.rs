@@ -18,7 +18,8 @@ pub mod routes;
 /// API middleware.
 pub mod middleware;
 
-mod res;
+/// API results.
+pub mod res;
 
 /// Application status
 #[derive(Serialize)]

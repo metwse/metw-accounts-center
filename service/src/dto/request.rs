@@ -57,18 +57,6 @@ pub struct LoginWithEmail {
     pub client_password_hash: String,
 }
 
-/// Roll keys, change password, master key or key pair.
-#[derive(Validate, Debug, Clone, Deserialize)]
-pub struct KeyRoll {
-    /// Argon2-hashed password. Password will not be changed if its empty.
-    #[validate(length(max = 128))]
-    pub client_password_hash: String,
-
-    /// New keys.
-    #[validate(nested)]
-    pub keys: Keys,
-}
-
 /// Account's criptographic keys.
 #[derive(Validate, Debug, Clone, Deserialize)]
 pub struct Keys {

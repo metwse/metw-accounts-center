@@ -19,7 +19,9 @@ thiserror = { workspace = true }
 
 validator = { workspace = true, features = ["derive"] }
 regex = { workspace = true }
+
 serde = { workspace = true }
+serde_with = { workspace = true}
 
 # Service-specific encryption/signature utility
 biscuit = "0.8"

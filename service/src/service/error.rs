@@ -1,8 +1,9 @@
 use crate::repo::RepoError;
+use serde::Serialize;
 use thiserror::Error;
 
 /// Service error reporting.
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Serialize)]
 #[allow(missing_docs)]
 pub enum ServiceError {
     #[error("repo: {0}")]

@@ -1,4 +1,4 @@
-use crate::res::AppResult;
+use crate::res::AppMiddlewareResult;
 use axum::{
     extract::{Request, State},
     http::header,
@@ -23,9 +23,9 @@ pub async fn auth_session(
     State(state): State<AppState>,
     mut req: Request,
     next: Next,
-) -> AppResult<Response> {
+) -> AppMiddlewareResult<Response> {
     let Some(token) = extract_token(&req) else {
-        return Err(HandlerError::Unauthorized).into();
+        return Err(HandlerError::Unauthorized)?;
     };
 
     match AuthenticationHandler(state)
@@ -35,9 +35,9 @@ pub async fn auth_session(
         Ok(id) => {
             req.extensions_mut().insert(id);
 
-            Ok(next.run(req).await).into()
+            Ok(next.run(req).await)
         }
-        Err(_) => Err(HandlerError::Unauthorized).into(),
+        Err(_) => Err(HandlerError::Unauthorized)?,
     }
 }
 
@@ -46,9 +46,9 @@ pub async fn auth_pending_activation_session(
     State(state): State<AppState>,
     mut req: Request,
     next: Next,
-) -> AppResult<Response> {
+) -> AppMiddlewareResult<Response> {
     let Some(token) = extract_token(&req) else {
-        return Err(HandlerError::Unauthorized).into();
+        return Err(HandlerError::Unauthorized)?;
     };
 
     match AuthenticationHandler(state)
@@ -58,8 +58,8 @@ pub async fn auth_pending_activation_session(
         Ok(id) => {
             req.extensions_mut().insert(id);
 
-            Ok(next.run(req).await).into()
+            Ok(next.run(req).await)
         }
-        Err(_) => Err(HandlerError::Unauthorized).into(),
+        Err(_) => Err(HandlerError::Unauthorized)?,
     }
 }
