@@ -120,7 +120,6 @@ fn internal_snowflake() -> i64 {
 
 #[cfg(test)]
 #[test]
-#[serial_test::serial]
 fn test_snowflake() {
     use std::collections::HashSet;
 

@@ -1,17 +1,23 @@
+
 use crate::{
     id::AccountId,
     token::{Token, TokenScope},
 };
 use biscuit::{JWT, jwa, jws};
-use chrono::{DateTime, Duration, Utc};
+use chrono::{Duration, Utc};
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+use chrono::TimeDelta;
 #[cfg(test)]
 use std::sync::Mutex;
 
 /// JSON web signature (JWS).
 pub struct JsonWebSignature {
     secret: jws::Secret,
+
+    #[cfg(test)]
+    time_delta: Mutex<TimeDelta>
 }
 
 #[derive(Deserialize, Serialize)]
@@ -20,25 +26,20 @@ struct PrivateClaims {
     id: AccountId,
 }
 
-#[cfg(not(test))]
-static NOW: fn() -> DateTime<Utc> = Utc::now;
-#[cfg(test)]
-static NOW: fn() -> DateTime<Utc> = JsonWebSignature::injected_now;
-
-#[cfg(test)]
-static INJECTED_NOW: Mutex<Option<DateTime<Utc>>> = Mutex::new(None);
-
 impl JsonWebSignature {
     /// Creates a new JWS verifier/signer for [`Token`].
     pub fn new(secret: Vec<u8>) -> Self {
         Self {
             secret: jws::Secret::Bytes(secret),
+
+            #[cfg(test)]
+            time_delta: Mutex::new(TimeDelta::zero()),
         }
     }
 
     /// Sign and encode the token.
     pub fn encode(&self, token: &Token) -> String {
-        let now = NOW();
+        let now = Utc::now();
 
         let payload = biscuit::ClaimsSet::<PrivateClaims> {
             registered: biscuit::RegisteredClaims {
@@ -70,6 +71,9 @@ impl JsonWebSignature {
     }
 
     /// Decode the token by verifying it.
+    ///
+    /// *Decoded token must never encoded again!* The decoded token will have
+    /// at least 60 seconds lifetime.
     pub fn decode(&self, base64_encoded_token: &str) -> Option<(Token, Vec<u8>)> {
         let token =
             biscuit::JWT::<PrivateClaims, biscuit::Empty>::new_encoded(base64_encoded_token);
@@ -80,7 +84,11 @@ impl JsonWebSignature {
             .into_decoded(&self.secret, jwa::SignatureAlgorithm::HS256)
             .ok()?;
 
-        let now = NOW();
+        #[cfg(test)]
+        let now = Utc::now() + *self.time_delta.lock().unwrap();
+
+        #[cfg(not(test))]
+        let now = Utc::now();
 
         token
             .validate(biscuit::ValidationOptions {
@@ -91,7 +99,7 @@ impl JsonWebSignature {
                     ..Default::default()
                 },
                 temporal_options: biscuit::TemporalOptions {
-                    now: Some(NOW()),
+                    now: Some(now),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -114,17 +122,7 @@ impl JsonWebSignature {
     }
 
     #[cfg(test)]
-    #[allow(missing_docs)]
-    pub fn inject_now(date_time: Option<DateTime<Utc>>) {
-        *INJECTED_NOW.lock().unwrap() = date_time
-    }
-
-    #[cfg(test)]
-    fn injected_now() -> DateTime<Utc> {
-        if let Some(now) = *INJECTED_NOW.lock().unwrap() {
-            now
-        } else {
-            Utc::now()
-        }
+    pub(crate) fn add_time_delta(&self, time_delta: TimeDelta) {
+        *self.time_delta.lock().unwrap() += time_delta;
     }
 }

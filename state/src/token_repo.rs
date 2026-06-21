@@ -29,7 +29,7 @@ impl TokenRepo for TokenRepoImpl {
                 "",
                 redis::SetOptions::default()
                     .conditional_set(redis::ExistenceCheck::NX)
-                    .with_expiration(redis::SetExpiry::PX(revoke_for.as_millis() as u64 + 8000)),
+                    .with_expiration(redis::SetExpiry::PX(revoke_for.as_millis() as u64)),
             )
             .await?)
     }
