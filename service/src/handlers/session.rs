@@ -5,7 +5,7 @@ use crate::{
     service::ServiceError,
     state::AppState,
     token::{Token, TokenScope},
-    util::mails,
+    util::emails,
 };
 use validator::Validate;
 
@@ -25,7 +25,7 @@ impl SessionHandler {
 
     /// Sends [`ConfirmNewEmail`] to add requested email.
     ///
-    /// [`ConfirmNewEmail`]: mails::Template::ConfirmNewEmail
+    /// [`ConfirmNewEmail`]: emails::Template::ConfirmNewEmail
     #[tracing::instrument(skip(self))]
     pub async fn add_email(
         self,
@@ -56,13 +56,13 @@ impl SessionHandler {
             },
         ));
 
-        let template = mails::Template::ConfirmNewEmail {
+        let template = emails::Template::ConfirmNewEmail {
             username,
             email: new_email.clone(),
             token: add_email_jwt,
         };
 
-        self.0.mail_client.send(new_email, id, template).await;
+        self.0.email_client.send(new_email, id, template).await;
 
         Ok(())
     }
@@ -88,7 +88,7 @@ impl SessionHandler {
 
     /// Sends [`ConfirmPrimaryEmailChange`] email to current primary email.
     ///
-    /// [`ConfirmPrimaryEmailChange`]: mails::Template::ConfirmPrimaryEmailChange
+    /// [`ConfirmPrimaryEmailChange`]: emails::Template::ConfirmPrimaryEmailChange
     #[tracing::instrument(skip(self))]
     pub async fn set_primary_email(
         self,
@@ -135,7 +135,7 @@ impl SessionHandler {
             },
         ));
 
-        let template = mails::Template::ConfirmPrimaryEmailChange {
+        let template = emails::Template::ConfirmPrimaryEmailChange {
             username,
             current_primary_email: current_primary_email.clone(),
             new_primary_email,
@@ -143,7 +143,7 @@ impl SessionHandler {
         };
 
         self.0
-            .mail_client
+            .email_client
             .send(current_primary_email, id, template)
             .await;
 

@@ -23,7 +23,7 @@
 //!
 //! ### Supporting Modules
 //!
-//! [`client`] is used for external integrations (e.g., mail provider,
+//! [`client`] is used for external integrations (e.g., email provider,
 //! CAPTCHA).
 //!
 //! The [`dto`] module defines the interface to communicate with `handlers`.

@@ -1,4 +1,4 @@
-use crate::{id::AccountId, util::mails};
+use crate::{id::AccountId, util::emails};
 use async_trait::async_trait;
 
 /// Mock client implementations.
@@ -7,9 +7,9 @@ pub mod mock;
 
 /// Send emails.
 #[async_trait]
-pub trait MailClient: Send + Sync {
+pub trait EmailClient: Send + Sync {
     /// Send emails.
-    async fn send(&self, email: String, id: AccountId, template: mails::Template);
+    async fn send(&self, email: String, id: AccountId, template: emails::Template);
 }
 
 /// Validate CAPTCHAs.

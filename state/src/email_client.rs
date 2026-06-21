@@ -1,22 +1,22 @@
 use async_trait::async_trait;
 use aws_sdk_sesv2 as sesv2;
-use service::{client::MailClient, id::AccountId, util::mails};
+use service::{client::EmailClient, id::AccountId, util::emails};
 use tracing::{error, trace};
 
-/// Mail client for sending emails.
-pub struct MailClientImpl {
+/// Email client for sending emails.
+pub struct EmailClientImpl {
     client: sesv2::Client,
     from_address: String,
     callback_url: String,
 }
 
-impl MailClientImpl {
-    /// Creates a new Amazon SES v2 mail client.
+impl EmailClientImpl {
+    /// Creates a new Amazon SES v2 email client.
     pub fn boxed_new(
         client: sesv2::Client,
         from_address: String,
         callback_url: String,
-    ) -> Box<dyn MailClient> {
+    ) -> Box<Self> {
         Box::new(Self {
             client,
             from_address,
@@ -26,8 +26,8 @@ impl MailClientImpl {
 }
 
 #[async_trait]
-impl MailClient for MailClientImpl {
-    async fn send(&self, email: String, id: AccountId, template: mails::Template) {
+impl EmailClient for EmailClientImpl {
+    async fn send(&self, email: String, id: AccountId, template: emails::Template) {
         trace!(%id, ?template, "email to account");
 
         let dest = sesv2::types::Destination::builder()

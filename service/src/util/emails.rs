@@ -1,4 +1,4 @@
-/// Mail templates.
+/// Email templates.
 ///
 /// See [`TokenScope`].
 ///
@@ -37,7 +37,7 @@ impl Template {
         match self {
             Self::ConfirmSignup { .. } => "Verify your metw.cc account".to_string(),
             Self::ConfirmNewEmail { .. } => "Add email to your metw.cc account".to_string(),
-            Self::ConfirmPrimaryEmailChange { .. } => "Confirm primary mail change".to_string(),
+            Self::ConfirmPrimaryEmailChange { .. } => "Confirm primary email change".to_string(),
         }
     }
 

@@ -24,7 +24,7 @@ impl TokenService {
     }
 
     #[cfg(test)]
-    pub(crate) fn add_time_delta(&self, time_delta: TimeDelta ) {
+    pub(crate) fn add_time_delta(&self, time_delta: TimeDelta) {
         self.jws.add_time_delta(time_delta);
     }
 

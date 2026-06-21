@@ -8,7 +8,7 @@ use service::{
     service::ServiceError,
     testutil::{random_email, random_username},
     token::TokenScope,
-    util::mails,
+    util::emails,
 };
 use std::assert_matches;
 
@@ -62,7 +62,7 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
         )
         .await?;
 
-    let mails::Template::ConfirmSignup {
+    let emails::Template::ConfirmSignup {
         token: complete_signup_jwt,
         ..
     } = ctx.last_email(account_id).await
@@ -86,7 +86,7 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
 pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
     let (account_id, username, email) = ctx.signup("passwd").await;
 
-    let mails::Template::ConfirmSignup {
+    let emails::Template::ConfirmSignup {
         token: complete_signup_jwt,
         ..
     } = ctx.last_email(account_id).await
@@ -287,7 +287,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
         Err(HandlerError::Service(ServiceError::EmailTaken))
     );
 
-    // Try to add account2's email as primary mail
+    // Try to add account2's email as primary email
     assert_matches!(
         SessionHandler(ctx.state.clone())
             .set_primary_email(
@@ -302,7 +302,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
 
     // Validate the new email.
     {
-        let mails::Template::ConfirmNewEmail {
+        let emails::Template::ConfirmNewEmail {
             email,
             token: add_email_jwt,
             ..
@@ -336,7 +336,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
         .await?;
 
     {
-        let mails::Template::ConfirmPrimaryEmailChange {
+        let emails::Template::ConfirmPrimaryEmailChange {
             token: change_primary_email_jwt,
             ..
         } = ctx.last_email(acccount_id).await
@@ -349,7 +349,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
             .verify(&change_primary_email_jwt)
             .await?;
 
-        // Change the primary mail.
+        // Change the primary email.
         AuthorizationHandler(ctx.state.clone())
             .auth(dto::request::Token {
                 token: change_primary_email_jwt.clone(),

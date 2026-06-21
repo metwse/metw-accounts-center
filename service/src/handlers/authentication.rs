@@ -4,7 +4,7 @@ use crate::{
     id::AccountId,
     state::AppState,
     token::{Token, TokenScope},
-    util::mails,
+    util::emails,
 };
 use validator::Validate;
 
@@ -47,7 +47,7 @@ impl AuthenticationHandler {
     ///
     /// Creates an unverified account and sends a [`ConfirmSignup`] email.
     ///
-    /// [`ConfirmSignup`]: mails::Template::ConfirmSignup
+    /// [`ConfirmSignup`]: emails::Template::ConfirmSignup
     #[tracing::instrument(skip_all, fields(username = signup_dto.username, email = signup_dto.email))]
     pub async fn signup(
         self,
@@ -72,12 +72,12 @@ impl AuthenticationHandler {
             TokenScope::EmailVerificationSession,
         ));
 
-        let template = mails::Template::ConfirmSignup {
+        let template = emails::Template::ConfirmSignup {
             username,
             token: complete_signup_jwt,
         };
 
-        self.0.mail_client.send(email, account_id, template).await;
+        self.0.email_client.send(email, account_id, template).await;
 
         Ok(dto::response::Token {
             token: email_verification_session_jwt,
