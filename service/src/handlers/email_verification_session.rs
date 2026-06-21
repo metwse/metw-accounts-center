@@ -43,12 +43,12 @@ impl EmailVerificationSessionHandler {
             return Err(HandlerError::UnexpectedError("account with no username"));
         };
 
-        let complete_signup_jwt = self.0.token_service.sign(&Token::new(
+        let complete_signup_jwt = self.0.token_service.sign(&Token {
             id,
-            TokenScope::CompleteSignup {
+            scope: TokenScope::CompleteSignup {
                 email: email.clone(),
             },
-        ));
+        });
 
         let template = emails::Template::ConfirmSignup {
             username,

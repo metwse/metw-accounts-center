@@ -1,4 +1,5 @@
 use crate::id::AccountId;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -7,10 +8,28 @@ use std::time::Duration;
 pub struct Token {
     /// Account id.
     pub id: AccountId,
+
     /// Token's permissions.
     pub scope: TokenScope,
-    /// Duration the token is valid for.
-    pub lifetime: Duration,
+}
+
+/// Authentication token with authorization scopes.
+#[derive(Debug, Clone)]
+pub struct DecodedToken {
+    /// Account id.
+    pub id: AccountId,
+
+    /// Token's permissions.
+    pub scope: TokenScope,
+
+    /// Byte fingerprint unique to the token.
+    pub fingerprint: Vec<u8>,
+
+    /// The time token expires at.
+    pub expires_at: DateTime<Utc>,
+
+    /// Time token is issued at.
+    pub issued_at: DateTime<Utc>,
 }
 
 /// Authorization scopes.
@@ -57,28 +76,6 @@ pub enum TokenScope {
     CompleteSignup { email: String },
 }
 
-impl Token {
-    /// Create a new token.
-    pub fn new(id: AccountId, scope: TokenScope) -> Self {
-        let lifetime = scope.lifetime();
-
-        Self {
-            id,
-            scope,
-            lifetime,
-        }
-    }
-
-    /// Create a new token.
-    pub fn new_with_lifetime(id: AccountId, scope: TokenScope, lifetime: Duration) -> Self {
-        Self {
-            id,
-            scope,
-            lifetime,
-        }
-    }
-}
-
 impl TokenScope {
     /// Get name of the enum variant.
     pub fn variant_name(&self) -> &'static str {
@@ -99,6 +96,39 @@ impl TokenScope {
             Self::AddEmail { .. } => Duration::from_hours(1),
             Self::ChangePrimaryEmail { .. } => Duration::from_mins(10),
             Self::CompleteSignup { .. } => Duration::from_hours(1),
+        }
+    }
+
+    /// Returns a duration that guarantees all tokens issued under this scope
+    /// will be expired after the returned time passes.
+    pub fn safe_scope_lifetime(&self) -> Duration {
+        self.lifetime() + Duration::from_secs(1)
+    }
+
+    /// Returns a upper-bound duration after which any token (regardless of
+    /// scope) is guaranteed to be expired.
+    pub fn safe_global_lifetime() -> Duration {
+        Duration::from_hours(24 * 7)
+    }
+}
+
+impl DecodedToken {
+    /// Returns the remaining time until this token is guaranteed to expire.
+    pub fn safe_lifetime(&self) -> Duration {
+        std::cmp::max(
+            (self.expires_at - Utc::now())
+                .to_std()
+                .unwrap_or(Duration::from_secs(0)),
+            Duration::from_secs(1),
+        )
+    }
+}
+
+impl From<DecodedToken> for Token {
+    fn from(value: DecodedToken) -> Self {
+        Self {
+            id: value.id,
+            scope: value.scope,
         }
     }
 }

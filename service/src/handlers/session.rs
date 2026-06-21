@@ -49,12 +49,12 @@ impl SessionHandler {
             return Err(HandlerError::UnexpectedError("account with no username"))?;
         };
 
-        let add_email_jwt = self.0.token_service.sign(&Token::new(
+        let add_email_jwt = self.0.token_service.sign(&Token {
             id,
-            TokenScope::AddEmail {
+            scope: TokenScope::AddEmail {
                 email: new_email.clone(),
             },
-        ));
+        });
 
         let template = emails::Template::ConfirmNewEmail {
             username,
@@ -127,13 +127,13 @@ impl SessionHandler {
             return Err(ServiceError::EmailNotFound)?;
         };
 
-        let change_primary_email_jwt = self.0.token_service.sign(&Token::new(
+        let change_primary_email_jwt = self.0.token_service.sign(&Token {
             id,
-            TokenScope::ChangePrimaryEmail {
+            scope: TokenScope::ChangePrimaryEmail {
                 current_primary_email: current_primary_email.clone(),
                 new_primary_email: new_primary_email.clone(),
             },
-        ));
+        });
 
         let template = emails::Template::ConfirmPrimaryEmailChange {
             username,

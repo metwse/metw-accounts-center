@@ -1,9 +1,9 @@
 use crate::{
     id::AccountId,
-    token::{Token, TokenScope},
+    token::{DecodedToken, Token, TokenScope},
 };
 use biscuit::{JWT, jwa, jws};
-use chrono::{Duration, Utc};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[cfg(test)]
@@ -38,11 +38,11 @@ impl JsonWebSignature {
 
     /// Sign and encode the token.
     pub fn encode(&self, token: &Token) -> String {
-        let now = Utc::now();
+        let now = self.now();
 
         let payload = biscuit::ClaimsSet::<PrivateClaims> {
             registered: biscuit::RegisteredClaims {
-                expiry: Some((now + token.lifetime).into()),
+                expiry: Some((now + token.scope.lifetime()).into()),
                 not_before: Some(now.into()),
                 issued_at: Some(now.into()),
                 ..Default::default()
@@ -71,9 +71,8 @@ impl JsonWebSignature {
 
     /// Decode the token by verifying it.
     ///
-    /// *Decoded token must never encoded again!* The decoded token will have
-    /// at least 60 seconds lifetime.
-    pub fn decode(&self, base64_encoded_token: &str) -> Option<(Token, Vec<u8>)> {
+    /// *Decoded token must never be encoded again!*
+    pub fn decode(&self, base64_encoded_token: &str) -> Option<DecodedToken> {
         let token =
             biscuit::JWT::<PrivateClaims, biscuit::Empty>::new_encoded(base64_encoded_token);
 
@@ -83,11 +82,7 @@ impl JsonWebSignature {
             .into_decoded(&self.secret, jwa::SignatureAlgorithm::HS256)
             .ok()?;
 
-        #[cfg(test)]
-        let now = Utc::now() + *self.time_delta.lock().unwrap();
-
-        #[cfg(not(test))]
-        let now = Utc::now();
+        let now = self.now();
 
         token
             .validate(biscuit::ValidationOptions {
@@ -106,22 +101,30 @@ impl JsonWebSignature {
             .ok()?;
 
         let payload = token.payload().unwrap();
-        let expiry = *payload.registered.expiry.unwrap();
+        let expires_at = *payload.registered.expiry.unwrap();
+        let issued_at = *payload.registered.issued_at.unwrap();
 
-        let lifetime = if expiry > now + Duration::seconds(60) {
-            (expiry - now).to_std().unwrap()
-        } else {
-            std::time::Duration::from_secs(60)
-        };
-
-        Some((
-            Token::new_with_lifetime(payload.private.id, payload.private.scope.clone(), lifetime),
-            signature,
-        ))
+        Some(DecodedToken {
+            id: payload.private.id,
+            scope: payload.private.scope.clone(),
+            fingerprint: signature,
+            expires_at,
+            issued_at,
+        })
     }
 
     #[cfg(test)]
     pub(crate) fn add_time_delta(&self, time_delta: TimeDelta) {
         *self.time_delta.lock().unwrap() += time_delta;
+    }
+
+    fn now(&self) -> DateTime<Utc> {
+        #[cfg(test)]
+        let now = Utc::now() + *self.time_delta.lock().unwrap();
+
+        #[cfg(not(test))]
+        let now = Utc::now();
+
+        now
     }
 }

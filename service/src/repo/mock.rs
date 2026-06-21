@@ -1,7 +1,12 @@
 use super::{AccountRepo, AccountRepoTransaction, RepoResult, TokenRepo};
-use crate::{dto, entity, id::AccountId, repo::RepoError};
+use crate::{
+    dto, entity,
+    id::AccountId,
+    repo::RepoError,
+    token::{DecodedToken, TokenScope},
+};
 use async_trait::async_trait;
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use std::{
     collections::{HashMap, HashSet},
     sync::Arc,
@@ -334,10 +339,14 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
     }
 }
 
+type ScopeRevocationKey = (AccountId, &'static str);
+
 /// Mock token repo implementation.
 #[derive(Default)]
 pub struct MockTokenRepoImpl {
-    revocations: Arc<Mutex<HashSet<Vec<u8>>>>,
+    fingerprint_revocations: Arc<Mutex<HashSet<Vec<u8>>>>,
+    scope_revocations: Arc<Mutex<HashMap<ScopeRevocationKey, DateTime<Utc>>>>,
+    account_revocations: Arc<Mutex<HashMap<AccountId, DateTime<Utc>>>>,
 }
 
 impl MockTokenRepoImpl {
@@ -349,36 +358,159 @@ impl MockTokenRepoImpl {
 
 #[async_trait]
 impl TokenRepo for MockTokenRepoImpl {
-    async fn check_and_revoke(
-        &self,
-        fingerprint: &[u8],
-        revoke_for: std::time::Duration,
-    ) -> RepoResult<bool> {
-        let mut state = self.revocations.lock().await;
+    async fn revoke_fingerprint(&self, token: &DecodedToken) -> RepoResult<bool> {
+        if self.check_account_revocation(token).await || self.check_scope_revocation(token).await {
+            return Ok(true);
+        }
 
-        if state.contains(fingerprint) {
-            Ok(true)
-        } else {
-            state.insert(fingerprint.into());
+        let mut state = self.fingerprint_revocations.lock().await;
+
+        let revocation_res = state.contains(&token.fingerprint);
+
+        if !revocation_res {
+            state.insert(token.fingerprint.clone());
+            drop(state);
 
             tokio::spawn({
-                let state = Arc::clone(&self.revocations);
-                let fingerprint: Vec<u8> = fingerprint.into();
+                let state = Arc::clone(&self.fingerprint_revocations);
+                let fingerprint = token.fingerprint.clone();
+                let revoke_for = token.safe_lifetime();
 
                 async move {
                     tokio::time::sleep(revoke_for).await;
-
                     let mut state = state.lock().await;
-
                     state.remove(&fingerprint);
                 }
             });
+        };
 
-            Ok(false)
+        Ok(revocation_res)
+    }
+
+    async fn revoke_scope(&self, token: &DecodedToken) -> RepoResult<bool> {
+        if self.check_account_revocation(token).await
+            || self.check_fingerprint_revocation(token).await
+        {
+            return Ok(true);
+        }
+
+        let mut state = self.scope_revocations.lock().await;
+
+        let key = (token.id, token.scope.variant_name());
+
+        let revocation_res = if let Some(&time) = state.get(&key) {
+            token.issued_at <= time
+        } else {
+            false
+        };
+
+        if !revocation_res {
+            let value = (*state).entry(key).or_insert(DateTime::<Utc>::MAX_UTC);
+            *value = std::cmp::min(self.now(), *value);
+            let value = *value;
+
+            drop(state);
+
+            tokio::spawn({
+                let state = Arc::clone(&self.scope_revocations);
+                let revoke_for = token.scope.safe_scope_lifetime();
+
+                async move {
+                    tokio::time::sleep(revoke_for).await;
+                    let mut state = state.lock().await;
+
+                    if let Some(&current_value) = state.get(&key)
+                        && current_value == value
+                    {
+                        state.remove(&key);
+                    }
+                }
+            });
+        };
+
+        Ok(revocation_res)
+    }
+
+    async fn revoke_account(&self, token: &DecodedToken) -> RepoResult<bool> {
+        if self.check_scope_revocation(token).await
+            || self.check_fingerprint_revocation(token).await
+        {
+            return Ok(true);
+        }
+
+        let mut state = self.account_revocations.lock().await;
+
+        let key = token.id;
+
+        let revocation_res = if let Some(&time) = state.get(&key) {
+            token.issued_at <= time
+        } else {
+            false
+        };
+
+        if !revocation_res {
+            let value = (*state).entry(key).or_insert(DateTime::<Utc>::MAX_UTC);
+            *value = std::cmp::min(self.now(), *value);
+            let value = *value;
+            drop(state);
+
+            tokio::spawn({
+                let state = Arc::clone(&self.account_revocations);
+                let revoke_for = TokenScope::safe_global_lifetime();
+
+                async move {
+                    tokio::time::sleep(revoke_for).await;
+                    let mut state = state.lock().await;
+
+                    if let Some(&current_value) = state.get(&key)
+                        && current_value == value
+                    {
+                        state.remove(&key);
+                    }
+                }
+            });
+        };
+
+        Ok(revocation_res)
+    }
+
+    async fn is_revoked(&self, token: &DecodedToken) -> RepoResult<bool> {
+        Ok(self.check_fingerprint_revocation(token).await
+            || self.check_scope_revocation(token).await
+            || self.check_account_revocation(token).await)
+    }
+}
+
+impl MockTokenRepoImpl {
+    fn now(&self) -> DateTime<Utc> {
+        Utc::now()
+    }
+
+    async fn check_fingerprint_revocation(&self, token: &DecodedToken) -> bool {
+        self.fingerprint_revocations
+            .lock()
+            .await
+            .contains(&token.fingerprint)
+    }
+
+    async fn check_scope_revocation(&self, token: &DecodedToken) -> bool {
+        if let Some(&time) = self
+            .scope_revocations
+            .lock()
+            .await
+            .get(&(token.id, token.scope.variant_name()))
+        {
+            token.issued_at <= time
+        } else {
+            false
         }
     }
 
-    async fn check_revocation(&self, fingerprint: &[u8]) -> RepoResult<bool> {
-        Ok(self.revocations.lock().await.contains(fingerprint))
+    async fn check_account_revocation(&self, token: &DecodedToken) -> bool {
+        if let Some(&time) = self.account_revocations.lock().await.get(&token.id) {
+            token.issued_at <= time
+        } else {
+            false
+        }
     }
 }
