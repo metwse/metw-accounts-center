@@ -72,7 +72,9 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
 
     // Now the second email is added.
     AuthorizationHandler(ctx.state.clone())
-        .auth(complete_signup_jwt)
+        .auth(dto::request::Token {
+            token: complete_signup_jwt,
+        })
         .await?;
 
     ctx.login_with_email(email, "passwd").await?;
@@ -98,7 +100,9 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
 
     // Now the email is added.
     AuthorizationHandler(ctx.state.clone())
-        .auth(complete_signup_jwt)
+        .auth(dto::request::Token {
+            token: complete_signup_jwt,
+        })
         .await?;
 
     let me = SessionHandler(ctx.state.clone()).me(account_id).await?;
@@ -150,7 +154,9 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
     // Provide session tokens to authorization handler.
     assert_matches!(
         AuthorizationHandler(ctx.state.clone())
-            .auth(session_jwt_from_email)
+            .auth(dto::request::Token {
+                token: session_jwt_from_email
+            })
             .await
             .unwrap_err(),
         HandlerError::Unauthorized
@@ -160,7 +166,9 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
     // call will return Unauthorized.
     assert_matches!(
         AuthorizationHandler(ctx.state.clone())
-            .auth(session_jwt_from_username)
+            .auth(dto::request::Token {
+                token: session_jwt_from_username
+            })
             .await
             .unwrap_err(),
         HandlerError::Service(ServiceError::TokenRevoked) | HandlerError::Unauthorized
@@ -176,12 +184,16 @@ pub async fn logout(ctx: &TestState) -> HandlerResult<()> {
     let session_jwt = ctx.login_with_username(username, "passwd").await?;
 
     AuthenticationHandler(ctx.state.clone())
-        .logout(session_jwt.clone())
+        .logout(dto::request::Token {
+            token: session_jwt.clone(),
+        })
         .await?;
 
     assert_matches!(
         AuthenticationHandler(ctx.state.clone())
-            .logout(session_jwt.clone())
+            .logout(dto::request::Token {
+                token: session_jwt.clone()
+            })
             .await
             .unwrap_err(),
         HandlerError::Service(ServiceError::TokenRevoked)
@@ -303,7 +315,9 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
 
         // Add the email.
         AuthorizationHandler(ctx.state.clone())
-            .auth(add_email_jwt.clone())
+            .auth(dto::request::Token {
+                token: add_email_jwt.clone(),
+            })
             .await?;
 
         assert!(add_email_token.id == acccount_id);
@@ -337,7 +351,9 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
 
         // Change the primary mail.
         AuthorizationHandler(ctx.state.clone())
-            .auth(change_primary_email_jwt.clone())
+            .auth(dto::request::Token {
+                token: change_primary_email_jwt.clone(),
+            })
             .await?;
     }
 

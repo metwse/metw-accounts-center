@@ -95,9 +95,9 @@
 //! ## `handlers`
 //!
 //! The [`handlers`] layer composes multiple services to orchestrate complex,
-//! high-level operations. Generally, the handler layer executes one or more
-//! service calls and either propagates the service results directly or translates
-//! them into specific handler errors based on the business outcome.
+//! unit-of-works. Generally, the handler layer executes one or more
+//! service calls and either propagates the service results directly or
+//! translates them into specific handler errors based on the business outcome.
 //!
 //! As an example, error conditions in [`AuthenticationHandler::auth_session`] are:
 //!
@@ -106,9 +106,14 @@
 //! | Token scope is not [`TokenScope::Session`] | [`HandlerError::Unauthorized`] |
 //! | JWT-related issue (triggered from TokenService) | [`HandlerError::Service`] |
 //!
-//! - Request validation happens at the handlers. Everything coming from the
-//!   user that requires validation *must be* a [`dto::request`] type or a JWT
-//!   string.
+//! - There are two types of handlers: those for HTTP endpoints and those for
+//!   middleware.
+//!
+//! - In handlers that are HTTP endpoints, at first request validation happens.
+//!   Everything coming from the user *must be* a [`dto::request`]; and the
+//!   handler response, if exists, must be [`dto::response`].
+//!
+//! - Middleware handlers may return types other than [`dto::response`].
 //!
 //! - The handler owns the allocation and passes references to the service
 //!   layer. It, however, transfer ownership of the allocation to `client`s.
@@ -121,6 +126,7 @@
 //!
 //! [`TokenScope::Session`]: service::token::TokenScope::Session
 //! [`dto::request`]: service::dto::request
+//! [`dto::response`]: service::dto::response
 //!
 //! [`AuthenticationHandler::auth_session`]: service::handlers::AuthenticationHandler::auth_session
 //!

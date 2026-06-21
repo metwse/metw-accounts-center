@@ -75,17 +75,17 @@ impl AccountService {
     #[tracing::instrument(skip_all)]
     pub async fn login_with_email(
         &self,
-        credentials: &dto::request::LoginWithEmail,
+        login_dto: &dto::request::LoginWithEmail,
     ) -> ServiceResult<dto::service::Login> {
         let Some(login_credentails) = self
             .repo
-            .get_login_credentials_by_email(&credentials.email)
+            .get_login_credentials_by_email(&login_dto.email)
             .await?
         else {
             return Err(ServiceError::InvalidCredentials);
         };
 
-        self.login(&login_credentails, &credentials.client_password_hash)
+        self.login(&login_credentails, &login_dto.client_password_hash)
             .await
     }
 
@@ -93,17 +93,17 @@ impl AccountService {
     #[tracing::instrument(skip_all)]
     pub async fn login_with_username(
         &self,
-        credentials: &dto::request::LoginWithUsername,
+        login_dto: &dto::request::LoginWithUsername,
     ) -> ServiceResult<dto::service::Login> {
         let Some(login) = self
             .repo
-            .get_login_credentials_by_username(&credentials.username)
+            .get_login_credentials_by_username(&login_dto.username)
             .await?
         else {
             return Err(ServiceError::InvalidCredentials);
         };
 
-        self.login(&login, &credentials.client_password_hash).await
+        self.login(&login, &login_dto.client_password_hash).await
     }
 
     /// Fetch the account details.

@@ -27,13 +27,17 @@ impl SessionHandler {
     ///
     /// [`ConfirmNewEmail`]: mails::Template::ConfirmNewEmail
     #[tracing::instrument(skip(self))]
-    pub async fn add_email(self, id: AccountId, email: dto::request::Email) -> HandlerResult<()> {
-        email.validate()?;
+    pub async fn add_email(
+        self,
+        id: AccountId,
+        email_dto: dto::request::Email,
+    ) -> HandlerResult<()> {
+        email_dto.validate()?;
 
-        let email = email.email;
+        let new_email = email_dto.email;
 
         let (is_email_taken_res, username_res) = tokio::join!(
-            self.0.account_service.is_email_taken(&email),
+            self.0.account_service.is_email_taken(&new_email),
             self.0.account_service.get_primary_username(id)
         );
 
@@ -48,17 +52,17 @@ impl SessionHandler {
         let add_email_jwt = self.0.token_service.sign(&Token::new(
             id,
             TokenScope::AddEmail {
-                email: email.clone(),
+                email: new_email.clone(),
             },
         ));
 
         let template = mails::Template::ConfirmNewEmail {
             username,
-            email: email.clone(),
+            email: new_email.clone(),
             token: add_email_jwt,
         };
 
-        self.0.mail_client.send(email, id, template).await;
+        self.0.mail_client.send(new_email, id, template).await;
 
         Ok(())
     }
@@ -68,11 +72,11 @@ impl SessionHandler {
     pub async fn delete_email(
         self,
         id: AccountId,
-        email: dto::request::Email,
+        email_dto: dto::request::Email,
     ) -> HandlerResult<()> {
-        email.validate()?;
+        email_dto.validate()?;
 
-        let email = email.email;
+        let email = email_dto.email;
 
         self.0
             .account_service
@@ -89,11 +93,11 @@ impl SessionHandler {
     pub async fn set_primary_email(
         self,
         id: AccountId,
-        new_primary_email: dto::request::Email,
+        email_dto: dto::request::Email,
     ) -> HandlerResult<()> {
-        new_primary_email.validate()?;
+        email_dto.validate()?;
 
-        let new_primary_email = new_primary_email.email;
+        let new_primary_email = email_dto.email;
 
         let (current_primary_email_res, username_res) = tokio::join!(
             self.0.account_service.get_primary_email(id),

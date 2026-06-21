@@ -10,13 +10,13 @@ use utoipa::OpenApi;
     request_body = dto::request::Signup,
     responses(
         (status = OK, description = "JWT for email verification session",
-            body = dto::response::Jwt)
+            body = dto::response::Token)
     )
 )]
 async fn signup(
     State(state): State<AppState>,
     AppJson(signup_dto): AppJson<dto::request::Signup>,
-) -> AppResult<dto::response::Jwt> {
+) -> AppResult<dto::response::Token> {
     Ok(AppJson(
         AuthenticationHandler(state).signup(signup_dto).await?,
     ))
@@ -27,13 +27,13 @@ async fn signup(
     request_body = dto::request::LoginWithUsername,
     responses(
         (status = OK, description = "JWT for session or email verification session",
-            body = dto::response::Jwt)
+            body = dto::response::Token)
     )
 )]
 async fn login_with_username(
     State(state): State<AppState>,
     AppJson(login_dto): AppJson<dto::request::LoginWithUsername>,
-) -> AppResult<dto::response::Jwt> {
+) -> AppResult<dto::response::Token> {
     Ok(AppJson(
         AuthenticationHandler(state)
             .login_with_username(login_dto)
@@ -46,13 +46,13 @@ async fn login_with_username(
     request_body = dto::request::LoginWithEmail,
     responses(
         (status = OK, description = "JWT for session or email verification session",
-            body = dto::response::Jwt)
+            body = dto::response::Token)
     )
 )]
 async fn login_with_email(
     State(state): State<AppState>,
     AppJson(login_dto): AppJson<dto::request::LoginWithEmail>,
-) -> AppResult<dto::response::Jwt> {
+) -> AppResult<dto::response::Token> {
     Ok(AppJson(
         AuthenticationHandler(state)
             .login_with_email(login_dto)
@@ -61,13 +61,19 @@ async fn login_with_email(
 }
 
 #[utoipa::path(
-    post, path = "post",
+    post, path = "logout",
+    request_body = dto::request::Token,
     responses(
         (status = OK)
     )
 )]
-async fn logout(State(state): State<AppState>, AppJson(token): AppJson<String>) -> AppResult<()> {
-    Ok(AppJson(AuthenticationHandler(state).logout(token).await?))
+async fn logout(
+    State(state): State<AppState>,
+    AppJson(token_dto): AppJson<dto::request::Token>,
+) -> AppResult<()> {
+    Ok(AppJson(
+        AuthenticationHandler(state).logout(token_dto).await?,
+    ))
 }
 
 pub fn routes(state: AppState) -> Router {

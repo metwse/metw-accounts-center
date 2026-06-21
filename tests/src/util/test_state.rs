@@ -113,7 +113,9 @@ impl TestState {
         };
 
         AuthorizationHandler(self.state.clone())
-            .auth(complete_signup_jwt)
+            .auth(dto::request::Token {
+                token: complete_signup_jwt,
+            })
             .await
             .unwrap();
 

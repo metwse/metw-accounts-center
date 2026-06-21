@@ -13,6 +13,8 @@ pub struct AuthenticationHandler(pub AppState);
 
 impl AuthenticationHandler {
     /// Verify the session token.
+    ///
+    /// *This handler is intended for middleware.*
     #[tracing::instrument(skip_all)]
     pub async fn auth_session(self, base64_encoded_token: String) -> HandlerResult<AccountId> {
         let token = self.0.token_service.verify(&base64_encoded_token).await?;
@@ -23,7 +25,10 @@ impl AuthenticationHandler {
             Err(HandlerError::Unauthorized)
         }
     }
+
     /// Verify the pending activation session token.
+    ///
+    /// *This handler intended is for middleware.*
     #[tracing::instrument(skip_all)]
     pub async fn auth_email_verification_session(
         self,
@@ -47,7 +52,7 @@ impl AuthenticationHandler {
     pub async fn signup(
         self,
         signup_dto: dto::request::Signup,
-    ) -> HandlerResult<dto::response::Jwt> {
+    ) -> HandlerResult<dto::response::Token> {
         signup_dto.validate()?;
 
         let email = signup_dto.email.clone();
@@ -74,7 +79,7 @@ impl AuthenticationHandler {
 
         self.0.mail_client.send(email, account_id, template).await;
 
-        Ok(dto::response::Jwt {
+        Ok(dto::response::Token {
             token: email_verification_session_jwt,
         })
     }
@@ -85,7 +90,7 @@ impl AuthenticationHandler {
     pub async fn login_with_username(
         self,
         login_dto: dto::request::LoginWithUsername,
-    ) -> HandlerResult<dto::response::Jwt> {
+    ) -> HandlerResult<dto::response::Token> {
         login_dto.validate()?;
 
         let login = self
@@ -103,7 +108,7 @@ impl AuthenticationHandler {
     pub async fn login_with_email(
         self,
         login_dto: dto::request::LoginWithEmail,
-    ) -> HandlerResult<dto::response::Jwt> {
+    ) -> HandlerResult<dto::response::Token> {
         login_dto.validate()?;
 
         let login = self.0.account_service.login_with_email(&login_dto).await?;
@@ -111,7 +116,7 @@ impl AuthenticationHandler {
         Ok(self.login(login))
     }
 
-    fn login(self, login: dto::service::Login) -> dto::response::Jwt {
+    fn login(self, login: dto::service::Login) -> dto::response::Token {
         tracing::trace!(%login.id);
 
         let token_scope = if login.is_email_verified {
@@ -120,7 +125,7 @@ impl AuthenticationHandler {
             TokenScope::EmailVerificationSession
         };
 
-        dto::response::Jwt {
+        dto::response::Token {
             token: self
                 .0
                 .token_service
@@ -132,8 +137,8 @@ impl AuthenticationHandler {
     ///
     /// Both the session tokens and authorization tokens can be revoked using
     /// this.
-    pub async fn logout(self, base64_encoded_token: String) -> HandlerResult<()> {
-        self.0.token_service.revoke(&base64_encoded_token).await?;
+    pub async fn logout(self, token_dto: dto::request::Token) -> HandlerResult<()> {
+        self.0.token_service.revoke(&token_dto.token).await?;
 
         Ok(())
     }

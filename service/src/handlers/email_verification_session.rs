@@ -29,11 +29,11 @@ impl EmailVerificationSessionHandler {
     pub async fn retry_signup(
         self,
         id: AccountId,
-        email: dto::request::Email,
+        email_dto: dto::request::Email,
     ) -> HandlerResult<()> {
-        email.validate()?;
+        email_dto.validate()?;
 
-        let email = email.email;
+        let email = email_dto.email;
 
         if self.0.account_service.is_email_taken(&email).await? {
             return Err(ServiceError::EmailTaken)?;

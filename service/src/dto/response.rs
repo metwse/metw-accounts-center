@@ -22,9 +22,9 @@ pub struct Account {
     pub keys: Keys,
 }
 
-/// JWT, usually returned after sign up or log in.
+/// Base64-encoded, usually returned after sign up or log in.
 #[derive(Debug, Serialize, ToSchema)]
-pub struct Jwt {
+pub struct Token {
     pub token: String,
 }
 
