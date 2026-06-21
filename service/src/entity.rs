@@ -61,7 +61,7 @@ pub struct Email {
     /// Account the email belongs to.
     pub account_id: AccountId,
 
-    /// Whether or not the email is primary mail of the account.
+    /// Whether or not the email is primary email of the account.
     pub is_primary: bool,
 
     /// Timestamp the email was added at.

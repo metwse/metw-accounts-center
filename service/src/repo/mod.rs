@@ -78,7 +78,7 @@ pub trait AccountRepo: Send + Sync {
 
     /// Get primary email if, exists.
     ///
-    /// All regular accounts shall have primary mail, but some system accounts
+    /// All regular accounts shall have primary email, but some system accounts
     /// or deleted accounts do not.
     async fn get_primary_email(&self, id: AccountId) -> RepoResult<Option<String>>;
 
@@ -107,7 +107,7 @@ pub trait AccountRepo: Send + Sync {
         new_primary_email: &str,
     ) -> RepoResult<bool>;
 
-    /// Remove the email if it is not primary mail of the account.
+    /// Remove the email if it is not primary email of the account.
     async fn remove_email_if_not_primary(&self, id: AccountId, email: &str) -> RepoResult<bool>;
 
     /// Returns true if the username has been taken.

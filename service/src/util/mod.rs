@@ -1,8 +1,8 @@
 /// Password utilities.
 pub mod password;
 
-/// Mail templates.
-pub mod mails;
+/// Email templates.
+pub mod emails;
 
 /// Authentication and privileged access tokens.
 pub mod token;

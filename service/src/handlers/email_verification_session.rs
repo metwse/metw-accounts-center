@@ -6,7 +6,7 @@ use crate::{
     service::ServiceError,
     state::AppState,
     token::{Token, TokenScope},
-    util::mails,
+    util::emails,
 };
 use validator::Validate;
 
@@ -24,7 +24,7 @@ impl EmailVerificationSessionHandler {
     ///
     /// Sends a [`ConfirmSignup`] email.
     ///
-    /// [`ConfirmSignup`]: mails::Template::ConfirmSignup
+    /// [`ConfirmSignup`]: emails::Template::ConfirmSignup
     #[tracing::instrument(skip(self))]
     pub async fn retry_signup(
         self,
@@ -50,12 +50,12 @@ impl EmailVerificationSessionHandler {
             },
         ));
 
-        let template = mails::Template::ConfirmSignup {
+        let template = emails::Template::ConfirmSignup {
             username,
             token: complete_signup_jwt,
         };
 
-        self.0.mail_client.send(email, id, template).await;
+        self.0.email_client.send(email, id, template).await;
 
         Ok(())
     }

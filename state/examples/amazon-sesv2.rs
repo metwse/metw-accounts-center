@@ -1,6 +1,7 @@
 //! This example sends a dummy email to given email.
 
-use state::MailClientImpl;
+use service::client::EmailClient;
+use state::EmailClientImpl;
 use std::io::{self, Write};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -12,8 +13,8 @@ async fn main() {
     let client = aws_sdk_sesv2::Client::new(&config);
 
     let noreply_email_address = std::env::var("NOREPLY_EMAIL_ADDRESS").unwrap();
-    let mail_client =
-        MailClientImpl::boxed_new(client, noreply_email_address, "http://example.com".into());
+    let email_client =
+        EmailClientImpl::boxed_new(client, noreply_email_address, "http://example.com".into());
 
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
@@ -28,11 +29,11 @@ async fn main() {
 
     dest = dest.trim().into();
 
-    mail_client
+    email_client
         .send(
             dest.clone(),
             0.into(),
-            service::util::mails::Template::ConfirmNewEmail {
+            service::util::emails::Template::ConfirmNewEmail {
                 username: "metw".to_string(),
                 email: dest,
                 token: "none".to_string(),

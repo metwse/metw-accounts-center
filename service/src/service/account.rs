@@ -164,7 +164,7 @@ impl AccountService {
         Ok(self.repo.is_email_taken_by(id, email).await?)
     }
 
-    /// Primary mail of the account.
+    /// Primary email of the account.
     #[tracing::instrument(skip(self))]
     pub async fn get_primary_email(&self, id: AccountId) -> ServiceResult<Option<String>> {
         Ok(self.repo.get_primary_email(id).await?)

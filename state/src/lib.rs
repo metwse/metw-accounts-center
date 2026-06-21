@@ -9,13 +9,13 @@
 //!   case of Redis state loss, one-time tokens can be accepted again.
 
 mod captcha_client;
-mod mail_client;
+mod email_client;
 
 mod account_repo;
 mod token_repo;
 
 pub use captcha_client::CaptchaClientImpl;
-pub use mail_client::MailClientImpl;
+pub use email_client::EmailClientImpl;
 
 pub use account_repo::AccountRepoImpl;
 pub use token_repo::TokenRepoImpl;
@@ -23,6 +23,7 @@ pub use token_repo::TokenRepoImpl;
 use serde::Deserialize;
 use service::{
     AppState,
+    client::{CaptchaClient, EmailClient},
     service::{AccountService, TokenService},
 };
 
@@ -44,7 +45,7 @@ pub struct Config {
     pub aws_secret_access_key: String,
     pub aws_region: String,
 
-    /// From address of emails sent by the mail client.
+    /// From address of emails sent by the email client.
     pub noreply_email_address: String,
     /// Callback URL for authorization tokens.
     pub email_callback_url: String,
@@ -94,7 +95,7 @@ impl Config {
 
         let aws_sesv2_client = aws_sdk_sesv2::Client::new(&aws_config);
 
-        let mail_client = MailClientImpl::boxed_new(
+        let email_client = EmailClientImpl::boxed_new(
             aws_sesv2_client,
             self.noreply_email_address,
             self.email_callback_url,
@@ -105,8 +106,8 @@ impl Config {
         AppState {
             account_service: account_service.into(),
             token_service: token_service.into(),
-            mail_client: mail_client.into(),
-            captcha_client: captcha_client.into(),
+            email_client: (email_client as Box<dyn EmailClient>).into(),
+            captcha_client: (captcha_client as Box<dyn CaptchaClient>).into(),
         }
     }
 }

@@ -9,7 +9,7 @@ pub struct CaptchaClientImpl {
 
 impl CaptchaClientImpl {
     /// Creates a new CAPTCHA client.
-    pub fn boxed_new(secret: String) -> Box<dyn CaptchaClient> {
+    pub fn boxed_new(secret: String) -> Box<Self> {
         Box::new(Self {
             client: TurnstileClient::new(secret.into()),
         })

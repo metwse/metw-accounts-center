@@ -1,6 +1,9 @@
 use service::{
     AppState,
-    client::mock::{Mails, MockCaptchaClientImpl, MockMailClientImpl},
+    client::{
+        CaptchaClient, EmailClient,
+        mock::{Emails, MockCaptchaClientImpl, MockEmailClientImpl},
+    },
     dto,
     handlers::{AuthenticationHandler, AuthorizationHandler, HandlerResult},
     id::AccountId,
@@ -10,7 +13,7 @@ use service::{
     },
     service::{AccountService, TokenService},
     testutil::{random_email, random_username},
-    util::mails,
+    util::emails,
 };
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -19,7 +22,7 @@ use tokio::sync::Mutex;
 #[allow(missing_docs)]
 pub struct TestState {
     pub state: AppState,
-    emails: Arc<Mutex<Mails>>,
+    emails: Arc<Mutex<Emails>>,
 }
 
 impl Default for TestState {
@@ -27,15 +30,17 @@ impl Default for TestState {
         let account_service = AccountService::new(MockAccountRepoImpl::boxed_new());
         let token_service =
             TokenService::new(MockTokenRepoImpl::boxed_new(), b"secret123".to_vec());
-        let (emails, mail_client) = MockMailClientImpl::boxed_new();
-        let capcha_client = MockCaptchaClientImpl::boxed_new();
+        let email_client = MockEmailClientImpl::boxed_new();
+        let captcha_client = MockCaptchaClientImpl::boxed_new();
+
+        let emails = email_client.get_emails();
 
         Self {
             state: AppState {
                 account_service: account_service.into(),
                 token_service: token_service.into(),
-                mail_client: mail_client.into(),
-                captcha_client: capcha_client.into(),
+                email_client: (email_client as Box<dyn EmailClient>).into(),
+                captcha_client: (captcha_client as Box<dyn CaptchaClient>).into(),
             },
             emails,
         }
@@ -104,7 +109,7 @@ impl TestState {
     ) -> (AccountId, &'static str, &'static str) {
         let (account_id, username, email) = self.signup(client_password_hash).await;
 
-        let mails::Template::ConfirmSignup {
+        let emails::Template::ConfirmSignup {
             token: complete_signup_jwt,
             ..
         } = self.last_email(account_id).await
@@ -153,7 +158,7 @@ impl TestState {
     }
 
     /// Get the last email sent to the account.
-    pub async fn last_email(&self, account_id: AccountId) -> mails::Template {
+    pub async fn last_email(&self, account_id: AccountId) -> emails::Template {
         let emails = self.emails.lock().await;
         let mailbox = emails.get(&account_id).unwrap();
 

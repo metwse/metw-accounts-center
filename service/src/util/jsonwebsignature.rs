@@ -1,4 +1,3 @@
-
 use crate::{
     id::AccountId,
     token::{Token, TokenScope},
@@ -17,7 +16,7 @@ pub struct JsonWebSignature {
     secret: jws::Secret,
 
     #[cfg(test)]
-    time_delta: Mutex<TimeDelta>
+    time_delta: Mutex<TimeDelta>,
 }
 
 #[derive(Deserialize, Serialize)]
