@@ -6,8 +6,8 @@
 use axum::{Json, Router, routing::get};
 use serde::Serialize;
 use service::AppState;
-use tower_http::trace::TraceLayer;
 use std::{sync::LazyLock, time::Instant};
+use tower_http::trace::TraceLayer;
 use utoipa::{OpenApi, ToSchema};
 
 /// API routes.

@@ -1,31 +1,22 @@
 //! See [`AuthorizationHandler`].
 
 use crate::res::{AppJson, AppResult};
-use axum::{
-    Router,
-    extract::{Query, State},
-    routing::post,
-};
-use serde::Deserialize;
-use service::{AppState, handlers::AuthorizationHandler};
-use utoipa::{IntoParams, OpenApi, ToSchema};
-
-#[derive(Deserialize, ToSchema, IntoParams)]
-struct Token {
-    pub token: String,
-}
+use axum::{Router, extract::State, routing::post};
+use service::{AppState, dto, handlers::AuthorizationHandler};
+use utoipa::OpenApi;
 
 #[utoipa::path(
     post, path = "auth",
-    params(Token),
+    request_body = dto::request::Token,
     responses(
         (status = OK)
     )
 )]
-async fn auth(State(state): State<AppState>, Query(token): Query<Token>) -> AppResult<()> {
-    Ok(AppJson(
-        AuthorizationHandler(state).auth(token.token).await?,
-    ))
+async fn auth(
+    State(state): State<AppState>,
+    AppJson(token_dto): AppJson<dto::request::Token>,
+) -> AppResult<()> {
+    Ok(AppJson(AuthorizationHandler(state).auth(token_dto).await?))
 }
 
 pub fn routes(state: AppState) -> Router {
@@ -33,5 +24,5 @@ pub fn routes(state: AppState) -> Router {
 }
 
 #[derive(OpenApi)]
-#[openapi(paths(auth), components(schemas(Token)))]
+#[openapi(paths(auth), components(schemas(dto::request::Token)))]
 pub struct ApiDoc;

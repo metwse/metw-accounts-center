@@ -80,6 +80,12 @@ pub struct Email {
     pub email: String,
 }
 
+/// Request containing JWT.
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct Token {
+    pub token: String,
+}
+
 #[cfg(test)]
 #[test]
 fn username_regex() {

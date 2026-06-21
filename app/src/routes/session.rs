@@ -6,7 +6,7 @@ use crate::{
 };
 use axum::{
     Extension, Router,
-    extract::{Path, State},
+    extract::State,
     middleware,
     routing::{delete, get, post},
 };
@@ -38,9 +38,11 @@ async fn me(
 async fn add_email(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
-    AppJson(email): AppJson<dto::request::Email>,
+    AppJson(email_dto): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
-    Ok(AppJson(SessionHandler(state).add_email(id, email).await?))
+    Ok(AppJson(
+        SessionHandler(state).add_email(id, email_dto).await?,
+    ))
 }
 
 #[utoipa::path(
@@ -54,16 +56,17 @@ async fn add_email(
 async fn delete_email(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
-    AppJson(email): AppJson<dto::request::Email>,
+    AppJson(email_dto): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
     Ok(AppJson(
-        SessionHandler(state).delete_email(id, email).await?,
+        SessionHandler(state).delete_email(id, email_dto).await?,
     ))
 }
 
 #[utoipa::path(
-    post, path = "/emails/{email}/set-primary",
+    post, path = "/emails/set-primary",
     security(("session_jwt" = [])),
+    request_body = dto::request::Email,
     responses(
         (status = OK)
     )
@@ -71,11 +74,11 @@ async fn delete_email(
 async fn set_primary_email(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
-    Path(email): Path<String>,
+    AppJson(email_dto): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
     Ok(AppJson(
         SessionHandler(state)
-            .set_primary_email(id, dto::request::Email { email })
+            .set_primary_email(id, email_dto)
             .await?,
     ))
 }
@@ -85,7 +88,7 @@ pub fn routes(state: AppState) -> Router {
         .route("/me", get(me))
         .route("/me/emails", post(add_email))
         .route("/me/emails", delete(delete_email))
-        .route("/me/emails/{email}/set-primary", post(set_primary_email))
+        .route("/me/emails/set-primary", post(set_primary_email))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             crate::middleware::auth_session,

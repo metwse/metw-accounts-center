@@ -1,5 +1,5 @@
 use super::{HandlerError, HandlerResult};
-use crate::{state::AppState, token::TokenScope};
+use crate::{dto, state::AppState, token::TokenScope};
 use tracing::trace;
 
 /// Account handlers that **does require** escalated privileges.
@@ -10,7 +10,9 @@ impl AuthorizationHandler {
     ///
     /// See [`TokenScope`].
     #[tracing::instrument(skip_all)]
-    pub async fn auth(self, base64_encoded_token: String) -> HandlerResult<()> {
+    pub async fn auth(self, token_dto: dto::request::Token) -> HandlerResult<()> {
+        let base64_encoded_token = token_dto.token;
+
         let token = self.0.token_service.revoke(&base64_encoded_token).await?;
 
         trace!(account_id = %token.id, variant = token.scope.variant_name());
