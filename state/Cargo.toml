@@ -4,6 +4,7 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
+tokio = { workspace = true }
 async-trait = { workspace = true }
 
 sqlx = { workspace = true, features = ["postgres", "macros"] }

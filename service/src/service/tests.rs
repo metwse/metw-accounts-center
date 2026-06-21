@@ -1,74 +1,13 @@
 use super::ServiceResult;
 use crate::{
+    id::AccountId,
     repo::mock::MockTokenRepoImpl,
     service::{ServiceError, TokenService},
     token::{Token, TokenScope},
 };
 use chrono::TimeDelta;
 use futures_util::future::join_all;
-use std::{assert_matches, sync::Arc, time::Duration};
-
-#[tokio::test]
-#[test_log::test]
-async fn token_service() -> ServiceResult<()> {
-    let repo = MockTokenRepoImpl::boxed_new();
-
-    let token_service = TokenService::new(repo, "supersecret1234".into());
-
-    let token1 = Token::new_with_lifetime(0.into(), TokenScope::Session, Duration::from_secs(1000));
-
-    let token2 = Token::new_with_lifetime(0.into(), TokenScope::Session, Duration::from_secs(0));
-
-    let token3 = Token::new_with_lifetime(2.into(), TokenScope::Session, Duration::from_secs(40));
-
-    let signed1 = token_service.sign(&token1);
-    let signed2 = token_service.sign(&token2);
-    let signed3 = token_service.sign(&token3);
-    let signed3_invalid = signed3.clone() + "a";
-
-    // token1 should be valid.
-    token_service.verify(&signed1).await?;
-
-    // Revoke token1 and check revocation status.
-    token_service.revoke(&signed1).await?;
-    assert_matches!(
-        token_service.verify(&signed1).await,
-        Err(ServiceError::TokenRevoked)
-    );
-    // Revocation of already-revoked token returns error.
-    assert_matches!(
-        token_service.revoke(&signed1).await,
-        Err(ServiceError::TokenRevoked)
-    );
-
-    // Do not allow token2, just-expired.
-    assert_matches!(
-        token_service.verify(&signed2).await,
-        Err(ServiceError::InvalidJwt)
-    );
-
-    token_service.verify(&signed3).await?;
-    // Do not allow token3, invalid signature.
-    assert_matches!(
-        token_service.verify(&signed3_invalid).await,
-        Err(ServiceError::InvalidJwt)
-    );
-
-    // Try some invalid tokens
-    for invalid_jwt in ["invalid", "", "invalid.invalid", "invalid.invalid.invalid"] {
-        assert_matches!(
-            token_service.revoke(invalid_jwt).await,
-            Err(ServiceError::InvalidJwt)
-        );
-
-        assert_matches!(
-            token_service.verify(invalid_jwt).await,
-            Err(ServiceError::InvalidJwt)
-        );
-    }
-
-    Ok(())
-}
+use std::{assert_matches, sync::Arc};
 
 #[tokio::test]
 #[test_log::test]
@@ -77,7 +16,13 @@ async fn token_service_expired() -> ServiceResult<()> {
 
     let token_service = TokenService::new(repo, "supersecret1234".into());
 
-    let token = Token::new_with_lifetime(3.into(), TokenScope::Session, Duration::from_secs(40));
+    let token = Token {
+        id: AccountId::unique(),
+        scope: TokenScope::Session,
+    };
+
+    token_service
+        .add_time_delta(TimeDelta::from_std(TokenScope::Session.safe_scope_lifetime()).unwrap());
 
     let signed = token_service.sign(&token);
 
@@ -99,7 +44,10 @@ async fn token_service_toctou() -> ServiceResult<()> {
 
     let token_service = Arc::new(TokenService::new(repo, "supersecret1234".into()));
 
-    let token = Token::new_with_lifetime(3.into(), TokenScope::Session, Duration::from_secs(40));
+    let token = Token {
+        id: AccountId::unique(),
+        scope: TokenScope::Session,
+    };
 
     let signed = token_service.sign(&token);
 

@@ -60,17 +60,17 @@ impl AuthenticationHandler {
 
         let account_id = self.0.account_service.signup(&signup_dto).await?;
 
-        let complete_signup_jwt = self.0.token_service.sign(&Token::new(
-            account_id,
-            TokenScope::CompleteSignup {
+        let complete_signup_jwt = self.0.token_service.sign(&Token {
+            id: account_id,
+            scope: TokenScope::CompleteSignup {
                 email: email.clone(),
             },
-        ));
+        });
 
-        let email_verification_session_jwt = self.0.token_service.sign(&Token::new(
-            account_id,
-            TokenScope::EmailVerificationSession,
-        ));
+        let email_verification_session_jwt = self.0.token_service.sign(&Token {
+            id: account_id,
+            scope: TokenScope::EmailVerificationSession,
+        });
 
         let template = emails::Template::ConfirmSignup {
             username,
@@ -126,10 +126,10 @@ impl AuthenticationHandler {
         };
 
         dto::response::Token {
-            token: self
-                .0
-                .token_service
-                .sign(&Token::new(login.id, token_scope)),
+            token: self.0.token_service.sign(&Token {
+                id: login.id,
+                scope: token_scope,
+            }),
         }
     }
 

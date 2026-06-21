@@ -1,4 +1,4 @@
-use crate::{dto, entity, id::AccountId};
+use crate::{dto, entity, id::AccountId, token::DecodedToken};
 use async_trait::async_trait;
 
 mod error;
@@ -159,15 +159,21 @@ pub trait AccountRepoTransaction: Send + Sync {
 /// Token revocation state.
 #[async_trait]
 pub trait TokenRepo: Send + Sync {
-    /// Atomic operation for checking the revocation and doing it.
+    /// Check token and revoke it by fingerprint.
     ///
     /// Returns true if the token has already been revoked.
-    async fn check_and_revoke(
-        &self,
-        fingerprint: &[u8],
-        revoke_for: std::time::Duration,
-    ) -> RepoResult<bool>;
+    async fn revoke_fingerprint(&self, token: &DecodedToken) -> RepoResult<bool>;
+
+    /// Check token and revoke all for accounts tokens with given scope.
+    ///
+    /// Returns true if the token has already been revoked.
+    async fn revoke_scope(&self, token: &DecodedToken) -> RepoResult<bool>;
+
+    /// Check token and revoke all tokens of the account.
+    ///
+    /// Returns true if the token has already been revoked.
+    async fn revoke_account(&self, token: &DecodedToken) -> RepoResult<bool>;
 
     /// Returns true if the token has been revoked.
-    async fn check_revocation(&self, fingerprint: &[u8]) -> RepoResult<bool>;
+    async fn is_revoked(&self, token: &DecodedToken) -> RepoResult<bool>;
 }
