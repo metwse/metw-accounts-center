@@ -3,15 +3,13 @@ use crate::{
     repo::mock::MockTokenRepoImpl,
     service::{ServiceError, TokenService},
     token::{Token, TokenScope},
-    util::JsonWebSignature,
 };
-use chrono::Utc;
+use chrono::TimeDelta;
 use futures_util::future::join_all;
 use std::{assert_matches, sync::Arc, time::Duration};
 
 #[tokio::test]
 #[test_log::test]
-#[serial_test::serial]
 async fn token_service() -> ServiceResult<()> {
     let repo = MockTokenRepoImpl::boxed_new();
 
@@ -74,7 +72,6 @@ async fn token_service() -> ServiceResult<()> {
 
 #[tokio::test]
 #[test_log::test]
-#[serial_test::serial]
 async fn token_service_expired() -> ServiceResult<()> {
     let repo = MockTokenRepoImpl::boxed_new();
 
@@ -85,20 +82,18 @@ async fn token_service_expired() -> ServiceResult<()> {
     let signed = token_service.sign(&token);
 
     // Expire token4
-    JsonWebSignature::inject_now(Some(Utc::now() - Duration::from_secs(40)));
+    token_service.add_time_delta(TimeDelta::minutes(-1));
+
     assert_matches!(
         token_service.verify(&signed).await,
         Err(ServiceError::InvalidJwt)
     );
-
-    JsonWebSignature::inject_now(None);
 
     Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
 #[test_log::test]
-#[serial_test::serial]
 async fn token_service_toctou() -> ServiceResult<()> {
     let repo = MockTokenRepoImpl::boxed_new();
 

@@ -5,6 +5,9 @@ use crate::{
     util::JsonWebSignature,
 };
 
+#[cfg(test)]
+use chrono::TimeDelta;
+
 /// Token state.
 pub struct TokenService {
     repo: Box<dyn TokenRepo>,
@@ -18,6 +21,11 @@ impl TokenService {
             repo,
             jws: JsonWebSignature::new(secret),
         }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn add_time_delta(&self, time_delta: TimeDelta ) {
+        self.jws.add_time_delta(time_delta);
     }
 
     /// Sign the token.
