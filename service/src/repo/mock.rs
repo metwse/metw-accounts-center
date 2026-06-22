@@ -1,6 +1,6 @@
 use super::{AccountRepo, AccountRepoTransaction, RepoResult, TokenRepo};
 use crate::{
-    dto, entity,
+    checked_now, dto, entity,
     id::AccountId,
     repo::RepoError,
     token::{DecodedToken, TokenScope},
@@ -151,16 +151,6 @@ impl AccountRepo for MockAccountRepoImpl {
         }
     }
 
-    async fn get_account_flags(&self, id: AccountId) -> RepoResult<Option<entity::AccountFlags>> {
-        let state = self.lock_state().await;
-
-        if let Some(flags_entity) = state.account_flags.get(&id) {
-            Ok(Some(flags_entity.clone()))
-        } else {
-            Ok(None)
-        }
-    }
-
     async fn set_primary_email_if_current_is(
         &self,
         id: AccountId,
@@ -292,7 +282,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
                     email: email.to_string(),
                     account_id: id,
                     is_primary,
-                    created_at: Utc::now(),
+                    created_at: checked_now(),
                 },
             );
 
@@ -315,7 +305,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
                     username: username.to_string(),
                     account_id: id,
                     is_primary,
-                    created_at: Utc::now(),
+                    created_at: checked_now(),
                     expires_at: None,
                 },
             );
@@ -365,9 +355,9 @@ impl TokenRepo for MockTokenRepoImpl {
 
         let mut state = self.fingerprint_revocations.lock().await;
 
-        let revocation_res = state.contains(&token.fingerprint);
+        let is_revoked = state.contains(&token.fingerprint);
 
-        if !revocation_res {
+        if !is_revoked {
             state.insert(token.fingerprint.clone());
             drop(state);
 
@@ -384,7 +374,7 @@ impl TokenRepo for MockTokenRepoImpl {
             });
         };
 
-        Ok(revocation_res)
+        Ok(is_revoked)
     }
 
     async fn revoke_scope(&self, token: &DecodedToken) -> RepoResult<bool> {
@@ -398,17 +388,16 @@ impl TokenRepo for MockTokenRepoImpl {
 
         let key = (token.id, token.scope.variant_name());
 
-        let revocation_res = if let Some(&time) = state.get(&key) {
-            token.issued_at <= time
+        let is_revoked = if let Some(&cutoff_time) = state.get(&key) {
+            token.issued_at <= cutoff_time
         } else {
             false
         };
 
-        if !revocation_res {
-            let value = (*state).entry(key).or_insert(DateTime::<Utc>::MAX_UTC);
-            *value = std::cmp::min(self.now(), *value);
-            let value = *value;
-
+        if !is_revoked {
+            let cutoff_time = (*state).entry(key).or_insert(DateTime::<Utc>::MIN_UTC);
+            *cutoff_time = std::cmp::max(checked_now(), *cutoff_time);
+            let cutoff_time = *cutoff_time;
             drop(state);
 
             tokio::spawn({
@@ -419,8 +408,8 @@ impl TokenRepo for MockTokenRepoImpl {
                     tokio::time::sleep(revoke_for).await;
                     let mut state = state.lock().await;
 
-                    if let Some(&current_value) = state.get(&key)
-                        && current_value == value
+                    if let Some(&current_cutoff_time) = state.get(&key)
+                        && current_cutoff_time == cutoff_time
                     {
                         state.remove(&key);
                     }
@@ -428,7 +417,7 @@ impl TokenRepo for MockTokenRepoImpl {
             });
         };
 
-        Ok(revocation_res)
+        Ok(is_revoked)
     }
 
     async fn revoke_account(&self, token: &DecodedToken) -> RepoResult<bool> {
@@ -442,16 +431,16 @@ impl TokenRepo for MockTokenRepoImpl {
 
         let key = token.id;
 
-        let revocation_res = if let Some(&time) = state.get(&key) {
+        let is_revoked = if let Some(&time) = state.get(&key) {
             token.issued_at <= time
         } else {
             false
         };
 
-        if !revocation_res {
-            let value = (*state).entry(key).or_insert(DateTime::<Utc>::MAX_UTC);
-            *value = std::cmp::min(self.now(), *value);
-            let value = *value;
+        if !is_revoked {
+            let cutoff_time = (*state).entry(key).or_insert(DateTime::<Utc>::MIN_UTC);
+            *cutoff_time = std::cmp::max(checked_now(), *cutoff_time);
+            let cutoff_time = *cutoff_time;
             drop(state);
 
             tokio::spawn({
@@ -462,8 +451,8 @@ impl TokenRepo for MockTokenRepoImpl {
                     tokio::time::sleep(revoke_for).await;
                     let mut state = state.lock().await;
 
-                    if let Some(&current_value) = state.get(&key)
-                        && current_value == value
+                    if let Some(&current_cutoff_time) = state.get(&key)
+                        && current_cutoff_time == cutoff_time
                     {
                         state.remove(&key);
                     }
@@ -471,7 +460,7 @@ impl TokenRepo for MockTokenRepoImpl {
             });
         };
 
-        Ok(revocation_res)
+        Ok(is_revoked)
     }
 
     async fn is_revoked(&self, token: &DecodedToken) -> RepoResult<bool> {
@@ -482,10 +471,6 @@ impl TokenRepo for MockTokenRepoImpl {
 }
 
 impl MockTokenRepoImpl {
-    fn now(&self) -> DateTime<Utc> {
-        Utc::now()
-    }
-
     async fn check_fingerprint_revocation(&self, token: &DecodedToken) -> bool {
         self.fingerprint_revocations
             .lock()

@@ -1,12 +1,11 @@
-use std::time::Duration;
-
 use service::{
+    checked_now,
     id::AccountId,
     repo::{RepoResult, TokenRepo},
     testutil::random_username,
     token::{DecodedToken, TokenScope},
 };
-use sqlx::types::chrono::Utc;
+use std::time::Duration;
 
 /// Sign a token, then check and revoke.
 pub async fn token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
@@ -14,8 +13,8 @@ pub async fn token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
         id: AccountId::unique(),
         scope: service::token::TokenScope::Session,
         fingerprint: random_username().into(),
-        expires_at: Utc::now() + Duration::from_secs(1),
-        issued_at: Utc::now() - Duration::from_secs(1),
+        expires_at: checked_now() + Duration::from_secs(1),
+        issued_at: checked_now() - Duration::from_secs(1),
     };
 
     // --- Revoke scope ---
@@ -102,8 +101,8 @@ pub async fn token_revocation_data_race(repo: &dyn TokenRepo) -> RepoResult<()> 
         id: AccountId::unique(),
         scope: TokenScope::Session,
         fingerprint: random_username().into(),
-        expires_at: Utc::now(),
-        issued_at: Utc::now(),
+        expires_at: checked_now(),
+        issued_at: checked_now(),
     };
 
     for _ in 0..16 {

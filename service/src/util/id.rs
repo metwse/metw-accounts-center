@@ -1,9 +1,11 @@
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime, Utc};
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use serde::{Deserialize, Serialize};
 use std::{
     sync::{LazyLock, Mutex},
     time::Duration,
 };
+
+use crate::checked_now;
 
 macro_rules! id_newtype {
     ($name:ident) => {
@@ -91,7 +93,7 @@ pub fn snowflake() -> i64 {
 }
 
 fn internal_snowflake() -> i64 {
-    let timestamp = Utc::now().timestamp_millis() - *EPOCH as i64;
+    let timestamp = checked_now().timestamp_millis() - *EPOCH as i64;
 
     // Ensure the time is not yet May 15 2109 07:35:11
     assert!(timestamp < 2i64.pow(42) - 1);

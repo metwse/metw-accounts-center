@@ -1,4 +1,4 @@
-use crate::{dto, entity, id::AccountId, token::DecodedToken};
+use crate::{dto, id::AccountId, token::DecodedToken};
 use async_trait::async_trait;
 
 mod error;
@@ -89,9 +89,6 @@ pub trait AccountRepo: Send + Sync {
 
     /// Get account keys - the key bundle of the account.
     async fn get_keys(&self, id: AccountId) -> RepoResult<Option<dto::repo::OwnedKeys>>;
-
-    /// Get account flags.
-    async fn get_account_flags(&self, id: AccountId) -> RepoResult<Option<entity::AccountFlags>>;
 
     /// Set the email primary for the account.
     ///

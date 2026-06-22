@@ -1,10 +1,10 @@
 use async_trait::async_trait;
 use redis::{AsyncCommands, aio::MultiplexedConnection};
 use service::{
+    checked_now,
     repo::{RepoResult, TokenRepo},
     token::{DecodedToken, TokenScope},
 };
-use sqlx::types::chrono::Utc;
 
 /// Token repository using Redis.
 pub struct TokenRepoImpl {
@@ -60,7 +60,7 @@ impl TokenRepo for TokenRepoImpl {
 
         let token_cutoff: (Option<i64>,) =
             redis::aio::transaction_async(con, &[&key], |mut con, mut pipe| {
-                let now = Utc::now().timestamp_millis();
+                let now = checked_now().timestamp_millis();
                 let key = key.clone();
 
                 async move {
@@ -108,7 +108,7 @@ impl TokenRepo for TokenRepoImpl {
 
         let token_cutoff: (Option<i64>,) =
             redis::aio::transaction_async(con, &[&key], |mut con, mut pipe| {
-                let now = Utc::now().timestamp_millis();
+                let now = checked_now().timestamp_millis();
                 let key = key.clone();
 
                 async move {

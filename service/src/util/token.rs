@@ -1,4 +1,4 @@
-use crate::id::AccountId;
+use crate::{checked_now, id::AccountId};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -116,7 +116,7 @@ impl DecodedToken {
     /// Returns the remaining time until this token is guaranteed to expire.
     pub fn safe_lifetime(&self) -> Duration {
         std::cmp::max(
-            (self.expires_at - Utc::now())
+            (self.expires_at - checked_now())
                 .to_std()
                 .unwrap_or(Duration::from_secs(0)),
             Duration::from_secs(1),

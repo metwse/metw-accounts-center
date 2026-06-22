@@ -92,6 +92,8 @@ pub use util::{id, token};
 
 pub use state::AppState;
 
+pub use util::checked_now::checked_now;
+
 /// Test utilities.
 #[cfg(any(feature = "testutil", test))]
 pub mod testutil;

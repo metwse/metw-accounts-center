@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use service::{
-    dto, entity,
+    dto,
     id::AccountId,
     repo::{AccountRepo, AccountRepoTransaction, RepoResult},
 };
@@ -119,19 +119,6 @@ impl AccountRepo for AccountRepoImpl {
         .await;
 
         Ok(keys?)
-    }
-
-    async fn get_account_flags(&self, id: AccountId) -> RepoResult<Option<entity::AccountFlags>> {
-        let flags = sqlx::query_as!(
-            entity::AccountFlags,
-            "SELECT id, is_email_verified FROM account_flags
-                WHERE id = $1",
-            id as _
-        )
-        .fetch_optional(&self.pool)
-        .await;
-
-        Ok(flags?)
     }
 
     async fn set_primary_email_if_current_is(

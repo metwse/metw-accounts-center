@@ -1,3 +1,7 @@
+#[cfg(test)]
+use crate::checked_now;
+#[cfg(not(test))]
+use crate::checked_now;
 use crate::{
     id::AccountId,
     token::{DecodedToken, Token, TokenScope},
@@ -120,11 +124,21 @@ impl JsonWebSignature {
 
     fn now(&self) -> DateTime<Utc> {
         #[cfg(test)]
-        let now = Utc::now() + *self.time_delta.lock().unwrap();
+        let now = checked_now() + *self.time_delta.lock().unwrap();
 
         #[cfg(not(test))]
-        let now = Utc::now();
+        let now = checked_now();
 
         now
     }
+}
+
+#[cfg(test)]
+#[test]
+fn invalid_jwts() {
+    let jws = JsonWebSignature::new("supersecret1234".into());
+
+    assert!(jws.decode("aaa.aaa.aaa").is_none());
+    assert!(jws.decode("aaa.aaa").is_none());
+    assert!(jws.decode("a").is_none());
 }

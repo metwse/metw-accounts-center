@@ -7,7 +7,7 @@
 //!
 //! ## `repo`
 //!
-//! The [`repo`] layer is responsible for low-level state management.
+//! The [`repo`] layer is responsible for data management.
 //!
 //! Methods of `*Repo` traits provide read-only access or test-and-set
 //! operations. `*RepoTransaction` traits, on the other hand, are atomic
@@ -20,7 +20,7 @@
 //!
 //! | Function Example | Type | Description |
 //! |--|--|--|
-//! | [`get_account_flags`] | read | Reads user flags. |
+//! | [`get_keys`] | read | Reads keying materials of users. |
 //! | [`set_primary_email_if_current_is`] | compare-and-swap | If the provided primary email is still the current primary email, changes the email. |
 //!
 //! - Any insert, delete, update, or upsert (insert or update if exists)
@@ -52,7 +52,7 @@
 //! [`RepoError`]: service::repo::RepoError
 //!
 //! [`set_primary_email_if_current_is`]: service::repo::AccountRepo::set_primary_email_if_current_is
-//! [`get_account_flags`]: service::repo::AccountRepo::get_account_flags
+//! [`get_keys`]: service::repo::AccountRepo::get_keys
 //! [`upsert_account`]: service::repo::AccountRepoTransaction::upsert_account
 //! [`insert_default_flags`]: service::repo::AccountRepoTransaction::insert_default_flags
 //! [`get_primary_email`]: service::repo::AccountRepo::get_primary_email
