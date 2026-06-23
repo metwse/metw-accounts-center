@@ -21,7 +21,7 @@ pub async fn token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
     assert!(!repo.is_revoked(&token).await?);
 
     // Revoke the token fingerprint.
-    assert!(!repo.revoke_fingerprint(&token).await?);
+    assert!(!repo.check_and_revoke_token(&token).await?);
     assert!(repo.is_revoked(&token).await?);
 
     // Change the fingerprint. Now the new token is not revoked.
@@ -29,7 +29,11 @@ pub async fn token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
     assert!(!repo.is_revoked(&token).await?);
 
     // Revoke tokens with Session scope.
-    assert!(!repo.revoke_scope(&token).await?);
+    assert!(
+        !repo
+            .check_and_revoke_account_tokens_with_scope(&token)
+            .await?
+    );
     assert!(repo.is_revoked(&token).await?);
 
     // Tokens with different fingerprints also revoked.
@@ -47,11 +51,14 @@ pub async fn token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
     token.issued_at += Duration::from_millis(1500);
 
     // Retrying revocation should fail.
-    assert!(repo.revoke_scope(&token).await?);
+    assert!(
+        repo.check_and_revoke_account_tokens_with_scope(&token)
+            .await?
+    );
 
     // Cannot revoke fingerprint or account as the scope is revoked.
-    assert!(repo.revoke_fingerprint(&token).await?);
-    assert!(repo.revoke_account(&token).await?);
+    assert!(repo.check_and_revoke_token(&token).await?);
+    assert!(repo.check_and_revoke_account_tokens(&token).await?);
 
     token.scope = service::token::TokenScope::EmailVerificationSession;
 
@@ -66,7 +73,7 @@ pub async fn token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
     assert!(!repo.is_revoked(&token).await?);
 
     // Revoke all tokens of the account.
-    assert!(!repo.revoke_account(&token).await?);
+    assert!(!repo.check_and_revoke_account_tokens(&token).await?);
 
     // Newer tokens should not be revoked.
     token.issued_at += Duration::from_millis(1500);
@@ -79,15 +86,18 @@ pub async fn token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
     token.issued_at += Duration::from_millis(1500);
 
     // Retrying revocation should fail.
-    assert!(repo.revoke_account(&token).await?);
-    assert!(repo.revoke_fingerprint(&token).await?); // should not revoke fingerprint
-    assert!(repo.revoke_scope(&token).await?);
+    assert!(repo.check_and_revoke_account_tokens(&token).await?);
+    assert!(repo.check_and_revoke_token(&token).await?); // should not revoke fingerprint
+    assert!(
+        repo.check_and_revoke_account_tokens_with_scope(&token)
+            .await?
+    );
 
     token.id = AccountId::unique();
 
     // Fingerprint was vaild until this point.
-    assert!(!repo.revoke_fingerprint(&token).await?);
-    assert!(repo.revoke_fingerprint(&token).await?);
+    assert!(!repo.check_and_revoke_token(&token).await?);
+    assert!(repo.check_and_revoke_token(&token).await?);
 
     Ok(())
 }
@@ -108,7 +118,7 @@ pub async fn token_revocation_data_race(repo: &dyn TokenRepo) -> RepoResult<()> 
     for _ in 0..16 {
         token_revocation_futures.push({
             let token = token.clone();
-            async move { repo.revoke_fingerprint(&token).await }
+            async move { repo.check_and_revoke_token(&token).await }
         });
     }
 

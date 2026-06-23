@@ -51,7 +51,7 @@ impl TokenService {
     #[tracing::instrument(skip_all)]
     pub async fn revoke(&self, base64_encoded_token: &str) -> ServiceResult<Token> {
         if let Some(decoded_token) = self.jws.decode(base64_encoded_token) {
-            if !self.repo.revoke_fingerprint(&decoded_token).await? {
+            if !self.repo.check_and_revoke_token(&decoded_token).await? {
                 Ok(decoded_token.into())
             } else {
                 Err(ServiceError::TokenRevoked)

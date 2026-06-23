@@ -9,7 +9,9 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use std::{
     collections::{HashMap, HashSet},
+    hash::Hash,
     sync::Arc,
+    time::Duration,
 };
 use tokio::sync::{Mutex, MutexGuard, OwnedMutexGuard};
 
@@ -348,7 +350,7 @@ impl MockTokenRepoImpl {
 
 #[async_trait]
 impl TokenRepo for MockTokenRepoImpl {
-    async fn revoke_fingerprint(&self, token: &DecodedToken) -> RepoResult<bool> {
+    async fn check_and_revoke_token(&self, token: &DecodedToken) -> RepoResult<bool> {
         if self.check_account_revocation(token).await || self.check_scope_revocation(token).await {
             return Ok(true);
         }
@@ -364,10 +366,10 @@ impl TokenRepo for MockTokenRepoImpl {
             tokio::spawn({
                 let state = Arc::clone(&self.fingerprint_revocations);
                 let fingerprint = token.fingerprint.clone();
-                let revoke_for = token.safe_lifetime();
+                let expiration = token.safe_lifetime();
 
                 async move {
-                    tokio::time::sleep(revoke_for).await;
+                    tokio::time::sleep(expiration).await;
                     let mut state = state.lock().await;
                     state.remove(&fingerprint);
                 }
@@ -377,7 +379,10 @@ impl TokenRepo for MockTokenRepoImpl {
         Ok(is_revoked)
     }
 
-    async fn revoke_scope(&self, token: &DecodedToken) -> RepoResult<bool> {
+    async fn check_and_revoke_account_tokens_with_scope(
+        &self,
+        token: &DecodedToken,
+    ) -> RepoResult<bool> {
         if self.check_account_revocation(token).await
             || self.check_fingerprint_revocation(token).await
         {
@@ -386,7 +391,7 @@ impl TokenRepo for MockTokenRepoImpl {
 
         let mut state = self.scope_revocations.lock().await;
 
-        let key = (token.id, token.scope.variant_name());
+        let key = (token.id, token.scope.scope_name());
 
         let is_revoked = if let Some(&cutoff_time) = state.get(&key) {
             token.issued_at <= cutoff_time
@@ -395,32 +400,18 @@ impl TokenRepo for MockTokenRepoImpl {
         };
 
         if !is_revoked {
-            let cutoff_time = (*state).entry(key).or_insert(DateTime::<Utc>::MIN_UTC);
-            *cutoff_time = std::cmp::max(checked_now(), *cutoff_time);
-            let cutoff_time = *cutoff_time;
-            drop(state);
-
-            tokio::spawn({
-                let state = Arc::clone(&self.scope_revocations);
-                let revoke_for = token.scope.safe_scope_lifetime();
-
-                async move {
-                    tokio::time::sleep(revoke_for).await;
-                    let mut state = state.lock().await;
-
-                    if let Some(&current_cutoff_time) = state.get(&key)
-                        && current_cutoff_time == cutoff_time
-                    {
-                        state.remove(&key);
-                    }
-                }
-            });
+            self.update_token_cutoff(
+                &mut *state,
+                self.scope_revocations.clone(),
+                key,
+                token.scope.safe_scope_lifetime(),
+            );
         };
 
         Ok(is_revoked)
     }
 
-    async fn revoke_account(&self, token: &DecodedToken) -> RepoResult<bool> {
+    async fn check_and_revoke_account_tokens(&self, token: &DecodedToken) -> RepoResult<bool> {
         if self.check_scope_revocation(token).await
             || self.check_fingerprint_revocation(token).await
         {
@@ -438,29 +429,44 @@ impl TokenRepo for MockTokenRepoImpl {
         };
 
         if !is_revoked {
-            let cutoff_time = (*state).entry(key).or_insert(DateTime::<Utc>::MIN_UTC);
-            *cutoff_time = std::cmp::max(checked_now(), *cutoff_time);
-            let cutoff_time = *cutoff_time;
-            drop(state);
-
-            tokio::spawn({
-                let state = Arc::clone(&self.account_revocations);
-                let revoke_for = TokenScope::safe_global_lifetime();
-
-                async move {
-                    tokio::time::sleep(revoke_for).await;
-                    let mut state = state.lock().await;
-
-                    if let Some(&current_cutoff_time) = state.get(&key)
-                        && current_cutoff_time == cutoff_time
-                    {
-                        state.remove(&key);
-                    }
-                }
-            });
+            self.update_token_cutoff(
+                &mut *state,
+                self.account_revocations.clone(),
+                key,
+                TokenScope::safe_global_lifetime(),
+            );
         };
 
         Ok(is_revoked)
+    }
+
+    async fn revoke_account_tokens_with_scope(
+        &self,
+        account_id: AccountId,
+        scope: &TokenScope,
+    ) -> RepoResult<Option<DateTime<Utc>>> {
+        let mut state = self.scope_revocations.lock().await;
+
+        Ok(self.update_token_cutoff(
+            &mut *state,
+            self.scope_revocations.clone(),
+            (account_id, scope.scope_name()),
+            scope.safe_scope_lifetime(),
+        ))
+    }
+
+    async fn revoke_account_tokens(
+        &self,
+        account_id: AccountId,
+    ) -> RepoResult<Option<DateTime<Utc>>> {
+        let mut state = self.account_revocations.lock().await;
+
+        Ok(self.update_token_cutoff(
+            &mut *state,
+            self.account_revocations.clone(),
+            account_id,
+            TokenScope::safe_global_lifetime(),
+        ))
     }
 
     async fn is_revoked(&self, token: &DecodedToken) -> RepoResult<bool> {
@@ -471,6 +477,46 @@ impl TokenRepo for MockTokenRepoImpl {
 }
 
 impl MockTokenRepoImpl {
+    // Deadlock safety: Mutex gurad for the locked_state must be dropped before
+    // any asynchronous call.
+    fn update_token_cutoff<T: Hash + Eq + Send + Clone + 'static>(
+        &self,
+        locked_state: &mut HashMap<T, DateTime<Utc>>,
+        state: Arc<Mutex<HashMap<T, DateTime<Utc>>>>,
+        key: T,
+        expiration: Duration,
+    ) -> Option<DateTime<Utc>> {
+        let cutoff_time = locked_state
+            .entry(key.clone())
+            .or_insert(DateTime::<Utc>::MIN_UTC);
+
+        let previous_cutoff_time = *cutoff_time;
+
+        *cutoff_time = std::cmp::max(checked_now(), *cutoff_time);
+        let cutoff_time = *cutoff_time;
+
+        // The clean up task removes revocation entry aftear any token subject
+        // to cutoff has been expired.
+        tokio::spawn({
+            async move {
+                tokio::time::sleep(expiration).await;
+                let mut state = state.lock().await;
+
+                if let Some(&current_cutoff_time) = state.get(&key)
+                    && current_cutoff_time == cutoff_time
+                {
+                    state.remove(&key);
+                }
+            }
+        });
+
+        if previous_cutoff_time == DateTime::<Utc>::MAX_UTC {
+            None
+        } else {
+            Some(previous_cutoff_time)
+        }
+    }
+
     async fn check_fingerprint_revocation(&self, token: &DecodedToken) -> bool {
         self.fingerprint_revocations
             .lock()
@@ -483,7 +529,7 @@ impl MockTokenRepoImpl {
             .scope_revocations
             .lock()
             .await
-            .get(&(token.id, token.scope.variant_name()))
+            .get(&(token.id, token.scope.scope_name()))
         {
             token.issued_at <= time
         } else {

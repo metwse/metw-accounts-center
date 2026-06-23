@@ -1,5 +1,10 @@
-use crate::{dto, id::AccountId, token::DecodedToken};
+use crate::{
+    dto,
+    id::AccountId,
+    token::{DecodedToken, TokenScope},
+};
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 
 mod error;
 
@@ -156,21 +161,51 @@ pub trait AccountRepoTransaction: Send + Sync {
 /// Token revocation state.
 #[async_trait]
 pub trait TokenRepo: Send + Sync {
-    /// Check token and revoke it by fingerprint.
+    /// Check whether the token has been revoked, and if it has not, revoke it.
     ///
     /// Returns true if the token has already been revoked.
-    async fn revoke_fingerprint(&self, token: &DecodedToken) -> RepoResult<bool>;
+    async fn check_and_revoke_token(&self, token: &DecodedToken) -> RepoResult<bool>;
 
-    /// Check token and revoke all for accounts tokens with given scope.
+    /// Check whether the token has been revoked, and if it has not, revoke all
+    /// tokens in the account that share the same scope as this token.
     ///
     /// Returns true if the token has already been revoked.
-    async fn revoke_scope(&self, token: &DecodedToken) -> RepoResult<bool>;
+    async fn check_and_revoke_account_tokens_with_scope(
+        &self,
+        token: &DecodedToken,
+    ) -> RepoResult<bool>;
 
-    /// Check token and revoke all tokens of the account.
+    /// Check whether the token has been revoked, and if it has not, revoke all
+    /// tokens associated with the account.
     ///
     /// Returns true if the token has already been revoked.
-    async fn revoke_account(&self, token: &DecodedToken) -> RepoResult<bool>;
+    async fn check_and_revoke_account_tokens(&self, token: &DecodedToken) -> RepoResult<bool>;
 
-    /// Returns true if the token has been revoked.
+    /// Revoke all tokens belonging to the account that have the specified
+    /// scope.
+    ///
+    /// This operation atomically updates the revocation cutoff time for the
+    /// `(account_id, scope)` pair and returns the previous cutoff time.
+    async fn revoke_account_tokens_with_scope(
+        &self,
+        account_id: AccountId,
+        scope: &TokenScope,
+    ) -> RepoResult<Option<DateTime<Utc>>>;
+
+    /// Revoke all tokens belonging to the account.
+    ///
+    /// This operation atomically updates the account's token cutoff time,
+    /// and returns the previous cutoff time.
+    async fn revoke_account_tokens(
+        &self,
+        account_id: AccountId,
+    ) -> RepoResult<Option<DateTime<Utc>>>;
+
+    /// Returns true if the token is considered revoked by any revocation rule.
+    ///
+    /// This includes:
+    /// - token-level revocation
+    /// - scope-level revocation
+    /// - account-level revocation
     async fn is_revoked(&self, token: &DecodedToken) -> RepoResult<bool>;
 }

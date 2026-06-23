@@ -77,8 +77,8 @@ pub enum TokenScope {
 }
 
 impl TokenScope {
-    /// Get name of the enum variant.
-    pub fn variant_name(&self) -> &'static str {
+    /// Get the scope name.
+    pub fn scope_name(&self) -> &'static str {
         match self {
             Self::Session => "session",
             Self::EmailVerificationSession { .. } => "pending-activation-session",

@@ -15,7 +15,7 @@ impl AuthorizationHandler {
 
         let token = self.0.token_service.revoke(&base64_encoded_token).await?;
 
-        trace!(account_id = %token.id, variant = token.scope.variant_name());
+        trace!(account_id = %token.id, variant = token.scope.scope_name());
 
         match token.scope {
             TokenScope::Session | TokenScope::EmailVerificationSession => {
