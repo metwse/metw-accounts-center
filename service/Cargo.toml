@@ -33,7 +33,7 @@ argon2 = "0.5"
 rand_core = { version = "0.6", features = ["getrandom"] }
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["full"] }
+tokio = { workspace = true, features = ["full", "test-util"] }
 
 serial_test = { workspace = true }
 test-log = { workspace = true, features = ["trace"] }
