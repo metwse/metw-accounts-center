@@ -159,6 +159,37 @@ pub trait AccountRepoTransaction: Send + Sync {
 }
 
 /// Token revocation state.
+///
+/// A token is considered revoked if any revocation policy invalidates it. This
+/// includes:
+///
+/// - token-level revocation
+/// - scope-level revocation
+/// - account-level revocation
+///
+///
+/// ## Check-and-Revoke Operations
+///
+/// The check-and-revoke methods perform the revocation check and the
+/// corresponding revocation atomically within their own revocation level.
+///
+/// For example, concurrent calls to [`check_and_revoke_token`] guarantee that
+/// at most one call succeeds and all others observe the token as revoked.
+///
+/// However, atomicity is not guaranteed across different revocation levels.
+/// Concurrent calls to [`check_and_revoke_token`] and
+/// [`check_and_revoke_account_tokens_with_scope`] on the same token have
+/// unspecified behavior. Do not use multiple variants of `check_and_revoke*`
+/// for a token scope; use only one level of check-and-revoke.
+///
+/// [`check_and_revoke_token`]: TokenRepo::check_and_revoke_token
+/// [`check_and_revoke_account_tokens_with_scope`]: TokenRepo::check_and_revoke_account_tokens_with_scope
+///
+///
+/// ## Revoke Operations
+///
+/// With these methods, no token revocation check is performed; revocation is
+/// applied directly at the account level.
 #[async_trait]
 pub trait TokenRepo: Send + Sync {
     /// Check whether the token has been revoked, and if it has not, revoke it.
@@ -202,10 +233,5 @@ pub trait TokenRepo: Send + Sync {
     ) -> RepoResult<Option<DateTime<Utc>>>;
 
     /// Returns true if the token is considered revoked by any revocation rule.
-    ///
-    /// This includes:
-    /// - token-level revocation
-    /// - scope-level revocation
-    /// - account-level revocation
     async fn is_revoked(&self, token: &DecodedToken) -> RepoResult<bool>;
 }

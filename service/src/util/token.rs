@@ -76,6 +76,9 @@ pub enum TokenScope {
     CompleteSignup { email: String },
 }
 
+/// Safety margin added to the original lifetimes.
+pub static SAFE_EXPIRATION_MARGIN: Duration = Duration::from_secs(10);
+
 impl TokenScope {
     /// Get the scope name.
     pub fn scope_name(&self) -> &'static str {
@@ -102,25 +105,23 @@ impl TokenScope {
     /// Returns a duration that guarantees all tokens issued under this scope
     /// will be expired after the returned time passes.
     pub fn safe_scope_lifetime(&self) -> Duration {
-        self.lifetime() + Duration::from_secs(1)
+        self.lifetime() + SAFE_EXPIRATION_MARGIN
     }
 
     /// Returns a upper-bound duration after which any token (regardless of
     /// scope) is guaranteed to be expired.
     pub fn safe_global_lifetime() -> Duration {
-        Duration::from_hours(24 * 7)
+        Duration::from_hours(24 * 7) + SAFE_EXPIRATION_MARGIN
     }
 }
 
 impl DecodedToken {
     /// Returns the remaining time until this token is guaranteed to expire.
     pub fn safe_lifetime(&self) -> Duration {
-        std::cmp::max(
-            (self.expires_at - checked_now())
-                .to_std()
-                .unwrap_or(Duration::from_secs(0)),
-            Duration::from_secs(1),
-        )
+        (self.expires_at - checked_now())
+            .to_std()
+            .unwrap_or(Duration::from_secs(0))
+            + SAFE_EXPIRATION_MARGIN
     }
 }
 

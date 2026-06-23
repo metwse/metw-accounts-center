@@ -7,11 +7,11 @@ use service::{
 };
 use std::time::Duration;
 
-/// Sign a token, then check and revoke.
-pub async fn token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
+/// Check-and-revoke.
+pub async fn check_and_revoke(repo: &dyn TokenRepo) -> RepoResult<()> {
     let mut token = DecodedToken {
         id: AccountId::unique(),
-        scope: service::token::TokenScope::Session,
+        scope: TokenScope::Session,
         fingerprint: random_username().into(),
         expires_at: checked_now() + Duration::from_secs(1),
         issued_at: checked_now() - Duration::from_secs(1),
@@ -60,11 +60,11 @@ pub async fn token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
     assert!(repo.check_and_revoke_token(&token).await?);
     assert!(repo.check_and_revoke_account_tokens(&token).await?);
 
-    token.scope = service::token::TokenScope::EmailVerificationSession;
+    token.scope = TokenScope::EmailVerificationSession;
 
     // But other scopes are still valid.
     assert!(!repo.is_revoked(&token).await?);
-    token.scope = service::token::TokenScope::Session;
+    token.scope = TokenScope::Session;
 
     // --- Revoke account ---
     token.id = AccountId::unique();
@@ -136,18 +136,62 @@ pub async fn token_revocation_data_race(repo: &dyn TokenRepo) -> RepoResult<()> 
     Ok(())
 }
 
+/// Revoke tokens for an account.
+pub async fn account_token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
+    let mut token = DecodedToken {
+        id: AccountId::unique(),
+        scope: TokenScope::Session,
+        fingerprint: random_username().into(),
+        expires_at: checked_now() + Duration::from_secs(2),
+        issued_at: checked_now() - Duration::from_secs(1),
+    };
+
+    assert!(!repo.is_revoked(&token).await?);
+
+    repo.revoke_account_tokens_with_scope(token.id, &token.scope)
+        .await?;
+
+    assert!(repo.is_revoked(&token).await?);
+
+    // Newer tokens are still valid.
+    token.issued_at = checked_now() + Duration::from_secs(1);
+    assert!(!repo.is_revoked(&token).await?);
+    token.issued_at = checked_now() - Duration::from_secs(1);
+
+    // Other scopes are still valid.
+    token.scope = TokenScope::EmailVerificationSession;
+    assert!(!repo.is_revoked(&token).await?);
+
+    repo.revoke_account_tokens(token.id).await?;
+
+    assert!(repo.is_revoked(&token).await?);
+
+    // Other scopes are revoked too.
+    token.scope = TokenScope::Session;
+    assert!(repo.is_revoked(&token).await?);
+
+    // Newer tokens are still valid.
+    token.issued_at = checked_now() + Duration::from_secs(1);
+
+    assert!(!repo.is_revoked(&token).await?);
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{token_revocation, token_revocation_data_race};
+    use super::{account_token_revocation, check_and_revoke, token_revocation_data_race};
     use crate::util::redis_client_from_env;
     use service::repo::{RepoResult, TokenRepo, mock::MockTokenRepoImpl};
     use state::TokenRepoImpl;
 
     async fn testsuite(token_repo: &dyn TokenRepo) -> RepoResult<()> {
         for _ in 0..4 {
-            token_revocation(token_repo).await?;
+            check_and_revoke(token_repo).await?;
 
             token_revocation_data_race(token_repo).await?;
+
+            account_token_revocation(token_repo).await?;
         }
 
         Ok(())
