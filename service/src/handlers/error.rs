@@ -21,4 +21,7 @@ pub enum HandlerError {
 
     #[error("unexpected error: {0}")]
     UnexpectedError(&'static str),
+
+    #[error("invalid captcha")]
+    InvalidCaptcha,
 }

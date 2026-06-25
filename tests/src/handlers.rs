@@ -47,6 +47,9 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
                     email: taken_email.to_string(),
                 },
                 random_ipv6(),
+                dto::request::Captcha {
+                    captcha: "captcha".to_string()
+                }
             )
             .await
             .unwrap_err(),
@@ -61,6 +64,9 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
                 email: email.to_string(),
             },
             random_ipv6(),
+            dto::request::Captcha {
+                captcha: "captcha".to_string(),
+            },
         )
         .await?;
 
@@ -232,7 +238,13 @@ pub async fn taken_username_or_email(ctx: &TestState) -> HandlerResult<()> {
 
     assert_matches!(
         AuthenticationHandler(ctx.state.clone())
-            .signup(signup_dto.clone(), random_ipv6())
+            .signup(
+                signup_dto.clone(),
+                random_ipv6(),
+                dto::request::Captcha {
+                    captcha: "captcha".to_string()
+                }
+            )
             .await
             .unwrap_err(),
         HandlerError::Service(ServiceError::UsernameTaken),
@@ -243,7 +255,13 @@ pub async fn taken_username_or_email(ctx: &TestState) -> HandlerResult<()> {
 
     assert_matches!(
         AuthenticationHandler(ctx.state.clone())
-            .signup(signup_dto.clone(), random_ipv6())
+            .signup(
+                signup_dto.clone(),
+                random_ipv6(),
+                dto::request::Captcha {
+                    captcha: "captcha".to_string()
+                }
+            )
             .await
             .unwrap_err(),
         HandlerError::Service(ServiceError::UsernameTaken),
@@ -254,7 +272,13 @@ pub async fn taken_username_or_email(ctx: &TestState) -> HandlerResult<()> {
 
     assert_matches!(
         AuthenticationHandler(ctx.state.clone())
-            .signup(signup_dto.clone(), random_ipv6())
+            .signup(
+                signup_dto.clone(),
+                random_ipv6(),
+                dto::request::Captcha {
+                    captcha: "captcha".to_string()
+                }
+            )
             .await
             .unwrap_err(),
         HandlerError::Service(ServiceError::EmailTaken),
@@ -277,6 +301,9 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
                 email: new_email.to_string(),
             },
             random_ipv6(),
+            dto::request::Captcha {
+                captcha: "captcha".to_string(),
+            },
         )
         .await?;
 
@@ -288,7 +315,10 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
                 dto::request::Email {
                     email: another_accounts_email.to_string()
                 },
-                random_ipv6()
+                random_ipv6(),
+                dto::request::Captcha {
+                    captcha: "captcha".to_string()
+                }
             )
             .await,
         Err(HandlerError::Service(ServiceError::EmailTaken))
@@ -301,6 +331,9 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
                 acccount_id,
                 dto::request::Email {
                     email: new_email.to_string()
+                },
+                dto::request::Captcha {
+                    captcha: "captcha".to_string()
                 }
             )
             .await,
@@ -338,6 +371,9 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
             acccount_id,
             dto::request::Email {
                 email: new_email.to_string(),
+            },
+            dto::request::Captcha {
+                captcha: "captcha".to_string(),
             },
         )
         .await?;

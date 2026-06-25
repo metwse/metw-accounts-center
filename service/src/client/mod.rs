@@ -16,5 +16,7 @@ pub trait EmailClient: Send + Sync {
 #[async_trait]
 pub trait CaptchaClient: Send + Sync {
     /// Validate CAPTCHAs.
+    ///
+    /// Returns true if validation success.
     async fn validate(&self, id: String) -> bool;
 }

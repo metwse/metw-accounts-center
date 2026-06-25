@@ -6,7 +6,7 @@ use crate::{
 };
 use axum::{
     Extension, Router,
-    extract::State,
+    extract::{Query, State},
     middleware,
     routing::{delete, get, post},
 };
@@ -32,6 +32,7 @@ async fn me(
     post, path = "/emails",
     security(("session_jwt" = [])),
     request_body = dto::request::Email,
+    params(dto::request::Captcha),
     responses(
         (status = OK)
     )
@@ -40,11 +41,12 @@ async fn add_email(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
     Extension(real_ip): Extension<IpAddr>,
+    Query(captcha): Query<dto::request::Captcha>,
     AppJson(email_dto): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
     Ok(AppJson(
         SessionHandler(state)
-            .add_email(id, email_dto, real_ip)
+            .add_email(id, email_dto, real_ip, captcha)
             .await?,
     ))
 }
@@ -71,6 +73,7 @@ async fn delete_email(
     post, path = "/emails/set-primary",
     security(("session_jwt" = [])),
     request_body = dto::request::Email,
+    params(dto::request::Captcha),
     responses(
         (status = OK)
     )
@@ -78,11 +81,12 @@ async fn delete_email(
 async fn set_primary_email(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
+    Query(captcha): Query<dto::request::Captcha>,
     AppJson(email_dto): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
     Ok(AppJson(
         SessionHandler(state)
-            .set_primary_email(id, email_dto)
+            .set_primary_email(id, email_dto, captcha)
             .await?,
     ))
 }

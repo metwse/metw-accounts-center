@@ -82,6 +82,7 @@ impl AppError {
                 HandlerError::Unauthorized => StatusCode::UNAUTHORIZED,
                 HandlerError::UnexpectedError(..) => StatusCode::CONFLICT,
                 HandlerError::AlreadyPrimaryEmail => StatusCode::BAD_REQUEST,
+                HandlerError::InvalidCaptcha => StatusCode::BAD_REQUEST,
             },
 
             Self::MissingOrInvalidXRealIp => StatusCode::INTERNAL_SERVER_ERROR,
