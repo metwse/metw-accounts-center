@@ -15,7 +15,7 @@ use service::{
     testutil::{random_email, random_username},
     util::emails,
 };
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 use tokio::sync::Mutex;
 
 /// Test repositories, handlers and clients.
@@ -123,6 +123,7 @@ impl TestState {
             })
             .await
             .unwrap();
+        tokio::time::sleep(Duration::from_secs(1)).await;
 
         (account_id, username, email)
     }

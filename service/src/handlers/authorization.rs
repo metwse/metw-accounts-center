@@ -13,19 +13,24 @@ impl AuthorizationHandler {
     pub async fn auth(self, token_dto: dto::request::Token) -> HandlerResult<()> {
         let base64_encoded_token = token_dto.token;
 
-        let token = self.0.token_service.revoke(&base64_encoded_token).await?;
+        let decoded_token = self.0.token_service.decode(&base64_encoded_token).await?;
 
-        trace!(account_id = %token.id, variant = token.scope.scope_name());
+        trace!(account_id = %decoded_token.id, variant = decoded_token.scope.scope_name());
 
-        match token.scope {
+        match &decoded_token.scope {
             TokenScope::Session | TokenScope::EmailVerificationSession => {
                 Err(HandlerError::Unauthorized)
             }
 
             TokenScope::AddEmail { email } => {
                 self.0
+                    .token_service
+                    .check_and_revoke_token(&decoded_token)
+                    .await?;
+
+                self.0
                     .account_service
-                    .auth_add_email(token.id, &email)
+                    .auth_add_email(decoded_token.id, email)
                     .await?;
 
                 Ok(())
@@ -36,8 +41,17 @@ impl AuthorizationHandler {
                 new_primary_email,
             } => {
                 self.0
+                    .token_service
+                    .check_and_revoke_account_tokens_with_scope(&decoded_token)
+                    .await?;
+
+                self.0
                     .account_service
-                    .auth_change_primary_email(token.id, &current_primary_email, &new_primary_email)
+                    .auth_change_primary_email(
+                        decoded_token.id,
+                        current_primary_email,
+                        new_primary_email,
+                    )
                     .await?;
 
                 Ok(())
@@ -45,8 +59,13 @@ impl AuthorizationHandler {
 
             TokenScope::CompleteSignup { email } => {
                 self.0
+                    .token_service
+                    .check_and_revoke_account_tokens(&decoded_token)
+                    .await?;
+
+                self.0
                     .account_service
-                    .auth_complete_signup(token.id, &email)
+                    .auth_complete_signup(decoded_token.id, email)
                     .await?;
 
                 Ok(())

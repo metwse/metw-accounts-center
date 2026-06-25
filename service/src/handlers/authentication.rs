@@ -138,7 +138,10 @@ impl AuthenticationHandler {
     /// Both the session tokens and authorization tokens can be revoked using
     /// this.
     pub async fn logout(self, token_dto: dto::request::Token) -> HandlerResult<()> {
-        self.0.token_service.revoke(&token_dto.token).await?;
+        self.0
+            .token_service
+            .check_and_revoke_token(&self.0.token_service.decode(&token_dto.token).await?)
+            .await?;
 
         Ok(())
     }

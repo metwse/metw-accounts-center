@@ -254,6 +254,8 @@ pub trait EmailLimitingRepo {
 
     /// Refunds one IP quota unit previously consumed by
     /// [`check_and_consume_quota`].
+    ///
+    /// [`check_and_consume_quota`]: EmailLimitingRepo::check_and_consume_quota
     async fn refund_ip_quota(&self, ip: &IpAddr, email: &str) -> RepoResult<()>;
 
     /// Removes all rate limiting state associated with the email address.
