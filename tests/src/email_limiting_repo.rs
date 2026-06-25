@@ -11,13 +11,13 @@ pub async fn email_limiting(repo: &dyn EmailLimitingRepo) -> RepoResult<()> {
     let email = random_email();
 
     assert_matches!(
-        repo.check_and_limit_email(&ip, email).await?,
-        EmailLimitingResult::NoTimeOut
+        repo.check_and_consume_quota(&ip, email).await?,
+        EmailLimitingResult::Allowed
     );
 
     assert_matches!(
-        repo.check_and_limit_email(&ip, email).await?,
-        EmailLimitingResult::EmailTimeOut(..) | EmailLimitingResult::IpTimeOut(..)
+        repo.check_and_consume_quota(&ip, email).await?,
+        EmailLimitingResult::EmailLimited(..) | EmailLimitingResult::IpLimited(..)
     );
 
     Ok(())

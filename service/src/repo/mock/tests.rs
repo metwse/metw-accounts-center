@@ -4,6 +4,7 @@ use crate::{
     repo::{
         EmailLimitingRepo, RepoResult, TokenRepo,
         mock::{MockEmailLimitingRepoImpl, MockTokenRepoImpl},
+        rate_limits::email_limiting_repo::*,
     },
     testutil::{random_email, random_ipv6, random_username},
     token::{DecodedToken, SAFE_EXPIRATION_MARGIN, TokenScope},
@@ -74,62 +75,62 @@ async fn mock_email_limiting_repo_cleanup_task() -> RepoResult<()> {
     // Emulate sending 5 emails
     for _ in 0..5 {
         assert_matches!(
-            repo.check_and_limit_email(&ip, email).await?,
-            EmailLimitingResult::NoTimeOut
+            repo.check_and_consume_quota(&ip, email).await?,
+            EmailLimitingResult::Allowed
         );
 
         assert_matches!(
-            repo.check_and_limit_email(&ip, email).await?,
-            EmailLimitingResult::EmailTimeOut(..) | EmailLimitingResult::IpTimeOut(..)
+            repo.check_and_consume_quota(&ip, email).await?,
+            EmailLimitingResult::EmailLimited(..) | EmailLimitingResult::IpLimited(..)
         );
 
         tokio::task::yield_now().await; // REG: To ensure the timer is registered.
 
-        tokio::time::advance(Duration::from_mins(1)).await;
+        tokio::time::advance(EMAIL_COOLDOWN.max(IP_COOLDOWN)).await;
         tokio::task::yield_now().await;
     }
 
     // Now the email's quota has been filled.
     let another_ip = random_ipv6();
     assert_matches!(
-        repo.check_and_limit_email(&ip, email).await?,
-        EmailLimitingResult::EmailTimeOut(..)
+        repo.check_and_consume_quota(&ip, email).await?,
+        EmailLimitingResult::EmailLimited(..)
     );
     assert_matches!(
-        repo.check_and_limit_email(&another_ip, email).await?,
-        EmailLimitingResult::EmailTimeOut(..)
+        repo.check_and_consume_quota(&another_ip, email).await?,
+        EmailLimitingResult::EmailLimited(..)
     );
 
     let another_email = random_email();
     // Send 5 more emails.
     for _ in 0..5 {
         assert_matches!(
-            repo.check_and_limit_email(&ip, another_email).await?,
-            EmailLimitingResult::NoTimeOut
+            repo.check_and_consume_quota(&ip, another_email).await?,
+            EmailLimitingResult::Allowed
         );
 
         tokio::task::yield_now().await; // REG.
 
-        tokio::time::advance(Duration::from_mins(1)).await;
+        tokio::time::advance(EMAIL_COOLDOWN.max(IP_COOLDOWN)).await;
         tokio::task::yield_now().await;
     }
 
     // Now the IP's quota has been filled.
     let yet_another_email = random_email();
     assert_matches!(
-        repo.check_and_limit_email(&ip, yet_another_email).await?,
-        EmailLimitingResult::IpTimeOut(..)
+        repo.check_and_consume_quota(&ip, yet_another_email).await?,
+        EmailLimitingResult::IpLimited(..)
     );
 
     tokio::task::yield_now().await; // REG.
 
-    tokio::time::advance(Duration::from_hours(24)).await;
+    tokio::time::advance(EMAIL_QUOTA_REFILL_DURATION.max(EMAIL_QUOTA_REFILL_DURATION)).await;
     tokio::task::yield_now().await;
 
     // Both the email's and IP's quota has been replenished.
     assert_matches!(
-        repo.check_and_limit_email(&ip, email).await?,
-        EmailLimitingResult::NoTimeOut
+        repo.check_and_consume_quota(&ip, email).await?,
+        EmailLimitingResult::Allowed
     );
 
     Ok(())

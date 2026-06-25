@@ -2,9 +2,15 @@ use async_trait::async_trait;
 use redis::{AsyncCommands, aio::MultiplexedConnection};
 use service::{
     dto,
-    repo::{EmailLimitingRepo, RepoResult},
+    repo::{
+        EmailLimitingRepo, RepoResult,
+        rate_limits::email_limiting_repo::{
+            EMAIL_COOLDOWN, EMAIL_QUOTA, EMAIL_QUOTA_REFILL_DURATION, IP_COOLDOWN, IP_QUOTA,
+            IP_QUOTA_REFILL_DURATION,
+        },
+    },
 };
-use std::net::IpAddr;
+use std::{net::IpAddr, time::Duration};
 
 /// Email limiting repository using Redis.
 pub struct EmailLimitingRepoImpl {
@@ -20,7 +26,7 @@ impl EmailLimitingRepoImpl {
 
 #[async_trait]
 impl EmailLimitingRepo for EmailLimitingRepoImpl {
-    async fn check_and_limit_email(
+    async fn check_and_consume_quota(
         &self,
         ip: &IpAddr,
         email: &str,
@@ -32,12 +38,14 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
         let used_ip_quota_key = to_used_ip_quota_key(ip);
         let block_ip_key = to_block_ip_key(ip);
 
-        let (block_email_ttl, block_ip_ttl, used_email_quota_ttl, used_ip_quota_ttl): (
-            i64,
-            i64,
-            i64,
-            i64,
-        ) = redis::aio::transaction_async(
+        let (
+            block_email_ttl,
+            block_ip_ttl,
+            used_email_quota,
+            used_ip_quota,
+            used_email_quota_ttl,
+            used_ip_quota_ttl,
+        ): (i64, i64, Option<u64>, Option<u64>, i64, i64) = redis::aio::transaction_async(
             con,
             &[
                 &used_email_quota_key,
@@ -65,34 +73,36 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
                     let block_ip: bool = con.exists(&block_ip_key).await?;
 
                     let blocked = block_ip
-                        | block_email
-                        | existing_used_email_quota.is_some_and(|v| v >= 5)
-                        | existing_used_ip_quota.is_some_and(|v| v >= 10);
+                        || block_email
+                        || existing_used_email_quota.is_some_and(|v| v >= EMAIL_QUOTA as i64)
+                        || existing_used_ip_quota.is_some_and(|v| v >= IP_QUOTA as i64);
 
                     let pipe = pipe
-                        .ttl(&block_email_key)
-                        .ttl(&block_ip_key)
-                        .ttl(&used_email_quota_key)
-                        .ttl(&used_ip_quota_key);
+                        .pttl(&block_email_key)
+                        .pttl(&block_ip_key)
+                        .get(&used_email_quota_key)
+                        .get(&used_ip_quota_key)
+                        .pttl(&used_email_quota_key)
+                        .pttl(&used_ip_quota_key);
 
                     if !blocked {
                         let new_used_email_quota = existing_used_email_quota.unwrap_or(0) + 1;
                         let new_used_email_quota_ttl = if existing_used_email_quota_ttl < 0 {
-                            60 * 60 * 24 * 1000
+                            EMAIL_QUOTA_REFILL_DURATION.as_millis() as u64
                         } else {
                             existing_used_email_quota_ttl as u64
                         };
 
                         let new_used_ip_quota = existing_used_ip_quota.unwrap_or(0) + 1;
                         let new_used_ip_quota_ttl = if existing_used_ip_quota_ttl < 0 {
-                            60 * 60 * 24 * 1000
+                            IP_QUOTA_REFILL_DURATION.as_millis() as u64
                         } else {
                             existing_used_ip_quota_ttl as u64
                         };
 
-                        pipe.set_ex(block_email_key, "", 60)
+                        pipe.set_ex(block_email_key, "", EMAIL_COOLDOWN.as_secs())
                             .ignore()
-                            .set_ex(block_ip_key, email, 60)
+                            .set_ex(block_ip_key, email, IP_COOLDOWN.as_secs())
                             .ignore()
                             .pset_ex(
                                 used_email_quota_key,
@@ -112,20 +122,31 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
         )
         .await?;
 
-        if block_email_ttl > 0 || used_email_quota_ttl > 0 {
-            Ok(dto::repo::EmailLimitingResult::EmailTimeOut(
-                block_email_ttl.max(used_email_quota_ttl) as usize,
+        let used_email_quota = used_email_quota.unwrap_or(0);
+        let used_ip_quota = used_ip_quota.unwrap_or(0);
+
+        if block_ip_ttl > 0 || used_ip_quota >= IP_QUOTA {
+            Ok(dto::repo::EmailLimitingResult::IpLimited(
+                if used_ip_quota >= IP_QUOTA {
+                    Duration::from_millis(used_ip_quota_ttl as u64)
+                } else {
+                    Duration::from_millis(block_ip_ttl as u64)
+                },
             ))
-        } else if block_ip_ttl > 0 || used_ip_quota_ttl > 0 {
-            Ok(dto::repo::EmailLimitingResult::IpTimeOut(
-                block_ip_ttl.max(used_ip_quota_ttl) as usize,
+        } else if block_email_ttl > 0 || used_email_quota >= EMAIL_QUOTA {
+            Ok(dto::repo::EmailLimitingResult::EmailLimited(
+                if used_email_quota >= EMAIL_QUOTA {
+                    Duration::from_millis(used_email_quota_ttl as u64)
+                } else {
+                    Duration::from_millis(block_email_ttl as u64)
+                },
             ))
         } else {
-            Ok(dto::repo::EmailLimitingResult::NoTimeOut)
+            Ok(dto::repo::EmailLimitingResult::Allowed)
         }
     }
 
-    async fn reclaim_ip_quota(&self, _ip: &IpAddr, _email: &str) -> RepoResult<()> {
+    async fn refund_ip_quota(&self, _ip: &IpAddr, _email: &str) -> RepoResult<()> {
         todo!()
     }
 
