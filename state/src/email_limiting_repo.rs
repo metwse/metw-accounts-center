@@ -134,18 +134,22 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
     }
 }
 
-fn to_used_email_quota_key(email: &str) -> String {
+/// Key for limiting an email address.
+pub fn to_used_email_quota_key(email: &str) -> String {
     format!("email-limiting:email:{email}:used-quota")
 }
 
-fn to_block_email_key(email: &str) -> String {
+/// Key for temporarily blocking an email address.
+pub fn to_block_email_key(email: &str) -> String {
     format!("email-limiting:email:{email}:block")
 }
 
-fn to_used_ip_quota_key(ip: &IpAddr) -> String {
+/// Key for limiting an IP address.
+pub fn to_used_ip_quota_key(ip: &IpAddr) -> String {
     format!("email-limiting:ip:{ip}:used-quota")
 }
 
-fn to_block_ip_key(ip: &IpAddr) -> String {
+/// Key for temporarily blocking an IP address.
+pub fn to_block_ip_key(ip: &IpAddr) -> String {
     format!("email-limiting:ip:{ip}:block")
 }

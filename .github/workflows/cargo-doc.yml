@@ -16,8 +16,11 @@ jobs:
         with:
           submodules: "true"
 
+      - name: Install Nightly Rust
+        run: rustup install nightly
+
       - name: Generate Cargo Documentation
-        run: cargo doc --all-features --no-deps
+        run: RUSTDOCFLAGS='--cfg docsrs' cargo +nightly doc --no-deps --workspace --all-features
         shell: bash
 
       - name: Redirect to Documentation Crate from index.html

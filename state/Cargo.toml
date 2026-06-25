@@ -38,5 +38,8 @@ tracing-subscriber = { workspace = true, features = ["fmt"] }
 
 service = { path = "../service/" }
 
+[features]
+testutil = []
+
 [lints]
 workspace = true

@@ -11,6 +11,7 @@ mod error;
 
 /// Mock repository implementations.
 #[cfg(feature = "mock")]
+#[cfg_attr(docsrs, doc(cfg(feature = "mock")))]
 pub mod mock;
 
 pub use error::RepoError;
