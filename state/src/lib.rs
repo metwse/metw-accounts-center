@@ -5,8 +5,9 @@
 //!
 //! ## Setup Recommendations
 //!
-//! - The token consumption is enforced only by Redis revocation keys. In
-//!   case of Redis state loss, one-time tokens can be accepted again.
+//! - The token consumption and email rate limiting is enforced by Redis, in
+//!   case of Redis state loss, one-time tokens can be accepted again. Make
+//!   sure you have enabled persistent storage in Redis.
 
 mod captcha_client;
 mod email_client;

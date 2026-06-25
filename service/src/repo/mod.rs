@@ -5,6 +5,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use std::net::IpAddr;
 
 mod error;
 
@@ -234,4 +235,28 @@ pub trait TokenRepo: Send + Sync {
 
     /// Returns true if the token is considered revoked by any revocation rule.
     async fn is_revoked(&self, token: &DecodedToken) -> RepoResult<bool>;
+}
+
+/// IP and email address based rate limiting for new emails.
+#[async_trait]
+pub trait EmailLimitingRepo {
+    /// Checks and applies rate limit to the email address.
+    ///
+    /// The rate limits are:
+    /// - Email addresses: One email per minute, 5 emails per day.
+    /// - IP addresses: One email per minute, 10 emails per day.
+    ///
+    /// Returns the time required for the timeout to expire, in seconds.
+    async fn check_and_limit_email(
+        &self,
+        ip: &IpAddr,
+        email: &str,
+    ) -> RepoResult<dto::repo::EmailLimitingResult>;
+
+    /// Replenish the email sending quota for an IP address by one, and unblock
+    /// the IP if it has blocked due to given email.
+    async fn reclaim_ip_quota(&self, ip: &IpAddr, email: &str) -> RepoResult<()>;
+
+    /// Clear limit records for an email.
+    async fn clear_email_limit(&self, email: &str) -> RepoResult<()>;
 }
