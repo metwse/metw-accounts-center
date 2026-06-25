@@ -6,6 +6,7 @@ use crate::{
     token::{Token, TokenScope},
     util::emails,
 };
+use std::net::IpAddr;
 use validator::Validate;
 
 /// Gateway handlers for creating accouts or logging into accounts.
@@ -52,13 +53,20 @@ impl AuthenticationHandler {
     pub async fn signup(
         self,
         signup_dto: dto::request::Signup,
+        ip: IpAddr,
     ) -> HandlerResult<dto::response::Token> {
         signup_dto.validate()?;
 
         let email = signup_dto.email.clone();
         let username = signup_dto.username.clone();
 
+        // TODO: Swap the order of check_and_consume_quota and signup calls.
         let account_id = self.0.account_service.signup(&signup_dto).await?;
+
+        self.0
+            .email_limiting_service
+            .check_and_consume_quota(&ip, &email)
+            .await?;
 
         let complete_signup_jwt = self.0.token_service.sign(&Token {
             id: account_id,

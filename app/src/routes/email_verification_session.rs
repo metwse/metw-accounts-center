@@ -6,6 +6,7 @@ use crate::{
 };
 use axum::{Extension, Router, extract::State, middleware, routing::post};
 use service::{AppState, dto, handlers::EmailVerificationSessionHandler, id::AccountId};
+use std::net::IpAddr;
 use utoipa::OpenApi;
 
 #[utoipa::path(
@@ -19,11 +20,12 @@ use utoipa::OpenApi;
 async fn retry_signup(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
+    Extension(real_ip): Extension<IpAddr>,
     AppJson(email_dto): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
     Ok(AppJson(
         EmailVerificationSessionHandler(state)
-            .retry_signup(id, email_dto)
+            .retry_signup(id, email_dto, real_ip)
             .await?,
     ))
 }

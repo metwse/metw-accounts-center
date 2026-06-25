@@ -17,6 +17,9 @@ pub enum AppError {
 
     #[error("json rejection: {0}")]
     JsonRejection(#[from] JsonRejection),
+
+    #[error("missing or invalid X-Real-IP")]
+    MissingOrInvalidXRealIp,
 }
 
 /// API result.
@@ -80,6 +83,8 @@ impl AppError {
                 HandlerError::UnexpectedError(..) => StatusCode::CONFLICT,
                 HandlerError::AlreadyPrimaryEmail => StatusCode::BAD_REQUEST,
             },
+
+            Self::MissingOrInvalidXRealIp => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 

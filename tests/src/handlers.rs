@@ -6,7 +6,7 @@ use service::{
         HandlerResult, SessionHandler,
     },
     service::ServiceError,
-    testutil::{random_email, random_username},
+    testutil::{random_email, random_ipv6, random_username},
     token::TokenScope,
     util::emails,
 };
@@ -46,6 +46,7 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
                 dto::request::Email {
                     email: taken_email.to_string(),
                 },
+                random_ipv6(),
             )
             .await
             .unwrap_err(),
@@ -59,6 +60,7 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
             dto::request::Email {
                 email: email.to_string(),
             },
+            random_ipv6(),
         )
         .await?;
 
@@ -230,17 +232,18 @@ pub async fn taken_username_or_email(ctx: &TestState) -> HandlerResult<()> {
 
     assert_matches!(
         AuthenticationHandler(ctx.state.clone())
-            .signup(signup_dto.clone())
+            .signup(signup_dto.clone(), random_ipv6())
             .await
             .unwrap_err(),
         HandlerError::Service(ServiceError::UsernameTaken),
     );
 
     signup_dto.username = another_taken_username.to_string();
+    signup_dto.email = random_email().to_string();
 
     assert_matches!(
         AuthenticationHandler(ctx.state.clone())
-            .signup(signup_dto.clone())
+            .signup(signup_dto.clone(), random_ipv6())
             .await
             .unwrap_err(),
         HandlerError::Service(ServiceError::UsernameTaken),
@@ -251,7 +254,7 @@ pub async fn taken_username_or_email(ctx: &TestState) -> HandlerResult<()> {
 
     assert_matches!(
         AuthenticationHandler(ctx.state.clone())
-            .signup(signup_dto.clone())
+            .signup(signup_dto.clone(), random_ipv6())
             .await
             .unwrap_err(),
         HandlerError::Service(ServiceError::EmailTaken),
@@ -273,6 +276,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
             dto::request::Email {
                 email: new_email.to_string(),
             },
+            random_ipv6(),
         )
         .await?;
 
@@ -283,7 +287,8 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
                 acccount_id,
                 dto::request::Email {
                     email: another_accounts_email.to_string()
-                }
+                },
+                random_ipv6()
             )
             .await,
         Err(HandlerError::Service(ServiceError::EmailTaken))
