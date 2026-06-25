@@ -13,12 +13,14 @@ mod captcha_client;
 mod email_client;
 
 mod account_repo;
+mod email_limiting_repo;
 mod token_repo;
 
 pub use captcha_client::CaptchaClientImpl;
 pub use email_client::EmailClientImpl;
 
 pub use account_repo::AccountRepoImpl;
+pub use email_limiting_repo::EmailLimitingRepoImpl;
 pub use token_repo::TokenRepoImpl;
 
 use serde::Deserialize;
