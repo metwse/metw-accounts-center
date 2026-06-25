@@ -24,6 +24,9 @@ pub mod account_service;
 /// Token repository tests.
 pub mod token_repo;
 
+/// Email limiting repository tests.
+pub mod email_limiting_repo;
+
 /// Hander tests.
 pub mod handlers;
 
