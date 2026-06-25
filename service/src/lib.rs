@@ -37,6 +37,8 @@
 //!
 //! [SoC]: https://en.wikipedia.org/wiki/Separation_of_concerns
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 /// Database entities.
 ///
 /// One-to-one mapping of database entities to Rust types. Used internally --
@@ -96,4 +98,5 @@ pub use util::checked_now::checked_now;
 
 /// Test utilities.
 #[cfg(any(feature = "testutil", test))]
+#[cfg_attr(docsrs, doc(cfg(feature = "testutil")))]
 pub mod testutil;

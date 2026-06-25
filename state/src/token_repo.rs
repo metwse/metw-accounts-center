@@ -37,7 +37,7 @@ impl TokenRepo for TokenRepoImpl {
 
         Ok(!con
             .set_options::<'_, Vec<u8>, &str, bool>(
-                to_fingerprint_key(token),
+                to_token_key(token),
                 "",
                 redis::SetOptions::default()
                     .conditional_set(redis::ExistenceCheck::NX)
@@ -170,7 +170,7 @@ impl TokenRepoImpl {
         Ok(self
             .con
             .clone()
-            .exists::<'_, Vec<u8>, bool>(to_fingerprint_key(token))
+            .exists::<'_, Vec<u8>, bool>(to_token_key(token))
             .await?)
     }
 
@@ -203,16 +203,19 @@ impl TokenRepoImpl {
     }
 }
 
-fn to_fingerprint_key(token: &DecodedToken) -> Vec<u8> {
+/// Per-token revocation key.
+pub fn to_token_key(token: &DecodedToken) -> Vec<u8> {
     let mut key = b"revoke-token:".to_vec();
     key.extend(&token.fingerprint);
     key
 }
 
-fn to_scope_key(account_id: AccountId, scope: &TokenScope) -> String {
+/// Revocation key for tokens with specific scope.
+pub fn to_scope_key(account_id: AccountId, scope: &TokenScope) -> String {
     format!("revoke-token:scope:{}:{}", account_id, scope.scope_name())
 }
 
-fn to_account_key(account_id: AccountId) -> String {
+/// Revocation key for an account's tokens.
+pub fn to_account_key(account_id: AccountId) -> String {
     format!("revoke-token:account:{}", account_id)
 }

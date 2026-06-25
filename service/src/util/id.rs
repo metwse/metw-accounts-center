@@ -88,6 +88,7 @@ static GLOBAL_STATE: Mutex<SnowflakeState> = Mutex::new(SnowflakeState {
 /// | Reserved for future use | 12 to 21 | |
 /// | Increment | 0 to 11 | For every ID that is generated, this number is incremented |
 #[cfg(any(feature = "testutil", test))]
+#[cfg_attr(docsrs, doc(cfg(feature = "testutil")))]
 pub fn snowflake() -> i64 {
     internal_snowflake()
 }

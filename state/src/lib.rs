@@ -9,6 +9,8 @@
 //!   case of Redis state loss, one-time tokens can be accepted again. Make
 //!   sure you have enabled persistent storage in Redis.
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 mod captcha_client;
 mod email_client;
 
@@ -29,6 +31,23 @@ use service::{
     client::{CaptchaClient, EmailClient},
     service::{AccountService, TokenService},
 };
+
+/// Redis keys used with repositories.
+#[cfg(feature = "testutil")]
+#[cfg_attr(docsrs, doc(cfg(feature = "testutil")))]
+pub mod redis_keys {
+    /// Keys used in token repository.
+    pub mod token_repo {
+        pub use crate::token_repo::{to_account_key, to_scope_key, to_token_key};
+    }
+
+    /// Keys used in email limiting repository.
+    pub mod email_limiting_repo {
+        pub use crate::email_limiting_repo::{
+            to_block_email_key, to_block_ip_key, to_used_email_quota_key, to_used_ip_quota_key,
+        };
+    }
+}
 
 /// Config holds the configuration for the application.
 #[derive(Clone, Debug, Deserialize)]
