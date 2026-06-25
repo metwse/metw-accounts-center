@@ -9,6 +9,9 @@ use std::net::IpAddr;
 
 mod error;
 
+/// Rate limits enforced by the repositories.
+pub mod rate_limits;
+
 /// Mock repository implementations.
 #[cfg(feature = "mock")]
 #[cfg_attr(docsrs, doc(cfg(feature = "mock")))]
@@ -241,23 +244,18 @@ pub trait TokenRepo: Send + Sync {
 /// IP and email address based rate limiting for new emails.
 #[async_trait]
 pub trait EmailLimitingRepo {
-    /// Checks and applies rate limit to the email address.
-    ///
-    /// The rate limits are:
-    /// - Email addresses: One email per minute, 5 emails per day.
-    /// - IP addresses: One email per minute, 10 emails per day.
-    ///
-    /// Returns the time required for the timeout to expire, in seconds.
-    async fn check_and_limit_email(
+    /// Checks whether an email may be sent and consumes the associated
+    /// rate limit quota if allowed.
+    async fn check_and_consume_quota(
         &self,
         ip: &IpAddr,
         email: &str,
     ) -> RepoResult<dto::repo::EmailLimitingResult>;
 
-    /// Replenish the email sending quota for an IP address by one, and unblock
-    /// the IP if it has blocked due to given email.
-    async fn reclaim_ip_quota(&self, ip: &IpAddr, email: &str) -> RepoResult<()>;
+    /// Refunds one IP quota unit previously consumed by
+    /// [`check_and_consume_quota`].
+    async fn refund_ip_quota(&self, ip: &IpAddr, email: &str) -> RepoResult<()>;
 
-    /// Clear limit records for an email.
+    /// Removes all rate limiting state associated with the email address.
     async fn clear_email_limit(&self, email: &str) -> RepoResult<()>;
 }

@@ -36,7 +36,8 @@ serial_test = { workspace = true }
 
 tracing-subscriber = { workspace = true, features = ["fmt"] }
 
-service = { path = "../service/" }
+service = { path = "../service/", features = ["testutil"] }
+tests = { path = "../tests/" }
 
 [features]
 testutil = []

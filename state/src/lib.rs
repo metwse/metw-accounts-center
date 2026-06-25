@@ -33,7 +33,7 @@ use service::{
 };
 
 /// Redis keys used with repositories.
-#[cfg(feature = "testutil")]
+#[cfg(any(feature = "testutil", test))]
 #[cfg_attr(docsrs, doc(cfg(feature = "testutil")))]
 pub mod redis_keys {
     /// Keys used in token repository.
@@ -48,6 +48,9 @@ pub mod redis_keys {
         };
     }
 }
+
+#[cfg(test)]
+mod tests;
 
 /// Config holds the configuration for the application.
 #[derive(Clone, Debug, Deserialize)]
@@ -131,31 +134,5 @@ impl Config {
             email_client: (email_client as Box<dyn EmailClient>).into(),
             captcha_client: (captcha_client as Box<dyn CaptchaClient>).into(),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::Config;
-
-    // Test validity of the .env.example file
-    #[test]
-    #[serial_test::serial]
-    fn config_from_example_env() {
-        dotenvy::from_path_override("../.env.example").unwrap();
-
-        Config::from_env();
-    }
-
-    // Bootstrap all services and clients, for testing .env
-    #[tokio::test]
-    #[ignore]
-    #[serial_test::serial]
-    async fn state_from_env() {
-        dotenvy::dotenv_override().unwrap();
-
-        let config = Config::from_env();
-
-        config.bootstrap().await;
     }
 }

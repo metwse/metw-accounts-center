@@ -1,5 +1,6 @@
 use crate::id::AccountId;
 use sqlx::prelude::FromRow;
+use std::time::Duration;
 
 pub struct Keys<'a> {
     pub identity_key: &'a [u8],
@@ -22,7 +23,7 @@ pub struct OwnedLoginCredentials {
 
 #[derive(Debug)]
 pub enum EmailLimitingResult {
-    IpTimeOut(usize),
-    EmailTimeOut(usize),
-    NoTimeOut,
+    IpLimited(Duration),
+    EmailLimited(Duration),
+    Allowed,
 }

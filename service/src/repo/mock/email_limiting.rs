@@ -1,21 +1,20 @@
 use super::super::{EmailLimitingRepo, RepoResult};
-use crate::dto;
+use crate::{dto, repo::rate_limits::email_limiting_repo::*};
 use async_trait::async_trait;
 use std::{
     collections::{HashMap, HashSet},
     net::IpAddr,
     sync::Arc,
-    time::Duration,
 };
 use tokio::sync::Mutex;
 
 #[derive(Default)]
 struct State {
     block_email: HashSet<String>,
-    used_quota_email: HashMap<String, (usize, usize)>,
+    used_quota_email: HashMap<String, (u64, u64)>,
     block_ip: HashMap<IpAddr, String>,
-    used_quota_ip: HashMap<IpAddr, (usize, usize)>,
-    quota_nonce: usize,
+    used_quota_ip: HashMap<IpAddr, (u64, u64)>,
+    quota_nonce: u64,
 }
 
 /// Mock email limiting repo implementation.
@@ -36,41 +35,45 @@ impl MockEmailLimitingRepoImpl {
 
 #[async_trait]
 impl EmailLimitingRepo for MockEmailLimitingRepoImpl {
-    async fn check_and_limit_email(
+    async fn check_and_consume_quota(
         &self,
         ip: &IpAddr,
         email: &str,
     ) -> RepoResult<dto::repo::EmailLimitingResult> {
         let mut state = self.state.lock().await;
 
-        if state.block_email.contains(email) {
-            return Ok(dto::repo::EmailLimitingResult::EmailTimeOut(60));
-        }
-
         if state.block_ip.contains_key(ip) {
-            return Ok(dto::repo::EmailLimitingResult::IpTimeOut(60));
+            return Ok(dto::repo::EmailLimitingResult::IpLimited(IP_COOLDOWN));
         }
 
-        if let Some(&(used_quota, _)) = state.used_quota_email.get(email)
-            && used_quota >= 5
-        {
-            return Ok(dto::repo::EmailLimitingResult::EmailTimeOut(60 * 60 * 24));
+        if state.block_email.contains(email) {
+            return Ok(dto::repo::EmailLimitingResult::EmailLimited(EMAIL_COOLDOWN));
         }
 
         if let Some(&(used_quota, _)) = state.used_quota_ip.get(ip)
-            && used_quota >= 10
+            && used_quota >= IP_QUOTA
         {
-            return Ok(dto::repo::EmailLimitingResult::IpTimeOut(60 * 60 * 24));
+            return Ok(dto::repo::EmailLimitingResult::IpLimited(
+                EMAIL_QUOTA_REFILL_DURATION,
+            ));
+        }
+
+        if let Some(&(used_quota, _)) = state.used_quota_email.get(email)
+            && used_quota >= EMAIL_QUOTA
+        {
+            return Ok(dto::repo::EmailLimitingResult::EmailLimited(
+                EMAIL_QUOTA_REFILL_DURATION,
+            ));
         }
 
         self.block_email_and_ip(&mut state, email, ip);
         self.email_use_quaota(&mut state, email);
         self.ip_use_quaota(&mut state, ip);
 
-        Ok(dto::repo::EmailLimitingResult::NoTimeOut)
+        Ok(dto::repo::EmailLimitingResult::Allowed)
     }
 
-    async fn reclaim_ip_quota(&self, ip: &IpAddr, email: &str) -> RepoResult<()> {
+    async fn refund_ip_quota(&self, ip: &IpAddr, email: &str) -> RepoResult<()> {
         let mut state = self.state.lock().await;
 
         if let Some(ip_blocked_for) = state.block_ip.get(ip)
@@ -109,20 +112,33 @@ impl MockEmailLimitingRepoImpl {
         state.block_email.insert(email.clone());
         state.block_ip.insert(*ip, email.clone());
 
-        let state = Arc::clone(&self.state);
-        let ip = *ip;
+        tokio::spawn({
+            let email = email.clone();
+            let state = Arc::clone(&self.state);
 
-        tokio::spawn(async move {
-            tokio::time::sleep(Duration::from_mins(1)).await;
+            async move {
+                tokio::time::sleep(EMAIL_COOLDOWN).await;
 
-            let mut state = state.lock().await;
+                let mut state = state.lock().await;
 
-            state.block_email.remove(&email);
+                state.block_email.remove(&email);
+            }
+        });
 
-            if let Some(ip_blocked_for) = state.block_ip.get(&ip)
-                && *ip_blocked_for == email
-            {
-                state.block_ip.remove(&ip);
+        tokio::spawn({
+            let state = Arc::clone(&self.state);
+            let ip = *ip;
+
+            async move {
+                tokio::time::sleep(IP_COOLDOWN).await;
+
+                let mut state = state.lock().await;
+
+                if let Some(ip_blocked_for) = state.block_ip.get(&ip)
+                    && *ip_blocked_for == email
+                {
+                    state.block_ip.remove(&ip);
+                }
             }
         });
     }
@@ -140,7 +156,7 @@ impl MockEmailLimitingRepoImpl {
             let ip = *ip;
 
             tokio::spawn(async move {
-                tokio::time::sleep(Duration::from_hours(24)).await;
+                tokio::time::sleep(IP_QUOTA_REFILL_DURATION).await;
 
                 let mut state = state.lock().await;
 
@@ -169,7 +185,7 @@ impl MockEmailLimitingRepoImpl {
             let state = Arc::clone(&self.state);
 
             tokio::spawn(async move {
-                tokio::time::sleep(Duration::from_hours(24)).await;
+                tokio::time::sleep(EMAIL_QUOTA_REFILL_DURATION).await;
 
                 let mut state = state.lock().await;
 
