@@ -1,6 +1,5 @@
-use crate::dto;
-
 use super::super::{EmailLimitingRepo, RepoResult};
+use crate::dto;
 use async_trait::async_trait;
 use std::{
     collections::{HashMap, HashSet},
@@ -61,7 +60,7 @@ impl EmailLimitingRepo for MockEmailLimitingRepoImpl {
         if let Some(&(used_quota, _)) = state.used_quota_ip.get(ip)
             && used_quota >= 10
         {
-            return Ok(dto::repo::EmailLimitingResult::EmailTimeOut(60 * 60 * 24));
+            return Ok(dto::repo::EmailLimitingResult::IpTimeOut(60 * 60 * 24));
         }
 
         self.block_email_and_ip(&mut state, email, ip);

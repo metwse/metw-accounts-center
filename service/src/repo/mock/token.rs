@@ -180,20 +180,18 @@ impl MockTokenRepoImpl {
 
         // The clean up task removes revocation entry aftear any token subject
         // to cutoff has been expired.
-        tokio::spawn({
-            async move {
-                tokio::time::sleep(expiration).await;
-                let mut state = state.lock().await;
+        tokio::spawn(async move {
+            tokio::time::sleep(expiration).await;
+            let mut state = state.lock().await;
 
-                if let Some(&current_cutoff_time) = state.get(&key)
-                    && current_cutoff_time == cutoff_time
-                {
-                    state.remove(&key);
-                }
+            if let Some(&current_cutoff_time) = state.get(&key)
+                && current_cutoff_time == cutoff_time
+            {
+                state.remove(&key);
             }
         });
 
-        if previous_cutoff_time == DateTime::<Utc>::MAX_UTC {
+        if previous_cutoff_time == DateTime::<Utc>::MIN_UTC {
             None
         } else {
             Some(previous_cutoff_time)

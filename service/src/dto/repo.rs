@@ -20,6 +20,7 @@ pub struct OwnedLoginCredentials {
     pub password_hash: String,
 }
 
+#[derive(Debug)]
 pub enum EmailLimitingResult {
     IpTimeOut(usize),
     EmailTimeOut(usize),
