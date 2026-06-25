@@ -9,10 +9,10 @@ use service::{
     id::AccountId,
     repo::{
         AccountRepo, TokenRepo,
-        mock::{MockAccountRepoImpl, MockTokenRepoImpl},
+        mock::{MockAccountRepoImpl, MockEmailLimitingRepoImpl, MockTokenRepoImpl},
     },
-    service::{AccountService, TokenService},
-    testutil::{random_email, random_username},
+    service::{AccountService, EmailLimitingService, TokenService},
+    testutil::{random_email, random_ipv6, random_username},
     util::emails,
 };
 use std::{sync::Arc, time::Duration};
@@ -30,6 +30,8 @@ impl Default for TestState {
         let account_service = AccountService::new(MockAccountRepoImpl::boxed_new());
         let token_service =
             TokenService::new(MockTokenRepoImpl::boxed_new(), b"secret123".to_vec());
+        let email_limiting_service =
+            EmailLimitingService::new(MockEmailLimitingRepoImpl::boxed_new());
         let email_client = MockEmailClientImpl::boxed_new();
         let captcha_client = MockCaptchaClientImpl::boxed_new();
 
@@ -39,6 +41,7 @@ impl Default for TestState {
             state: AppState {
                 account_service: account_service.into(),
                 token_service: token_service.into(),
+                email_limiting_service: email_limiting_service.into(),
                 email_client: (email_client as Box<dyn EmailClient>).into(),
                 captcha_client: (captcha_client as Box<dyn CaptchaClient>).into(),
             },
@@ -78,16 +81,19 @@ impl TestState {
         let email = random_email();
 
         let email_verification_jwt = AuthenticationHandler(self.state.clone())
-            .signup(dto::request::Signup {
-                client_password_hash: client_password_hash.to_string(),
-                username: username.to_string(),
-                email: email.to_string(),
-                keys: dto::request::Keys {
-                    identity_key: vec![1],
-                    encrypted_private_key: vec![2],
-                    encrypted_master_key: vec![3],
+            .signup(
+                dto::request::Signup {
+                    client_password_hash: client_password_hash.to_string(),
+                    username: username.to_string(),
+                    email: email.to_string(),
+                    keys: dto::request::Keys {
+                        identity_key: vec![1],
+                        encrypted_private_key: vec![2],
+                        encrypted_master_key: vec![3],
+                    },
                 },
-            })
+                random_ipv6(),
+            )
             .await
             .unwrap();
 

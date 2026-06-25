@@ -11,6 +11,7 @@ use axum::{
     routing::{delete, get, post},
 };
 use service::{AppState, dto, handlers::SessionHandler, id::AccountId};
+use std::net::IpAddr;
 use utoipa::OpenApi;
 
 #[utoipa::path(
@@ -38,10 +39,13 @@ async fn me(
 async fn add_email(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
+    Extension(real_ip): Extension<IpAddr>,
     AppJson(email_dto): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
     Ok(AppJson(
-        SessionHandler(state).add_email(id, email_dto).await?,
+        SessionHandler(state)
+            .add_email(id, email_dto, real_ip)
+            .await?,
     ))
 }
 

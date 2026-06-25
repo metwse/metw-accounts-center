@@ -1,4 +1,4 @@
-use crate::res::AppMiddlewareResult;
+use crate::res::{AppError, AppMiddlewareResult};
 use axum::{
     extract::{Request, State},
     http::header,
@@ -9,6 +9,7 @@ use service::{
     AppState,
     handlers::{AuthenticationHandler, HandlerError},
 };
+use std::{net::IpAddr, str::FromStr};
 use utoipa::{Modify, openapi};
 
 fn extract_token(req: &Request) -> Option<String> {
@@ -19,7 +20,38 @@ fn extract_token(req: &Request) -> Option<String> {
         .map(|token_str| token_str.to_string())
 }
 
+/// Extract the remote IP from X-Real-IP header.
+#[tracing::instrument(skip_all)]
+pub async fn extract_real_ip(mut req: Request, next: Next) -> AppMiddlewareResult<Response> {
+    let real_ip: IpAddr = match req.headers().get("X-Real-IP") {
+        Some(header_value) => header_value
+            .to_str()
+            .map_err(|_| AppError::MissingOrInvalidXRealIp)
+            .and_then(|header| {
+                IpAddr::from_str(header).map_err(|_| AppError::MissingOrInvalidXRealIp)
+            })?,
+        None => {
+            #[cfg(debug_assertions)]
+            {
+                use service::testutil::random_ipv6;
+
+                tracing::debug!("no X-Real-IP is given, using random IP address");
+
+                random_ipv6()
+            }
+
+            #[cfg(not(debug_assertions))]
+            return Err(AppError::MissingOrInvalidXRealIp);
+        }
+    };
+
+    req.extensions_mut().insert(real_ip);
+
+    Ok(next.run(req).await)
+}
+
 /// Authenticate a login session.
+#[tracing::instrument(skip_all)]
 pub async fn auth_session(
     State(state): State<AppState>,
     mut req: Request,
@@ -43,6 +75,7 @@ pub async fn auth_session(
 }
 
 /// Authenticate the login session before email verification.
+#[tracing::instrument(skip_all)]
 pub async fn auth_email_verification_session(
     State(state): State<AppState>,
     mut req: Request,

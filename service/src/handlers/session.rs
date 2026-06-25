@@ -7,6 +7,7 @@ use crate::{
     token::{Token, TokenScope},
     util::emails,
 };
+use std::net::IpAddr;
 use validator::Validate;
 
 /// Account handlers that does not require escalated privileges.
@@ -31,6 +32,7 @@ impl SessionHandler {
         self,
         id: AccountId,
         email_dto: dto::request::Email,
+        ip: IpAddr,
     ) -> HandlerResult<()> {
         email_dto.validate()?;
 
@@ -48,6 +50,11 @@ impl SessionHandler {
         let Some(username) = username_res? else {
             return Err(HandlerError::UnexpectedError("account with no username"))?;
         };
+
+        self.0
+            .email_limiting_service
+            .check_and_consume_quota(&ip, &new_email)
+            .await?;
 
         let add_email_jwt = self.0.token_service.sign(&Token {
             id,

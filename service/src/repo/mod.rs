@@ -243,7 +243,7 @@ pub trait TokenRepo: Send + Sync {
 
 /// IP and email address based rate limiting for new emails.
 #[async_trait]
-pub trait EmailLimitingRepo {
+pub trait EmailLimitingRepo: Send + Sync {
     /// Checks whether an email may be sent and consumes the associated
     /// rate limit quota if allowed.
     async fn check_and_consume_quota(

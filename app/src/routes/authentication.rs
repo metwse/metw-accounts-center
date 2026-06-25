@@ -1,8 +1,9 @@
 //! See [`AuthenticationHandler`].
 
 use crate::res::{AppJson, AppResult};
-use axum::{Router, extract::State, routing::post};
+use axum::{Extension, Router, extract::State, routing::post};
 use service::{AppState, dto, handlers::AuthenticationHandler};
+use std::net::IpAddr;
 use utoipa::OpenApi;
 
 #[utoipa::path(
@@ -15,10 +16,13 @@ use utoipa::OpenApi;
 )]
 async fn signup(
     State(state): State<AppState>,
+    Extension(real_ip): Extension<IpAddr>,
     AppJson(signup_dto): AppJson<dto::request::Signup>,
 ) -> AppResult<dto::response::Token> {
     Ok(AppJson(
-        AuthenticationHandler(state).signup(signup_dto).await?,
+        AuthenticationHandler(state)
+            .signup(signup_dto, real_ip)
+            .await?,
     ))
 }
 

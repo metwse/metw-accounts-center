@@ -2,6 +2,9 @@
 //!
 //! This crate contains the application binary, bootstrapping all handlers to
 //! the axum routers.
+//!
+//! *Note*: The Axum application is intended to run under a reverse proxy. The
+//! reverse proxy must provide the remote address via the `X-Real-IP` header.
 
 use axum::{Json, Router, routing::get};
 use serde::Serialize;
@@ -74,5 +77,6 @@ pub fn app(state: AppState) -> Router {
         .merge(routes::authorization::routes(state.clone()))
         .merge(routes::email_verification_session::routes(state.clone()))
         .merge(routes::session::routes(state))
+        .route_layer(axum::middleware::from_fn(middleware::extract_real_ip))
         .layer(TraceLayer::new_for_http())
 }

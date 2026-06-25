@@ -1,8 +1,5 @@
-#[cfg(test)]
-use crate::checked_now;
-#[cfg(not(test))]
-use crate::checked_now;
 use crate::{
+    checked_now,
     id::AccountId,
     token::{DecodedToken, Token, TokenScope},
 };

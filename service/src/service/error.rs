@@ -1,5 +1,6 @@
 use crate::repo::RepoError;
 use serde::Serialize;
+use std::time::Duration;
 use thiserror::Error;
 
 /// Service error reporting.
@@ -41,4 +42,7 @@ pub enum ServiceError {
 
     #[error("token revoked")]
     TokenRevoked,
+
+    #[error("email limited: {0:?}")]
+    EmailLimited(Duration),
 }

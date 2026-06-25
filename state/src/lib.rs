@@ -29,7 +29,7 @@ use serde::Deserialize;
 use service::{
     AppState,
     client::{CaptchaClient, EmailClient},
-    service::{AccountService, TokenService},
+    service::{AccountService, EmailLimitingService, TokenService},
 };
 
 /// Redis keys used with repositories.
@@ -99,8 +99,13 @@ impl Config {
             .await
             .unwrap();
 
-        let token_service =
-            TokenService::new(TokenRepoImpl::boxed_new(redis), self.jwt_secret.into());
+        let token_service = TokenService::new(
+            TokenRepoImpl::boxed_new(redis.clone()),
+            self.jwt_secret.into(),
+        );
+
+        let email_limiting_service =
+            EmailLimitingService::new(EmailLimitingRepoImpl::boxed_new(redis));
 
         let aws_credentials = aws_credential_types::Credentials::new(
             self.aws_access_key_id,
@@ -131,6 +136,7 @@ impl Config {
         AppState {
             account_service: account_service.into(),
             token_service: token_service.into(),
+            email_limiting_service: email_limiting_service.into(),
             email_client: (email_client as Box<dyn EmailClient>).into(),
             captcha_client: (captcha_client as Box<dyn CaptchaClient>).into(),
         }
