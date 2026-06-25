@@ -1,0 +1,17 @@
+[confirm-signup]
+ subject = "Verify your metw.cc account"
+ text = "To complete your registration and verify your email address, please click the link below:"
+ button_text = "Verify Email"
+ extra_text = "If you did not create this account, please safely ignore this message."
+
+[confirm-new-email]
+subject = "Add email to your metw.cc account"
+text = "To add this address as a secondary email to your account, please click the link below:"
+button_text = "Verify Email"
+extra_text = "If the account did not belong to you, please safely ignore this message."
+
+[confirm-primary-email-change]
+subject = "Confirm primary email change of your metw.cc account"
+text = "Please confirm your account's primary email change to {new_primary_email}, click the link below:"
+button_text = "Confirm Change"
+extra_text = "If you want to keep <{current_primary_email}> as your primary email, ignore this message."

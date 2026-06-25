@@ -13,8 +13,11 @@ async fn main() {
     let client = aws_sdk_sesv2::Client::new(&config);
 
     let noreply_email_address = std::env::var("NOREPLY_EMAIL_ADDRESS").unwrap();
-    let email_client =
-        EmailClientImpl::boxed_new(client, noreply_email_address, "http://example.com".into());
+    let email_client = EmailClientImpl::boxed_new(
+        client,
+        noreply_email_address,
+        "http://example.com/token?=".into(),
+    );
 
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())

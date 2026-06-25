@@ -1,0 +1,6 @@
+{text}
+
+{{callback_url}}{{token}}
+
+Do not share this link with anyone. This email was sent to @{{username}}.
+{extra_text}.
