@@ -10,7 +10,7 @@ use service::{
     token::TokenScope,
     util::emails,
 };
-use std::assert_matches;
+use std::{assert_matches, time::Duration};
 
 /// Completes sign up with pending activation session.
 pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
@@ -76,6 +76,7 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
             token: complete_signup_jwt,
         })
         .await?;
+    tokio::time::sleep(Duration::from_secs(1)).await;
 
     ctx.login_with_email(email, "passwd").await?;
 
@@ -104,6 +105,7 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
             token: complete_signup_jwt,
         })
         .await?;
+    tokio::time::sleep(Duration::from_secs(1)).await;
 
     let me = SessionHandler(ctx.state.clone()).me(account_id).await?;
     assert!(me.email.unwrap() == email);

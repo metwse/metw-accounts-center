@@ -142,3 +142,25 @@ fn invalid_jwts() {
     assert!(jws.decode("aaa.aaa").is_none());
     assert!(jws.decode("a").is_none());
 }
+
+#[cfg(test)]
+#[test]
+fn expired_jwts() {
+    let jws = JsonWebSignature::new("supersecret1234".into());
+
+    let base64_encoded_token = jws.encode(&Token {
+        id: AccountId::unique(),
+        scope: TokenScope::Session,
+    });
+
+    jws.add_time_delta(TimeDelta::seconds(-1));
+
+    // nbf check
+    assert!(jws.decode(&base64_encoded_token).is_none());
+
+    jws.add_time_delta(TimeDelta::seconds(1));
+    jws.add_time_delta(TimeDelta::from_std(TokenScope::Session.safe_scope_lifetime()).unwrap());
+
+    // exp check
+    assert!(jws.decode(&base64_encoded_token).is_none());
+}

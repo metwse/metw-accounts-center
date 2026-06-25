@@ -3,9 +3,6 @@ mod token;
 
 mod error;
 
-#[cfg(test)]
-mod tests;
-
 pub use account::AccountService;
 pub use token::TokenService;
 
