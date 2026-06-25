@@ -32,8 +32,12 @@ impl EmailVerificationSessionHandler {
         id: AccountId,
         email_dto: dto::request::Email,
         ip: IpAddr,
+        captcha: dto::request::Captcha,
     ) -> HandlerResult<()> {
         email_dto.validate()?;
+        if !self.0.captcha_client.validate(captcha.captcha).await {
+            return Err(HandlerError::InvalidCaptcha);
+        }
 
         let email = email_dto.email;
 

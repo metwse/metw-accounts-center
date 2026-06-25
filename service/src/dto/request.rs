@@ -1,6 +1,6 @@
 use serde::Deserialize;
 use std::sync::LazyLock;
-use utoipa::ToSchema;
+use utoipa::{IntoParams, ToSchema};
 use validator::Validate;
 
 static USERNAME_REGEX_STR: &str = "^[a-z]([_.]?[a-z0-9])*$";
@@ -84,6 +84,12 @@ pub struct Email {
 #[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct Token {
     pub token: String,
+}
+
+/// Request containing CAPTCHA response.
+#[derive(Debug, Clone, Deserialize, IntoParams)]
+pub struct Captcha {
+    pub captcha: String,
 }
 
 #[cfg(test)]

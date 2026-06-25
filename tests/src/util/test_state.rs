@@ -93,6 +93,9 @@ impl TestState {
                     },
                 },
                 random_ipv6(),
+                dto::request::Captcha {
+                    captcha: "captcha".to_string(),
+                },
             )
             .await
             .unwrap();

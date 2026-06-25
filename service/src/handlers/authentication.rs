@@ -54,8 +54,12 @@ impl AuthenticationHandler {
         self,
         signup_dto: dto::request::Signup,
         ip: IpAddr,
+        captcha: dto::request::Captcha,
     ) -> HandlerResult<dto::response::Token> {
         signup_dto.validate()?;
+        if !self.0.captcha_client.validate(captcha.captcha).await {
+            return Err(HandlerError::InvalidCaptcha);
+        }
 
         let email = signup_dto.email.clone();
         let username = signup_dto.username.clone();

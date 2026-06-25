@@ -1,7 +1,11 @@
 //! See [`AuthenticationHandler`].
 
 use crate::res::{AppJson, AppResult};
-use axum::{Extension, Router, extract::State, routing::post};
+use axum::{
+    Extension, Router,
+    extract::{Query, State},
+    routing::post,
+};
 use service::{AppState, dto, handlers::AuthenticationHandler};
 use std::net::IpAddr;
 use utoipa::OpenApi;
@@ -9,6 +13,7 @@ use utoipa::OpenApi;
 #[utoipa::path(
     post, path = "signup",
     request_body = dto::request::Signup,
+    params(dto::request::Captcha),
     responses(
         (status = OK, description = "JWT for email verification session",
             body = dto::response::Token)
@@ -17,11 +22,12 @@ use utoipa::OpenApi;
 async fn signup(
     State(state): State<AppState>,
     Extension(real_ip): Extension<IpAddr>,
+    Query(captcha): Query<dto::request::Captcha>,
     AppJson(signup_dto): AppJson<dto::request::Signup>,
 ) -> AppResult<dto::response::Token> {
     Ok(AppJson(
         AuthenticationHandler(state)
-            .signup(signup_dto, real_ip)
+            .signup(signup_dto, real_ip, captcha)
             .await?,
     ))
 }
