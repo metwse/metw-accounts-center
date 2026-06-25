@@ -25,7 +25,12 @@ regex = { workspace = true }
 serde = { workspace = true }
 serde_with = { workspace = true}
 
-# Service-specific encryption/signature utility
+# email templates
+toml = { version = "1", features = ["parse", "serde"] }
+strfmt = "0.2"
+minify-html = "0.18"
+
+# encryption/signature utility
 biscuit = "0.8"
 argon2 = "0.5"
 # transitive dependency: argon2::password_hash::rand_core::OsRng requires this

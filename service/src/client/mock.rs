@@ -36,7 +36,8 @@ impl EmailClient for MockEmailClientImpl {
         let mut debug = self.emails.lock().await;
 
         let subject = template.subject();
-        let _body = template.body("http://example.com/");
+        let _body_html = template.body_html("http://example.com/token?=");
+        let _body_text = template.body_text("http://example.com/token?=");
 
         debug!(%id, subject, ?template, "email to account");
 

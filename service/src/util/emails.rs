@@ -1,3 +1,7 @@
+use std::{collections::HashMap, sync::LazyLock};
+use strfmt::strfmt;
+use toml;
+
 /// Email templates.
 ///
 /// See [`TokenScope`].
@@ -31,37 +35,110 @@ pub enum Template {
     },
 }
 
+struct ProcessedTemplate {
+    pub subject: String,
+    pub body_text: String,
+    pub body_html: String,
+}
+
+static TEMPLATES: LazyLock<HashMap<String, ProcessedTemplate>> = LazyLock::new(|| {
+    let template_arguments = include_str!("../../email_templates/emails.toml");
+
+    let html_template: &str = include_str!("../../email_templates/template.html");
+    let text_template: &str = include_str!("../../email_templates/template.txt");
+
+    let html_template = String::from_utf8(minify_html::minify(html_template.as_bytes(), &minify_html::Cfg::default())).unwrap();
+
+    let templates =
+        toml::from_str::<HashMap<String, HashMap<String, String>>>(template_arguments).unwrap();
+
+    let mut processed_templates = HashMap::<String, ProcessedTemplate>::new();
+
+    for (template_name, mut value) in templates.into_iter() {
+        let body_html = strfmt(&html_template, &value).unwrap();
+        let body_text = strfmt(text_template, &value).unwrap();
+
+        processed_templates.insert(
+            template_name,
+            ProcessedTemplate {
+                subject: value.remove("subject").unwrap(),
+                body_text,
+                body_html,
+            },
+        );
+    }
+
+    processed_templates
+});
+
 impl Template {
     /// Get subject of the template.
     pub fn subject(&self) -> String {
-        match self {
-            Self::ConfirmSignup { .. } => "Verify your metw.cc account".to_string(),
-            Self::ConfirmNewEmail { .. } => "Add email to your metw.cc account".to_string(),
-            Self::ConfirmPrimaryEmailChange { .. } => "Confirm primary email change".to_string(),
-        }
+        TEMPLATES.get(self.to_str()).unwrap().subject.clone()
     }
 
     /// Get email body of the template.
-    pub fn body(&self, callback_url: &str) -> String {
+    pub fn body_html(&self, callback_url: &str) -> String {
+        let template = &TEMPLATES.get(self.to_str()).unwrap().body_html;
+
+        self.build_email(template, callback_url)
+    }
+
+    /// Get plaintext email body of the template.
+    pub fn body_text(&self, callback_url: &str) -> String {
+        let template = &TEMPLATES.get(self.to_str()).unwrap().body_text;
+
+        self.build_email(template, callback_url)
+    }
+
+    fn build_email(&self, template: &str, callback_url: &str) -> String {
         match self {
-            Self::ConfirmSignup { username, token } => format!(
-                "Hello {username}! Please verify your account by clicking: {callback_url}?token={token}"
-            ),
+            Self::ConfirmSignup { username, token } => strfmt!(
+                template,
+                callback_url => callback_url.to_string(),
+                token => token.to_string(),
+                username => username.to_string()
+            )
+            .unwrap(),
             Self::ConfirmNewEmail {
                 username,
                 email,
                 token,
-            } => format!(
-                "To add <{email}> as a secondary email to your account @{username}, please click the link: {callback_url}?token={token}"
-            ),
+            } => strfmt!(
+                template,
+                callback_url => callback_url.to_string(),
+                token => token.to_string(),
+                username => username.to_string(),
+                email => email.to_string()
+            )
+            .unwrap(),
             Self::ConfirmPrimaryEmailChange {
                 username,
                 current_primary_email,
                 new_primary_email,
                 token,
-            } => format!(
-                "Hello {username}, please confirm your account's primary email change (from <{current_primary_email}> to <{new_primary_email}>) by clicking the link: {callback_url}?token={token}"
-            ),
+            } => strfmt!(
+                template,
+                callback_url => callback_url.to_string(),
+                token => token.to_string(),
+                username => username.to_string(),
+                current_primary_email => current_primary_email.to_string(),
+                new_primary_email => new_primary_email.to_string()
+            )
+            .unwrap(),
         }
     }
+
+    fn to_str(&self) -> &'static str {
+        match self {
+            Self::ConfirmSignup { .. } => "confirm-signup",
+            Self::ConfirmNewEmail { .. } => "confirm-new-email",
+            Self::ConfirmPrimaryEmailChange { .. } => "confirm-primary-email-change",
+        }
+    }
+}
+
+#[test]
+fn email_templates() {
+    TEMPLATES.contains_key("");
 }

@@ -42,15 +42,26 @@ impl EmailClient for EmailClientImpl {
             return error!("cannot build subject");
         };
 
-        let Ok(body_content) = sesv2::types::Content::builder()
-            .data(template.body(&self.callback_url))
+        let Ok(body_html_content) = sesv2::types::Content::builder()
+            .data(template.body_html(&self.callback_url))
             .charset("UTF-8")
             .build()
         else {
             return error!("cannot build body");
         };
 
-        let body = sesv2::types::Body::builder().text(body_content).build();
+        let Ok(body_text_content) = sesv2::types::Content::builder()
+            .data(template.body_text(&self.callback_url))
+            .charset("UTF-8")
+            .build()
+        else {
+            return error!("cannot build body");
+        };
+
+        let body = sesv2::types::Body::builder()
+            .html(body_html_content)
+            .text(body_text_content)
+            .build();
 
         let msg = sesv2::types::Message::builder()
             .subject(subject_content)
