@@ -19,3 +19,9 @@ pub struct OwnedLoginCredentials {
     pub is_email_verified: bool,
     pub password_hash: String,
 }
+
+pub enum EmailLimitingResult {
+    IpTimeOut(usize),
+    EmailTimeOut(usize),
+    NoTimeOut,
+}
