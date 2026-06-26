@@ -6,6 +6,7 @@ use axum::{
 };
 use serde::Serialize;
 use service::{handlers::HandlerError, service::ServiceError};
+use std::time::Duration;
 use thiserror::Error;
 
 /// Application error reporting.
@@ -20,6 +21,9 @@ pub enum AppError {
 
     #[error("missing or invalid X-Real-IP")]
     MissingOrInvalidXRealIp,
+
+    #[error("rate limited: {0:?}")]
+    RateLimited(Duration),
 }
 
 /// API result.
@@ -76,6 +80,8 @@ impl AppError {
                         StatusCode::NOT_FOUND
                     }
 
+                    ServiceError::EmailLimited(..) => StatusCode::TOO_MANY_REQUESTS,
+
                     _ => StatusCode::BAD_REQUEST,
                 },
                 HandlerError::Validation(..) => StatusCode::BAD_REQUEST,
@@ -86,6 +92,8 @@ impl AppError {
             },
 
             Self::MissingOrInvalidXRealIp => StatusCode::INTERNAL_SERVER_ERROR,
+
+            Self::RateLimited(..) => StatusCode::TOO_MANY_REQUESTS,
         }
     }
 

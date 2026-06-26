@@ -8,6 +8,9 @@ tokio = { workspace = true, features = ["net", "rt", "rt-multi-thread"] }
 tower-http = { workspace = true, features = ["cors", "trace"] }
 axum = { workspace = true, features = ["macros"] }
 
+tower_governor = { version = "0.8", default-features = false, features = ["axum"] }
+governor = "0.10"
+
 utoipa = { workspace = true, features = ["axum_extras"] }
 
 tracing = { workspace = true }

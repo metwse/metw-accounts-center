@@ -1,13 +1,16 @@
 //! See [`AuthenticationHandler`].
 
-use crate::res::{AppJson, AppResult};
+use crate::{
+    middleware::{extract_real_ip::GovernorIpKeyExtractor, limiter::basic},
+    res::{AppJson, AppResult},
+};
 use axum::{
     Extension, Router,
     extract::{Query, State},
     routing::post,
 };
 use service::{AppState, dto, handlers::AuthenticationHandler};
-use std::net::IpAddr;
+use std::{net::IpAddr, time::Duration};
 use utoipa::OpenApi;
 
 #[utoipa::path(
@@ -94,6 +97,7 @@ pub fn routes(state: AppState) -> Router {
         .route("/login/email", post(login_with_email))
         .route("/login/username", post(login_with_username))
         .route("/logout", post(logout))
+        .layer(basic::<GovernorIpKeyExtractor>(2, Duration::from_secs(5)))
         .with_state(state.clone())
 }
 

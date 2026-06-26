@@ -1,4 +1,4 @@
-use crate::res::{AppError, AppMiddlewareResult};
+use crate::res::AppMiddlewareResult;
 use axum::{
     extract::{Request, State},
     http::header,
@@ -8,8 +8,9 @@ use axum::{
 use service::{
     AppState,
     handlers::{AuthenticationHandler, HandlerError},
+    id::AccountId,
 };
-use std::{net::IpAddr, str::FromStr};
+use tower_governor::key_extractor::KeyExtractor;
 use utoipa::{Modify, openapi};
 
 fn extract_token(req: &Request) -> Option<String> {
@@ -18,36 +19,6 @@ fn extract_token(req: &Request) -> Option<String> {
         .and_then(|header| header.to_str().ok())
         .and_then(|bearer_token| bearer_token.trim().strip_prefix("Bearer "))
         .map(|token_str| token_str.to_string())
-}
-
-/// Extract the remote IP from X-Real-IP header.
-#[tracing::instrument(skip_all)]
-pub async fn extract_real_ip(mut req: Request, next: Next) -> AppMiddlewareResult<Response> {
-    let real_ip: IpAddr = match req.headers().get("X-Real-IP") {
-        Some(header_value) => header_value
-            .to_str()
-            .map_err(|_| AppError::MissingOrInvalidXRealIp)
-            .and_then(|header| {
-                IpAddr::from_str(header).map_err(|_| AppError::MissingOrInvalidXRealIp)
-            })?,
-        None => {
-            #[cfg(debug_assertions)]
-            {
-                use service::testutil::random_ipv6;
-
-                tracing::debug!("no X-Real-IP is given, using random IP address");
-
-                random_ipv6()
-            }
-
-            #[cfg(not(debug_assertions))]
-            return Err(AppError::MissingOrInvalidXRealIp);
-        }
-    };
-
-    req.extensions_mut().insert(real_ip);
-
-    Ok(next.run(req).await)
 }
 
 /// Authenticate a login session.
@@ -99,9 +70,9 @@ pub async fn auth_email_verification_session(
 }
 
 /// utoipa modifiers for middleware documentations.
-pub struct ApiDocSecurityAddon;
+pub struct ApiDocAuthAddon;
 
-impl Modify for ApiDocSecurityAddon {
+impl Modify for ApiDocAuthAddon {
     fn modify(&self, openapi: &mut openapi::OpenApi) {
         if let Some(components) = openapi.components.as_mut() {
             components.add_security_scheme(
@@ -124,5 +95,18 @@ impl Modify for ApiDocSecurityAddon {
                 ),
             );
         }
+    }
+}
+
+/// A key extractor that tries to get rate limiting key from the extension
+/// added by [`auth_session`] or [`auth_email_verification_session`].
+#[derive(Clone, Default)]
+pub struct GovernorAccountIdKeyExtractor;
+
+impl KeyExtractor for GovernorAccountIdKeyExtractor {
+    type Key = AccountId;
+
+    fn extract<T>(&self, req: &Request<T>) -> Result<Self::Key, tower_governor::GovernorError> {
+        Ok(*req.extensions().get::<AccountId>().unwrap())
     }
 }
