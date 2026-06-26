@@ -77,6 +77,8 @@ pub fn app(state: AppState) -> Router {
         .merge(routes::authorization::routes(state.clone()))
         .merge(routes::email_verification_session::routes(state.clone()))
         .merge(routes::session::routes(state))
-        .route_layer(axum::middleware::from_fn(middleware::extract_real_ip))
+        .route_layer(axum::middleware::from_fn(
+            middleware::extract_real_ip::extract_real_ip,
+        ))
         .layer(TraceLayer::new_for_http())
 }

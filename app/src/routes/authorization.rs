@@ -1,8 +1,12 @@
 //! See [`AuthorizationHandler`].
 
-use crate::res::{AppJson, AppResult};
+use crate::{
+    middleware::{auth::GovernorAccountIdKeyExtractor, limiter},
+    res::{AppJson, AppResult},
+};
 use axum::{Router, extract::State, routing::post};
 use service::{AppState, dto, handlers::AuthorizationHandler};
+use std::time::Duration;
 use utoipa::OpenApi;
 
 #[utoipa::path(
@@ -20,7 +24,13 @@ async fn auth(
 }
 
 pub fn routes(state: AppState) -> Router {
-    Router::new().route("/auth", post(auth)).with_state(state)
+    Router::new()
+        .route("/auth", post(auth))
+        .layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
+            2,
+            Duration::from_secs(5),
+        ))
+        .with_state(state)
 }
 
 #[derive(OpenApi)]

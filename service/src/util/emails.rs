@@ -47,7 +47,11 @@ static TEMPLATES: LazyLock<HashMap<String, ProcessedTemplate>> = LazyLock::new(|
     let html_template: &str = include_str!("../../email_templates/template.html");
     let text_template: &str = include_str!("../../email_templates/template.txt");
 
-    let html_template = String::from_utf8(minify_html::minify(html_template.as_bytes(), &minify_html::Cfg::default())).unwrap();
+    let html_template = String::from_utf8(minify_html::minify(
+        html_template.as_bytes(),
+        &minify_html::Cfg::default(),
+    ))
+    .unwrap();
 
     let templates =
         toml::from_str::<HashMap<String, HashMap<String, String>>>(template_arguments).unwrap();

@@ -1,7 +1,11 @@
 //! See [`SessionHandler`].
 
 use crate::{
-    middleware::ApiDocSecurityAddon,
+    middleware::{
+        auth::{ApiDocAuthAddon, GovernorAccountIdKeyExtractor, auth_session},
+        extract_real_ip::GovernorIpKeyExtractor,
+        limiter,
+    },
     res::{AppJson, AppResult},
 };
 use axum::{
@@ -11,7 +15,7 @@ use axum::{
     routing::{delete, get, post},
 };
 use service::{AppState, dto, handlers::SessionHandler, id::AccountId};
-use std::net::IpAddr;
+use std::{net::IpAddr, time::Duration};
 use utoipa::OpenApi;
 
 #[utoipa::path(
@@ -97,10 +101,15 @@ pub fn routes(state: AppState) -> Router {
         .route("/me/emails", post(add_email))
         .route("/me/emails", delete(delete_email))
         .route("/me/emails/set-primary", post(set_primary_email))
-        .route_layer(middleware::from_fn_with_state(
-            state.clone(),
-            crate::middleware::auth_session,
+        .layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
+            5,
+            Duration::from_secs(5),
         ))
+        .layer(limiter::basic::<GovernorIpKeyExtractor>(
+            25,
+            Duration::from_secs(5),
+        ))
+        .route_layer(middleware::from_fn_with_state(state.clone(), auth_session))
         .with_state(state)
 }
 
@@ -108,7 +117,7 @@ pub fn routes(state: AppState) -> Router {
 #[openapi(
     paths(me, add_email, delete_email, set_primary_email),
     components(schemas(dto::response::Account, dto::request::Email)),
-    modifiers(&ApiDocSecurityAddon),
+    modifiers(&ApiDocAuthAddon),
     security(("session_jwt" = []))
 )]
 pub struct ApiDoc;
