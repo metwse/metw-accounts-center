@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["app"],"mod":["middleware","res","routes"],"struct":["ApiDoc"]};

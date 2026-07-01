@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["HandlerError"],"struct":["AuthenticationHandler","AuthorizationHandler","EmailVerificationSessionHandler","SessionHandler"],"type":["HandlerResult"]};

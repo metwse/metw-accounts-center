@@ -1,0 +1,99 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="State Abstraction Layers"><title>_docs::acd_1 - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-1ed95124.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="_docs" data-themes="" data-resource-suffix="" data-rustdoc-version="1.98.0-nightly (f46ec5218 2026-06-30)" data-channel="nightly" data-search-js="search-9944d736.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Module acd_1</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../_docs/index.html">_docs</a><span class="version">0.0.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module acd_1</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#state-abstraction-layers" title="State Abstraction Layers">State Abstraction Layers</a><ul><li><a href="#repo" title="`repo`"><code>repo</code></a></li><li><a href="#service" title="`service`"><code>service</code></a></li><li><a href="#handlers" title="`handlers`"><code>handlers</code></a></li><li><a href="#client" title="`client`"><code>client</code></a></li></ul></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="../index.html">In crate _<wbr>docs</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">_docs</a></div><h1>Module <span>acd_1</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/_docs/acd_1.rs.html#1-141">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="state-abstraction-layers"><a class="doc-anchor" href="#state-abstraction-layers">§</a>State Abstraction Layers</h2>
+<p>Take a look at the <a href="../../service/index.html#system-design" title="mod service">System Design</a> section in the
+service crate.</p>
+<p>This documentation discusses the communication between the <code>repo</code>, <code>service</code>,
+and <code>handler</code> layers.</p>
+<h3 id="repo"><a class="doc-anchor" href="#repo">§</a><code>repo</code></h3>
+<p>The <a href="../../service/repo/index.html" title="mod service::repo"><code>repo</code></a> layer is responsible for data management.</p>
+<p>Methods of <code>*Repo</code> traits provide read-only access or test-and-set
+operations. <code>*RepoTransaction</code> traits, on the other hand, are atomic
+transactional units to manipulate data freely. For example, <a href="../../service/repo/trait.AccountRepo.html" title="trait service::repo::AccountRepo"><code>AccountRepo</code></a>
+or its transaction variant <a href="../../service/repo/trait.AccountRepoTransaction.html" title="trait service::repo::AccountRepoTransaction"><code>AccountRepoTransaction</code></a>. Implementation
+conventions for this layer:</p>
+<ul>
+<li>Non-transaction repo operations can <em>only be</em> read or atomic
+compare-and-swap / test-and-set.</li>
+</ul>
+<div><table><thead><tr><th>Function Example</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><a href="../../service/repo/trait.AccountRepo.html#tymethod.get_keys" title="method service::repo::AccountRepo::get_keys"><code>get_keys</code></a></td><td>read</td><td>Reads keying materials of users.</td></tr>
+<tr><td><a href="../../service/repo/trait.AccountRepo.html#tymethod.set_primary_email_if_current_is" title="method service::repo::AccountRepo::set_primary_email_if_current_is"><code>set_primary_email_if_current_is</code></a></td><td>compare-and-swap</td><td>If the provided primary email is still the current primary email, changes the email.</td></tr>
+</tbody></table>
+</div>
+<ul>
+<li>Any insert, delete, update, or upsert (insert or update if exists)
+operation must reside within a transaction.</li>
+</ul>
+<div><table><thead><tr><th>Function Example</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><a href="../../service/repo/trait.AccountRepoTransaction.html#tymethod.upsert_account" title="method service::repo::AccountRepoTransaction::upsert_account"><code>upsert_account</code></a></td><td>upsert</td><td>Inserts a new user or updates the existing one by account id.</td></tr>
+<tr><td><a href="../../service/repo/trait.AccountRepoTransaction.html#tymethod.insert_default_flags" title="method service::repo::AccountRepoTransaction::insert_default_flags"><code>insert_default_flags</code></a></td><td>insert</td><td>Inserts default user flags.</td></tr>
+</tbody></table>
+</div>
+<ul>
+<li><code>*Repo</code> variants that return a single item like “fetch one” do not return
+a <code>RowNotFound</code> error; they must be mapped to an <code>Option</code>. Those that
+are “fetch many” return a <code>Vec</code>.</li>
+</ul>
+<div><table><thead><tr><th>Function Example</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><a href="../../service/repo/trait.AccountRepo.html#tymethod.get_primary_email" title="method service::repo::AccountRepo::get_primary_email"><code>get_primary_email</code></a></td><td>fetch one</td><td>Returns the primary email of the user.</td></tr>
+<tr><td><a href="../../service/repo/trait.AccountRepo.html#tymethod.get_secondary_emails" title="method service::repo::AccountRepo::get_secondary_emails"><code>get_secondary_emails</code></a></td><td>fetch many</td><td>Returns the secondary emails of the user.</td></tr>
+</tbody></table>
+</div>
+<ul>
+<li><a href="../../service/repo/error/enum.RepoError.html" title="enum service::repo::error::RepoError"><code>RepoError</code></a> is an internal error used only for tracing and
+observability. This error must not be returned directly to the user; it
+must be <em>redacted</em>.</li>
+</ul>
+<h3 id="service"><a class="doc-anchor" href="#service">§</a><code>service</code></h3>
+<p>The <a href="../../service/service/index.html" title="mod service::service"><code>service</code></a> layer acts as the “middleman” between the handlers and the
+data access (repo) layers. It abstracts low-level access operations into
+units of work.</p>
+<ul>
+<li>High-level business logic validation errors are mapped to specific
+variants of <a href="../../service/service/error/enum.ServiceError.html" title="enum service::service::error::ServiceError"><code>ServiceError</code></a>. Low-level database infrastructure failures
+bypass specific mappings and propagate as generic errors.</li>
+</ul>
+<p>As an example, error conditions in <a href="../../service/service/account/struct.AccountService.html#method.signup" title="method service::service::account::AccountService::signup"><code>AccountService::signup</code></a> are:</p>
+<div><table><thead><tr><th>Condition</th><th>Error Type</th></tr></thead><tbody>
+<tr><td>Username is already taken</td><td><a href="../../service/service/error/enum.ServiceError.html#variant.UsernameTaken" title="variant service::service::error::ServiceError::UsernameTaken"><code>ServiceError::UsernameTaken</code></a></td></tr>
+<tr><td>Email is already taken</td><td><a href="../../service/service/error/enum.ServiceError.html#variant.EmailTaken" title="variant service::service::error::ServiceError::EmailTaken"><code>ServiceError::EmailTaken</code></a></td></tr>
+</tbody></table>
+</div>
+<p>The service layer handles specific error mapping on a <em>best-effort</em> basis
+by validating conditions before executing raw changes. If a validation
+fails to predict a state conflict, or if an underlying database constraint
+triggers an unhandled error, the fallback result will be a generic
+<a href="../../service/service/error/enum.ServiceError.html#variant.Repo" title="variant service::service::error::ServiceError::Repo"><code>ServiceError::Repo</code></a>. In such scenarios, upper layers must continue to
+treat the internal transparent errors as redacted.</p>
+<h3 id="handlers"><a class="doc-anchor" href="#handlers">§</a><code>handlers</code></h3>
+<p>The <a href="../../service/handlers/index.html" title="mod service::handlers"><code>handlers</code></a> layer composes multiple services to orchestrate complex,
+unit-of-works. Generally, the handler layer executes one or more
+service calls and either propagates the service results directly or
+translates them into specific handler errors based on the business outcome.</p>
+<p>As an example, error conditions in <a href="../../service/handlers/authentication/struct.AuthenticationHandler.html#method.auth_session" title="method service::handlers::authentication::AuthenticationHandler::auth_session"><code>AuthenticationHandler::auth_session</code></a> are:</p>
+<div><table><thead><tr><th>Condition</th><th>Error Type</th></tr></thead><tbody>
+<tr><td>Token scope is not <a href="../../service/util/token/enum.TokenScope.html#variant.Session" title="variant service::util::token::TokenScope::Session"><code>TokenScope::Session</code></a></td><td><a href="../../service/handlers/error/enum.HandlerError.html#variant.Unauthorized" title="variant service::handlers::error::HandlerError::Unauthorized"><code>HandlerError::Unauthorized</code></a></td></tr>
+<tr><td>JWT-related issue (triggered from TokenService)</td><td><a href="../../service/handlers/error/enum.HandlerError.html#variant.Service" title="variant service::handlers::error::HandlerError::Service"><code>HandlerError::Service</code></a></td></tr>
+</tbody></table>
+</div>
+<ul>
+<li>
+<p>There are two types of handlers: those for HTTP endpoints and those for
+middleware.</p>
+</li>
+<li>
+<p>In handlers that are HTTP endpoints, at first request validation happens.
+Everything coming from the user <em>must be</em> a <a href="../../service/dto/request/index.html" title="mod service::dto::request"><code>dto::request</code></a>; and the
+handler response, if exists, must be <a href="../../service/dto/response/index.html" title="mod service::dto::response"><code>dto::response</code></a>.</p>
+</li>
+<li>
+<p>Middleware handlers may return types other than <a href="../../service/dto/response/index.html" title="mod service::dto::response"><code>dto::response</code></a>.</p>
+</li>
+<li>
+<p>The handler owns the allocation and passes references to the service
+layer. It, however, transfer ownership of the allocation to <code>client</code>s.</p>
+</li>
+</ul>
+<h3 id="client"><a class="doc-anchor" href="#client">§</a><code>client</code></h3>
+<p><a href="../../service/client/index.html" title="mod service::client"><code>client</code></a> contains external integrations such as <a href="../../service/client/trait.CaptchaClient.html" title="trait service::client::CaptchaClient"><code>CaptchaClient</code></a>. They
+typically send requests to external services.</p>
+</div></details></section></div></main></body></html>

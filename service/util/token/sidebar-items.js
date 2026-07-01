@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["TokenScope"],"static":["SAFE_EXPIRATION_MARGIN"],"struct":["DecodedToken","Token"]};

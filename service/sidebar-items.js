@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["checked_now"],"mod":["client","dto","entity","handlers","repo","service","testutil","util"],"struct":["AppState"]};
