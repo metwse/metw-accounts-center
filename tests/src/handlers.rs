@@ -443,7 +443,8 @@ mod tests {
                 logout(ctx),
                 taken_username_or_email(ctx),
                 change_primary_email(ctx)
-            ).unwrap();
+            )
+            .unwrap();
         };
 
         tokio::join!(
