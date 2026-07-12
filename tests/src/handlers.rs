@@ -436,13 +436,23 @@ mod tests {
     use state::{AccountRepoImpl, TokenRepoImpl};
 
     async fn testsuite(ctx: &TestState) -> HandlerResult<()> {
-        for _ in 0..4 {
-            retry_signup(ctx).await?;
-            signup_and_login(ctx).await?;
-            logout(ctx).await?;
-            taken_username_or_email(ctx).await?;
-            change_primary_email(ctx).await?;
-        }
+        let run_tests = async || {
+            tokio::try_join!(
+                retry_signup(ctx),
+                signup_and_login(ctx),
+                logout(ctx),
+                taken_username_or_email(ctx),
+                change_primary_email(ctx)
+            ).unwrap();
+        };
+
+        tokio::join!(
+            run_tests(),
+            run_tests(),
+            run_tests(),
+            run_tests(),
+            run_tests()
+        );
 
         Ok(())
     }
