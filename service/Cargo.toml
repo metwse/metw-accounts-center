@@ -2,6 +2,7 @@
 name = "service"
 version = "0.0.0"
 edition = "2024"
+build = "build/main.rs"
 
 [dependencies]
 tokio = { workspace = true, features = ["rt", "macros", "sync"] }
@@ -25,17 +26,14 @@ regex = { workspace = true }
 serde = { workspace = true }
 serde_with = { workspace = true}
 
-# email templates
-toml = { version = "1", features = ["parse", "serde"] }
-strfmt = "0.2"
-minify-html = "0.18"
-
 # encryption/signature utility
 biscuit = "0.8"
 argon2 = "0.5"
 # transitive dependency: argon2::password_hash::rand_core::OsRng requires this
 # feature
 rand_core = { version = "0.6", features = ["getrandom"] }
+
+strfmt = "0.2"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["full", "test-util"] }
@@ -46,6 +44,13 @@ test-log = { workspace = true, features = ["trace"] }
 futures-util = { workspace = true }
 
 service = { path = ".", features = ["mock"] }
+
+[build-dependencies]
+# email templates
+toml = { version = "1", features = ["parse", "serde"] }
+strfmt = "0.2"
+minify-html = "0.18"
+
 
 [features]
 # tokio/time requred for time outs in mock token service.
