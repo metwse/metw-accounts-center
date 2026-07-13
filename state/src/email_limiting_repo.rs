@@ -146,12 +146,66 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
         }
     }
 
-    async fn refund_ip_quota(&self, _ip: &IpAddr, _email: &str) -> RepoResult<()> {
-        todo!()
+    async fn refund_ip_quota(&self, ip: &IpAddr, email: &str) -> RepoResult<()> {
+        let con = self.con.clone();
+
+        let used_ip_quota_key = to_used_ip_quota_key(ip);
+        let block_ip_key = to_block_ip_key(ip);
+
+        let _: () = redis::aio::transaction_async(
+            con,
+            &[&used_ip_quota_key, &block_ip_key],
+            |mut con, mut pipe| {
+                let used_ip_quota_key = used_ip_quota_key.clone();
+                let block_ip_key = block_ip_key.clone();
+
+                let email = email.to_string();
+
+                async move {
+                    let existing_used_ip_quota: Option<i64> = con.get(&used_ip_quota_key).await?;
+                    let existing_used_ip_quota_ttl: i64 = con.ttl(&used_ip_quota_key).await?;
+                    let block_ip_for: Option<String> = con.get(&block_ip_key).await?;
+
+                    let pipe = if let Some(existing_used_ip_quota) = existing_used_ip_quota
+                        && existing_used_ip_quota > 1
+                    {
+                        pipe.set_ex(
+                            &used_ip_quota_key,
+                            existing_used_ip_quota - 1,
+                            existing_used_ip_quota_ttl.unsigned_abs(),
+                        )
+                        .ignore()
+                    } else {
+                        pipe.del(&used_ip_quota_key).ignore()
+                    };
+
+                    let pipe = if let Some(block_ip_for) = block_ip_for
+                        && block_ip_for == email
+                    {
+                        pipe.del(&block_ip_key).ignore()
+                    } else {
+                        pipe
+                    };
+
+                    pipe.query_async(&mut con).await
+                }
+            },
+        )
+        .await?;
+
+        Ok(())
     }
 
-    async fn clear_email_limit(&self, _email: &str) -> RepoResult<()> {
-        todo!()
+    async fn clear_email_limit(&self, email: &str) -> RepoResult<()> {
+        let mut con = self.con.clone();
+
+        let used_email_quota_key = to_used_email_quota_key(email);
+        let block_email_key = to_block_email_key(email);
+
+        let _: () = con.del(&used_email_quota_key).await?;
+        let _: () = con.del(&block_email_key).await?;
+
+        Ok(())
     }
 }
 
