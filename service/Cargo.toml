@@ -33,8 +33,6 @@ argon2 = "0.5"
 # feature
 rand_core = { version = "0.6", features = ["getrandom"] }
 
-strfmt = "0.2"
-
 [dev-dependencies]
 tokio = { workspace = true, features = ["full", "test-util"] }
 
