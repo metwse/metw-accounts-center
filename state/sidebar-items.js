@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["redis_keys"],"struct":["AccountRepoImpl","CaptchaClientImpl","Config","EmailClientImpl","EmailLimitingRepoImpl","TokenRepoImpl"]};
+window.SIDEBAR_ITEMS = {"mod":["redis_keys"],"struct":["AccountRepoImpl","AwsEmailClientImpl","CaptchaClientImpl","Config","EmailLimitingRepoImpl","LettreEmailClientImpl","TokenRepoImpl"]};
