@@ -8,6 +8,11 @@
 //! - The token consumption and email rate limiting is enforced by Redis, in
 //!   case of Redis state loss, one-time tokens can be accepted again. Make
 //!   sure you have enabled persistent storage in Redis.
+//!
+//! ## Development Notes
+//!
+//! - Concurrent transactions *are not supported* on multiplexed Redis
+//!   connections. Use one connection per function require transactions.
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
@@ -114,19 +119,21 @@ impl Config {
 
         let account_service = AccountService::new(AccountRepoImpl::boxed_new(pgpool));
 
-        let redis = redis::Client::open(self.redis_url)
-            .unwrap()
-            .get_multiplexed_async_connection()
-            .await
-            .unwrap();
+        let redis_con_generator = Box::new(async move || {
+            redis::Client::open(self.redis_url.clone())
+                .unwrap()
+                .get_multiplexed_async_connection()
+                .await
+                .unwrap()
+        });
 
         let token_service = TokenService::new(
-            TokenRepoImpl::boxed_new(redis.clone()),
+            TokenRepoImpl::boxed_new(&redis_con_generator).await,
             self.jwt_secret.into(),
         );
 
         let email_limiting_service =
-            EmailLimitingService::new(EmailLimitingRepoImpl::boxed_new(redis));
+            EmailLimitingService::new(EmailLimitingRepoImpl::boxed_new(&redis_con_generator).await);
 
         #[cfg(all(feature = "email-client-aws", not(feature = "email-client-lettre")))]
         let email_client = {

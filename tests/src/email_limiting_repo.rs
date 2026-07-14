@@ -26,7 +26,7 @@ pub async fn email_limiting(repo: &dyn EmailLimitingRepo) -> RepoResult<()> {
 #[cfg(test)]
 mod tests {
     use super::email_limiting;
-    use crate::util::redis_client_from_env;
+    use crate::util::redis_con_generator_from_env;
     use service::repo::{EmailLimitingRepo, RepoResult, mock::MockEmailLimitingRepoImpl};
     use state::EmailLimitingRepoImpl;
 
@@ -47,8 +47,13 @@ mod tests {
     #[ignore]
     #[serial_test::serial]
     async fn email_limiting_repo() -> RepoResult<()> {
-        let redis = redis_client_from_env().await;
+        let con_generator = redis_con_generator_from_env().await;
 
-        testsuite(EmailLimitingRepoImpl::boxed_new(redis.clone()).as_ref()).await
+        testsuite(
+            EmailLimitingRepoImpl::boxed_new(&con_generator)
+                .await
+                .as_ref(),
+        )
+        .await
     }
 }
