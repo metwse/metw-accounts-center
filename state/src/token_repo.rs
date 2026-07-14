@@ -138,11 +138,11 @@ impl TokenRepoImpl {
         key: String,
         expiration: Duration,
     ) -> RepoResult<Option<DateTime<Utc>>> {
-        let con = self
+        let transaction_con_guard = self
             .transaction_con_update_token_cutoff_time
             .lock()
-            .await
-            .clone();
+            .await;
+        let con = transaction_con_guard.clone();
 
         let previous_token_cutoff_time: (Option<i64>,) =
             redis::aio::transaction_async(con, &[&key], |mut con, mut pipe| {
