@@ -38,10 +38,7 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
         ip: &IpAddr,
         email: &str,
     ) -> RepoResult<dto::repo::EmailLimitingResult> {
-        let transaction_con_guard = self
-            .transaction_con_check_and_consume_quota
-            .lock()
-            .await;
+        let transaction_con_guard = self.transaction_con_check_and_consume_quota.lock().await;
         let con = transaction_con_guard.clone();
 
         let used_email_quota_key = to_used_email_quota_key(email);

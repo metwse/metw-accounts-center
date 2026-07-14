@@ -127,9 +127,12 @@ impl TestState {
         };
 
         AuthorizationHandler(self.state.clone())
-            .auth(dto::request::Token {
-                token: complete_signup_jwt,
-            })
+            .auth(
+                dto::request::Token {
+                    token: complete_signup_jwt,
+                },
+                random_ipv6(),
+            )
             .await
             .unwrap();
         tokio::time::sleep(Duration::from_secs(1)).await;

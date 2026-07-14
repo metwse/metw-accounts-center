@@ -1,5 +1,6 @@
 use super::{HandlerError, HandlerResult};
 use crate::{dto, state::AppState, token::TokenScope};
+use std::net::IpAddr;
 use tracing::trace;
 
 /// Account handlers that **does require** escalated privileges.
@@ -10,7 +11,7 @@ impl AuthorizationHandler {
     ///
     /// See [`TokenScope`].
     #[tracing::instrument(skip_all)]
-    pub async fn auth(self, token_dto: dto::request::Token) -> HandlerResult<()> {
+    pub async fn auth(self, token_dto: dto::request::Token, ip: IpAddr) -> HandlerResult<()> {
         let base64_encoded_token = token_dto.token;
 
         let decoded_token = self.0.token_service.decode(&base64_encoded_token).await?;
@@ -26,6 +27,15 @@ impl AuthorizationHandler {
                 self.0
                     .token_service
                     .check_and_revoke_token(&decoded_token)
+                    .await?;
+
+                self.0
+                    .email_limiting_service
+                    .clear_email_limit(email)
+                    .await?;
+                self.0
+                    .email_limiting_service
+                    .refund_ip_quota(&ip, email)
                     .await?;
 
                 self.0
@@ -61,6 +71,15 @@ impl AuthorizationHandler {
                 self.0
                     .token_service
                     .check_and_revoke_account_tokens(&decoded_token)
+                    .await?;
+
+                self.0
+                    .email_limiting_service
+                    .clear_email_limit(email)
+                    .await?;
+                self.0
+                    .email_limiting_service
+                    .refund_ip_quota(&ip, email)
                     .await?;
 
                 self.0

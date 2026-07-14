@@ -80,9 +80,12 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
 
     // Now the second email is added.
     AuthorizationHandler(ctx.state.clone())
-        .auth(dto::request::Token {
-            token: complete_signup_jwt,
-        })
+        .auth(
+            dto::request::Token {
+                token: complete_signup_jwt,
+            },
+            random_ipv6(),
+        )
         .await?;
     tokio::time::sleep(Duration::from_secs(1)).await;
 
@@ -109,9 +112,12 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
 
     // Now the email is added.
     AuthorizationHandler(ctx.state.clone())
-        .auth(dto::request::Token {
-            token: complete_signup_jwt,
-        })
+        .auth(
+            dto::request::Token {
+                token: complete_signup_jwt,
+            },
+            random_ipv6(),
+        )
         .await?;
     tokio::time::sleep(Duration::from_secs(1)).await;
 
@@ -164,9 +170,12 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
     // Provide session tokens to authorization handler.
     assert_matches!(
         AuthorizationHandler(ctx.state.clone())
-            .auth(dto::request::Token {
-                token: session_jwt_from_email
-            })
+            .auth(
+                dto::request::Token {
+                    token: session_jwt_from_email
+                },
+                random_ipv6()
+            )
             .await
             .unwrap_err(),
         HandlerError::Unauthorized
@@ -176,9 +185,12 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
     // call will return Unauthorized.
     assert_matches!(
         AuthorizationHandler(ctx.state.clone())
-            .auth(dto::request::Token {
-                token: session_jwt_from_username
-            })
+            .auth(
+                dto::request::Token {
+                    token: session_jwt_from_username
+                },
+                random_ipv6()
+            )
             .await
             .unwrap_err(),
         HandlerError::Service(ServiceError::TokenRevoked) | HandlerError::Unauthorized
@@ -355,9 +367,12 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
 
         // Add the email.
         AuthorizationHandler(ctx.state.clone())
-            .auth(dto::request::Token {
-                token: add_email_jwt.clone(),
-            })
+            .auth(
+                dto::request::Token {
+                    token: add_email_jwt.clone(),
+                },
+                random_ipv6(),
+            )
             .await?;
 
         assert!(add_email_token.id == acccount_id);
@@ -394,9 +409,12 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
 
         // Change the primary email.
         AuthorizationHandler(ctx.state.clone())
-            .auth(dto::request::Token {
-                token: change_primary_email_jwt.clone(),
-            })
+            .auth(
+                dto::request::Token {
+                    token: change_primary_email_jwt.clone(),
+                },
+                random_ipv6(),
+            )
             .await?;
     }
 

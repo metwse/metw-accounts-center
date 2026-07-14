@@ -64,13 +64,22 @@ impl AuthenticationHandler {
         let email = signup_dto.email.clone();
         let username = signup_dto.username.clone();
 
-        // TODO: Swap the order of check_and_consume_quota and signup calls.
-        let account_id = self.0.account_service.signup(&signup_dto).await?;
-
         self.0
             .email_limiting_service
             .check_and_consume_quota(&ip, &email)
             .await?;
+
+        let account_id = match self.0.account_service.signup(&signup_dto).await {
+            Ok(account_id) => account_id,
+            Err(err) => {
+                self.0
+                    .email_limiting_service
+                    .refund_ip_quota(&ip, &email)
+                    .await?;
+
+                return Err(err)?;
+            }
+        };
 
         let complete_signup_jwt = self.0.token_service.sign(&Token {
             id: account_id,
