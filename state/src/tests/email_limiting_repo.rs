@@ -80,5 +80,22 @@ async fn email_limiting_repo() -> RepoResult<()> {
         EmailLimitingResult::Allowed
     );
 
+    con.del::<String, u64>(to_block_ip_key(&ip)).await?;
+    con.del::<String, u64>(to_block_email_key(email)).await?;
+
+    // Send two emails to the email.
+    assert_matches!(
+        repo.check_and_consume_quota(&ip, email).await?,
+        EmailLimitingResult::Allowed
+    );
+
+    // Refund quota for one email.
+    repo.refund_ip_quota(&ip, email).await?;
+
+    let used_ip_quota = con.get::<String, u64>(to_used_ip_quota_key(&ip)).await?;
+
+    // But still quote is used once.
+    assert_eq!(used_ip_quota, 1);
+
     Ok(())
 }
