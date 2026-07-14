@@ -431,7 +431,7 @@ mod tests {
     use super::{
         change_primary_email, logout, retry_signup, signup_and_login, taken_username_or_email,
     };
-    use crate::util::{TestState, pg_pool_from_env, redis_client_from_env};
+    use crate::util::{TestState, pg_pool_from_env, redis_con_generator_from_env};
     use service::handlers::HandlerResult;
     use state::{AccountRepoImpl, TokenRepoImpl};
 
@@ -470,10 +470,10 @@ mod tests {
     #[serial_test::serial]
     async fn repo() -> HandlerResult<()> {
         let pg_pool = pg_pool_from_env().await;
-        let redis = redis_client_from_env().await;
+        let con_generator = redis_con_generator_from_env().await;
 
         let account_repo = AccountRepoImpl::boxed_new(pg_pool);
-        let token_repo = TokenRepoImpl::boxed_new(redis);
+        let token_repo = TokenRepoImpl::boxed_new(&con_generator).await;
 
         let ctx = TestState::new()
             .with_account_repo(account_repo)

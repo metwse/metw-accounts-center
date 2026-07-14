@@ -13,12 +13,15 @@ pub async fn pg_pool_from_env() -> sqlx::PgPool {
 }
 
 /// Initializes a Redis client from `REDIS_URL` enviroment variable.
-pub async fn redis_client_from_env() -> redis::aio::MultiplexedConnection {
+pub async fn redis_con_generator_from_env()
+-> Box<impl AsyncFn() -> redis::aio::MultiplexedConnection> {
     dotenvy::dotenv_override().ok();
 
-    redis::Client::open(std::env::var("REDIS_URL").unwrap())
-        .unwrap()
-        .get_multiplexed_async_connection()
-        .await
-        .unwrap()
+    Box::new(async move || {
+        redis::Client::open(std::env::var("REDIS_URL").unwrap())
+            .unwrap()
+            .get_multiplexed_async_connection()
+            .await
+            .unwrap()
+    })
 }

@@ -11,16 +11,23 @@ use service::{
     },
 };
 use std::{net::IpAddr, time::Duration};
+use tokio::sync::Mutex;
 
 /// Email limiting repository using Redis.
 pub struct EmailLimitingRepoImpl {
     con: MultiplexedConnection,
+    transaction_con_check_and_consume_quota: Mutex<MultiplexedConnection>,
+    transaction_con_refund_ip_quota: Mutex<MultiplexedConnection>,
 }
 
 impl EmailLimitingRepoImpl {
     /// Creates a new token repository.
-    pub fn boxed_new(con: MultiplexedConnection) -> Box<Self> {
-        Box::new(Self { con })
+    pub async fn boxed_new(con_generator: &impl AsyncFn() -> MultiplexedConnection) -> Box<Self> {
+        Box::new(Self {
+            con: con_generator().await,
+            transaction_con_check_and_consume_quota: Mutex::new(con_generator().await),
+            transaction_con_refund_ip_quota: Mutex::new(con_generator().await),
+        })
     }
 }
 
@@ -31,7 +38,11 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
         ip: &IpAddr,
         email: &str,
     ) -> RepoResult<dto::repo::EmailLimitingResult> {
-        let con = self.con.clone();
+        let con = self
+            .transaction_con_check_and_consume_quota
+            .lock()
+            .await
+            .clone();
 
         let used_email_quota_key = to_used_email_quota_key(email);
         let block_email_key = to_block_email_key(email);
@@ -147,7 +158,7 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
     }
 
     async fn refund_ip_quota(&self, ip: &IpAddr, email: &str) -> RepoResult<()> {
-        let con = self.con.clone();
+        let con = self.transaction_con_refund_ip_quota.lock().await.clone();
 
         let used_ip_quota_key = to_used_ip_quota_key(ip);
         let block_ip_key = to_block_ip_key(ip);
@@ -163,16 +174,16 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
 
                 async move {
                     let existing_used_ip_quota: Option<i64> = con.get(&used_ip_quota_key).await?;
-                    let existing_used_ip_quota_ttl: i64 = con.ttl(&used_ip_quota_key).await?;
+                    let existing_used_ip_quota_ttl: u64 = con.pttl(&used_ip_quota_key).await?;
                     let block_ip_for: Option<String> = con.get(&block_ip_key).await?;
 
                     let pipe = if let Some(existing_used_ip_quota) = existing_used_ip_quota
                         && existing_used_ip_quota > 1
                     {
-                        pipe.set_ex(
+                        pipe.pset_ex(
                             &used_ip_quota_key,
                             existing_used_ip_quota - 1,
-                            existing_used_ip_quota_ttl.unsigned_abs(),
+                            existing_used_ip_quota_ttl,
                         )
                         .ignore()
                     } else {

@@ -8,16 +8,21 @@ use service::{
     token::{DecodedToken, TokenScope},
 };
 use std::time::Duration;
+use tokio::sync::Mutex;
 
 /// Token repository using Redis.
 pub struct TokenRepoImpl {
     con: MultiplexedConnection,
+    transaction_con_update_token_cutoff_time: Mutex<MultiplexedConnection>,
 }
 
 impl TokenRepoImpl {
     /// Creates a new token repository.
-    pub fn boxed_new(con: MultiplexedConnection) -> Box<Self> {
-        Box::new(Self { con })
+    pub async fn boxed_new(con_generator: &impl AsyncFn() -> MultiplexedConnection) -> Box<Self> {
+        Box::new(Self {
+            con: con_generator().await,
+            transaction_con_update_token_cutoff_time: Mutex::new(con_generator().await),
+        })
     }
 }
 
@@ -133,7 +138,11 @@ impl TokenRepoImpl {
         key: String,
         expiration: Duration,
     ) -> RepoResult<Option<DateTime<Utc>>> {
-        let con = self.con.clone();
+        let con = self
+            .transaction_con_update_token_cutoff_time
+            .lock()
+            .await
+            .clone();
 
         let previous_token_cutoff_time: (Option<i64>,) =
             redis::aio::transaction_async(con, &[&key], |mut con, mut pipe| {

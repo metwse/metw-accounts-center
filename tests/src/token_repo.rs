@@ -181,7 +181,7 @@ pub async fn account_token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
 #[cfg(test)]
 mod tests {
     use super::{account_token_revocation, check_and_revoke, token_revocation_data_race};
-    use crate::util::redis_client_from_env;
+    use crate::util::redis_con_generator_from_env;
     use service::repo::{RepoResult, TokenRepo, mock::MockTokenRepoImpl};
     use state::TokenRepoImpl;
 
@@ -208,8 +208,8 @@ mod tests {
     #[ignore]
     #[serial_test::serial]
     async fn token_repo() -> RepoResult<()> {
-        let redis = redis_client_from_env().await;
+        let con_generator = redis_con_generator_from_env().await;
 
-        testsuite(TokenRepoImpl::boxed_new(redis.clone()).as_ref()).await
+        testsuite(TokenRepoImpl::boxed_new(&con_generator).await.as_ref()).await
     }
 }
