@@ -138,10 +138,7 @@ impl TokenRepoImpl {
         key: String,
         expiration: Duration,
     ) -> RepoResult<Option<DateTime<Utc>>> {
-        let transaction_con_guard = self
-            .transaction_con_update_token_cutoff_time
-            .lock()
-            .await;
+        let transaction_con_guard = self.transaction_con_update_token_cutoff_time.lock().await;
         let con = transaction_con_guard.clone();
 
         let previous_token_cutoff_time: (Option<i64>,) =

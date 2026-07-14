@@ -4,9 +4,9 @@ use crate::{
     middleware::{auth::GovernorAccountIdKeyExtractor, limiter},
     res::{AppJson, AppResult},
 };
-use axum::{Router, extract::State, routing::post};
+use axum::{Extension, Router, extract::State, routing::post};
 use service::{AppState, dto, handlers::AuthorizationHandler};
-use std::time::Duration;
+use std::{net::IpAddr, time::Duration};
 use utoipa::OpenApi;
 
 #[utoipa::path(
@@ -18,9 +18,12 @@ use utoipa::OpenApi;
 )]
 async fn auth(
     State(state): State<AppState>,
+    Extension(real_ip): Extension<IpAddr>,
     AppJson(token_dto): AppJson<dto::request::Token>,
 ) -> AppResult<()> {
-    Ok(AppJson(AuthorizationHandler(state).auth(token_dto).await?))
+    Ok(AppJson(
+        AuthorizationHandler(state).auth(token_dto, real_ip).await?,
+    ))
 }
 
 pub fn routes(state: AppState) -> Router {

@@ -91,7 +91,6 @@ async fn logout(
 
 pub fn routes(state: AppState) -> Router {
     // TODO: Add dummy delay to prevent timing attacks.
-    // TODO: Connect CAPTCHA.
     Router::new()
         .route("/signup", post(signup))
         .route("/login/email", post(login_with_email))

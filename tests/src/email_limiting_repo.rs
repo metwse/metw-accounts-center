@@ -10,6 +10,10 @@ pub async fn email_limiting(repo: &dyn EmailLimitingRepo) -> RepoResult<()> {
     let ip = random_ipv6();
     let email = random_email();
 
+    // Refund quotas that are never set.
+    repo.refund_ip_quota(&ip, email).await?;
+    repo.clear_email_limit(email).await?;
+
     assert_matches!(
         repo.check_and_consume_quota(&ip, email).await?,
         EmailLimitingResult::Allowed
