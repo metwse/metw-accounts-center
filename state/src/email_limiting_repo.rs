@@ -38,11 +38,11 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
         ip: &IpAddr,
         email: &str,
     ) -> RepoResult<dto::repo::EmailLimitingResult> {
-        let con = self
+        let transaction_con_guard = self
             .transaction_con_check_and_consume_quota
             .lock()
-            .await
-            .clone();
+            .await;
+        let con = transaction_con_guard.clone();
 
         let used_email_quota_key = to_used_email_quota_key(email);
         let block_email_key = to_block_email_key(email);
@@ -158,7 +158,8 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
     }
 
     async fn refund_ip_quota(&self, ip: &IpAddr, email: &str) -> RepoResult<()> {
-        let con = self.transaction_con_refund_ip_quota.lock().await.clone();
+        let transaction_con_guard = self.transaction_con_refund_ip_quota.lock().await;
+        let con = transaction_con_guard.clone();
 
         let used_ip_quota_key = to_used_ip_quota_key(ip);
         let block_ip_key = to_block_ip_key(ip);
