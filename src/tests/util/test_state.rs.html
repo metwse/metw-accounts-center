@@ -127,52 +127,55 @@
 <a href=#127 id=127 data-nosnippet>127</a>        };
 <a href=#128 id=128 data-nosnippet>128</a>
 <a href=#129 id=129 data-nosnippet>129</a>        AuthorizationHandler(<span class="self">self</span>.state.clone())
-<a href=#130 id=130 data-nosnippet>130</a>            .auth(dto::request::Token {
-<a href=#131 id=131 data-nosnippet>131</a>                token: complete_signup_jwt,
-<a href=#132 id=132 data-nosnippet>132</a>            })
-<a href=#133 id=133 data-nosnippet>133</a>            .<span class="kw">await
-<a href=#134 id=134 data-nosnippet>134</a>            </span>.unwrap();
-<a href=#135 id=135 data-nosnippet>135</a>        tokio::time::sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
-<a href=#136 id=136 data-nosnippet>136</a>
-<a href=#137 id=137 data-nosnippet>137</a>        (account_id, username, email)
-<a href=#138 id=138 data-nosnippet>138</a>    }
+<a href=#130 id=130 data-nosnippet>130</a>            .auth(
+<a href=#131 id=131 data-nosnippet>131</a>                dto::request::Token {
+<a href=#132 id=132 data-nosnippet>132</a>                    token: complete_signup_jwt,
+<a href=#133 id=133 data-nosnippet>133</a>                },
+<a href=#134 id=134 data-nosnippet>134</a>                random_ipv6(),
+<a href=#135 id=135 data-nosnippet>135</a>            )
+<a href=#136 id=136 data-nosnippet>136</a>            .<span class="kw">await
+<a href=#137 id=137 data-nosnippet>137</a>            </span>.unwrap();
+<a href=#138 id=138 data-nosnippet>138</a>        tokio::time::sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
 <a href=#139 id=139 data-nosnippet>139</a>
-<a href=#140 id=140 data-nosnippet>140</a>    <span class="doccomment">/// Login with username.
-<a href=#141 id=141 data-nosnippet>141</a>    </span><span class="kw">pub async fn </span>login_with_username(
-<a href=#142 id=142 data-nosnippet>142</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#143 id=143 data-nosnippet>143</a>        username: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
-<a href=#144 id=144 data-nosnippet>144</a>        client_password_hash: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
-<a href=#145 id=145 data-nosnippet>145</a>    ) -&gt; HandlerResult&lt;String&gt; {
-<a href=#146 id=146 data-nosnippet>146</a>        AuthenticationHandler(<span class="self">self</span>.state.clone())
-<a href=#147 id=147 data-nosnippet>147</a>            .login_with_username(dto::request::LoginWithUsername {
-<a href=#148 id=148 data-nosnippet>148</a>                username: username.to_string(),
-<a href=#149 id=149 data-nosnippet>149</a>                client_password_hash: client_password_hash.to_string(),
-<a href=#150 id=150 data-nosnippet>150</a>            })
-<a href=#151 id=151 data-nosnippet>151</a>            .<span class="kw">await
-<a href=#152 id=152 data-nosnippet>152</a>            </span>.map(|jwt| jwt.token)
-<a href=#153 id=153 data-nosnippet>153</a>    }
-<a href=#154 id=154 data-nosnippet>154</a>
-<a href=#155 id=155 data-nosnippet>155</a>    <span class="doccomment">/// Login with email.
-<a href=#156 id=156 data-nosnippet>156</a>    </span><span class="kw">pub async fn </span>login_with_email(
-<a href=#157 id=157 data-nosnippet>157</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#158 id=158 data-nosnippet>158</a>        email: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
-<a href=#159 id=159 data-nosnippet>159</a>        client_password_hash: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
-<a href=#160 id=160 data-nosnippet>160</a>    ) -&gt; HandlerResult&lt;String&gt; {
-<a href=#161 id=161 data-nosnippet>161</a>        AuthenticationHandler(<span class="self">self</span>.state.clone())
-<a href=#162 id=162 data-nosnippet>162</a>            .login_with_email(dto::request::LoginWithEmail {
-<a href=#163 id=163 data-nosnippet>163</a>                email: email.to_string(),
-<a href=#164 id=164 data-nosnippet>164</a>                client_password_hash: client_password_hash.to_string(),
-<a href=#165 id=165 data-nosnippet>165</a>            })
-<a href=#166 id=166 data-nosnippet>166</a>            .<span class="kw">await
-<a href=#167 id=167 data-nosnippet>167</a>            </span>.map(|jwt| jwt.token)
-<a href=#168 id=168 data-nosnippet>168</a>    }
-<a href=#169 id=169 data-nosnippet>169</a>
-<a href=#170 id=170 data-nosnippet>170</a>    <span class="doccomment">/// Get the last email sent to the account.
-<a href=#171 id=171 data-nosnippet>171</a>    </span><span class="kw">pub async fn </span>last_email(<span class="kw-2">&amp;</span><span class="self">self</span>, account_id: AccountId) -&gt; emails::Template {
-<a href=#172 id=172 data-nosnippet>172</a>        <span class="kw">let </span>emails = <span class="self">self</span>.emails.lock().<span class="kw">await</span>;
-<a href=#173 id=173 data-nosnippet>173</a>        <span class="kw">let </span>mailbox = emails.get(<span class="kw-2">&amp;</span>account_id).unwrap();
-<a href=#174 id=174 data-nosnippet>174</a>
-<a href=#175 id=175 data-nosnippet>175</a>        mailbox.last().unwrap().clone()
-<a href=#176 id=176 data-nosnippet>176</a>    }
-<a href=#177 id=177 data-nosnippet>177</a>}
+<a href=#140 id=140 data-nosnippet>140</a>        (account_id, username, email)
+<a href=#141 id=141 data-nosnippet>141</a>    }
+<a href=#142 id=142 data-nosnippet>142</a>
+<a href=#143 id=143 data-nosnippet>143</a>    <span class="doccomment">/// Login with username.
+<a href=#144 id=144 data-nosnippet>144</a>    </span><span class="kw">pub async fn </span>login_with_username(
+<a href=#145 id=145 data-nosnippet>145</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#146 id=146 data-nosnippet>146</a>        username: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+<a href=#147 id=147 data-nosnippet>147</a>        client_password_hash: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+<a href=#148 id=148 data-nosnippet>148</a>    ) -&gt; HandlerResult&lt;String&gt; {
+<a href=#149 id=149 data-nosnippet>149</a>        AuthenticationHandler(<span class="self">self</span>.state.clone())
+<a href=#150 id=150 data-nosnippet>150</a>            .login_with_username(dto::request::LoginWithUsername {
+<a href=#151 id=151 data-nosnippet>151</a>                username: username.to_string(),
+<a href=#152 id=152 data-nosnippet>152</a>                client_password_hash: client_password_hash.to_string(),
+<a href=#153 id=153 data-nosnippet>153</a>            })
+<a href=#154 id=154 data-nosnippet>154</a>            .<span class="kw">await
+<a href=#155 id=155 data-nosnippet>155</a>            </span>.map(|jwt| jwt.token)
+<a href=#156 id=156 data-nosnippet>156</a>    }
+<a href=#157 id=157 data-nosnippet>157</a>
+<a href=#158 id=158 data-nosnippet>158</a>    <span class="doccomment">/// Login with email.
+<a href=#159 id=159 data-nosnippet>159</a>    </span><span class="kw">pub async fn </span>login_with_email(
+<a href=#160 id=160 data-nosnippet>160</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#161 id=161 data-nosnippet>161</a>        email: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+<a href=#162 id=162 data-nosnippet>162</a>        client_password_hash: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+<a href=#163 id=163 data-nosnippet>163</a>    ) -&gt; HandlerResult&lt;String&gt; {
+<a href=#164 id=164 data-nosnippet>164</a>        AuthenticationHandler(<span class="self">self</span>.state.clone())
+<a href=#165 id=165 data-nosnippet>165</a>            .login_with_email(dto::request::LoginWithEmail {
+<a href=#166 id=166 data-nosnippet>166</a>                email: email.to_string(),
+<a href=#167 id=167 data-nosnippet>167</a>                client_password_hash: client_password_hash.to_string(),
+<a href=#168 id=168 data-nosnippet>168</a>            })
+<a href=#169 id=169 data-nosnippet>169</a>            .<span class="kw">await
+<a href=#170 id=170 data-nosnippet>170</a>            </span>.map(|jwt| jwt.token)
+<a href=#171 id=171 data-nosnippet>171</a>    }
+<a href=#172 id=172 data-nosnippet>172</a>
+<a href=#173 id=173 data-nosnippet>173</a>    <span class="doccomment">/// Get the last email sent to the account.
+<a href=#174 id=174 data-nosnippet>174</a>    </span><span class="kw">pub async fn </span>last_email(<span class="kw-2">&amp;</span><span class="self">self</span>, account_id: AccountId) -&gt; emails::Template {
+<a href=#175 id=175 data-nosnippet>175</a>        <span class="kw">let </span>emails = <span class="self">self</span>.emails.lock().<span class="kw">await</span>;
+<a href=#176 id=176 data-nosnippet>176</a>        <span class="kw">let </span>mailbox = emails.get(<span class="kw-2">&amp;</span>account_id).unwrap();
+<a href=#177 id=177 data-nosnippet>177</a>
+<a href=#178 id=178 data-nosnippet>178</a>        mailbox.last().unwrap().clone()
+<a href=#179 id=179 data-nosnippet>179</a>    }
+<a href=#180 id=180 data-nosnippet>180</a>}
 </code></pre></div></section></main></body></html>
