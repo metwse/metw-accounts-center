@@ -2,7 +2,7 @@
 
 use crate::{
     middleware::{
-        auth::{ApiDocAuthAddon, auth_email_verification_session},
+        auth::{ApiDocAuthAddon, GovernorAccountIdKeyExtractor, auth_email_verification_session},
         extract_real_ip::GovernorIpKeyExtractor,
         limiter,
     },
@@ -44,8 +44,12 @@ async fn retry_signup(
 pub fn routes(state: AppState) -> Router {
     Router::new()
         .route("/signup/retry", post(retry_signup))
-        .layer(limiter::basic::<GovernorIpKeyExtractor>(
+        .layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
             2,
+            Duration::from_secs(5),
+        ))
+        .layer(limiter::basic::<GovernorIpKeyExtractor>(
+            5,
             Duration::from_secs(5),
         ))
         .route_layer(middleware::from_fn_with_state(
