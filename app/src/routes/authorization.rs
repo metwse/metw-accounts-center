@@ -1,7 +1,7 @@
 //! See [`AuthorizationHandler`].
 
 use crate::{
-    middleware::{auth::GovernorAccountIdKeyExtractor, limiter},
+    middleware::{extract_real_ip::GovernorIpKeyExtractor, limiter},
     res::{AppJson, AppResult},
 };
 use axum::{Extension, Router, extract::State, routing::post};
@@ -29,7 +29,7 @@ async fn auth(
 pub fn routes(state: AppState) -> Router {
     Router::new()
         .route("/auth", post(auth))
-        .layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
+        .layer(limiter::basic::<GovernorIpKeyExtractor>(
             2,
             Duration::from_secs(5),
         ))

@@ -1,5 +1,6 @@
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use serde::{Deserialize, Serialize};
+use serde_with::{DisplayFromStr, serde_as};
 use std::{
     sync::{LazyLock, Mutex},
     time::Duration,
@@ -13,8 +14,27 @@ macro_rules! id_newtype {
             #[doc = "Unique "]
             #[doc = stringify!($name)]
             #[doc = " identifier."]
+            #[serde_as]
             #[derive(Debug, Serialize, Deserialize, Clone, Copy, Default, Hash, PartialEq, Eq, sqlx::Decode, sqlx::Encode)]
-            pub struct [< $name Id >](i64);
+            pub struct [< $name Id >](
+                #[serde_as(as = "DisplayFromStr")]
+                i64
+            );
+
+            impl utoipa::ToSchema for [< $name Id >] {
+                fn name() -> std::borrow::Cow<'static, str> {
+                    std::borrow::Cow::Borrowed("String")
+                }
+            }
+
+            impl utoipa::PartialSchema for [< $name Id >] {
+                fn schema() -> utoipa::openapi::RefOr<utoipa::openapi::schema::Schema> {
+                    utoipa::openapi::schema::Object::builder()
+                        .schema_type(utoipa::openapi::schema::Type::String)
+                        .into()
+                }
+            }
+
 
             impl std::fmt::Display for [< $name Id >] {
                 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

@@ -1,4 +1,5 @@
 use super::repo;
+use crate::id::AccountId;
 use serde::Serialize;
 use utoipa::ToSchema;
 
@@ -6,7 +7,7 @@ use utoipa::ToSchema;
 #[derive(Debug, Serialize, ToSchema)]
 pub struct Account {
     /// Unique user id.
-    pub id: i64,
+    pub id: AccountId,
 
     /// User's primary username, if exists.
     pub username: Option<String>,

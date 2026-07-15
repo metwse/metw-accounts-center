@@ -119,7 +119,7 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
 
     let me = account_service.me(account_id).await?;
 
-    assert!(me.id == i64::from(account_id));
+    assert!(me.id == account_id);
     assert!(me.username.unwrap() == username);
     assert!(me.email.unwrap() == email);
     assert!(me.secondary_emails.is_empty());
