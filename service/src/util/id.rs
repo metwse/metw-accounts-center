@@ -63,7 +63,7 @@ macro_rules! id_newtype {
             impl [< $name Id >] {
                 /// Generates a new unique ID using the snowflake algorithm.
                 pub fn unique() -> Self {
-                    [< $name Id >](internal_snowflake())
+                    [< $name Id >](snowflake())
                 }
             }
         }
@@ -107,13 +107,7 @@ static GLOBAL_STATE: Mutex<SnowflakeState> = Mutex::new(SnowflakeState {
 /// | Timestamp | 22 to 63 | Milliseconds since metw.cc [`EPOCH`] |
 /// | Reserved for future use | 12 to 21 | |
 /// | Increment | 0 to 11 | For every ID that is generated, this number is incremented |
-#[cfg(any(feature = "testutil", test))]
-#[cfg_attr(docsrs, doc(cfg(feature = "testutil")))]
 pub fn snowflake() -> i64 {
-    internal_snowflake()
-}
-
-fn internal_snowflake() -> i64 {
     let timestamp = checked_now().timestamp_millis() - *EPOCH as i64;
 
     // Ensure the time is not yet May 15 2109 07:35:11
@@ -125,7 +119,7 @@ fn internal_snowflake() -> i64 {
         drop(state);
 
         std::thread::sleep(Duration::from_millis(1));
-        return internal_snowflake();
+        return snowflake();
     }
 
     if state.increment == 0 {

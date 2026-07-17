@@ -29,6 +29,11 @@ pub fn minimize_email_templates() {
     let out_dir = Path::new(&out_dir);
 
     for (template_name, mut value) in templates.into_iter() {
+        value.insert(
+            "callback_not_minimized".to_string(),
+            r#"href="{callback_url}{token}""#.to_string(),
+        );
+
         let html = strfmt::strfmt(&html_template, &value).unwrap();
         let text = strfmt::strfmt(text_template, &value).unwrap();
         let subject = value.remove("subject").unwrap();
@@ -37,8 +42,8 @@ pub fn minimize_email_templates() {
         let text_file = out_dir.join(format!("email-templates_{template_name}.txt"));
         let subject_file = out_dir.join(format!("email-templates_{template_name}-subject.txt"));
 
-        writeln!(File::create(&html_file).unwrap(), "{html}").unwrap();
-        writeln!(File::create(&text_file).unwrap(), "{text}").unwrap();
-        writeln!(File::create(&subject_file).unwrap(), "{subject}").unwrap();
+        write!(File::create(&html_file).unwrap(), "{html}").unwrap();
+        write!(File::create(&text_file).unwrap(), "{text}").unwrap();
+        write!(File::create(&subject_file).unwrap(), "{subject}").unwrap();
     }
 }
