@@ -3,7 +3,11 @@ use lettre::{
     AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor,
     message::{Mailbox, MultiPart},
 };
-use service::{client::EmailClient, id::AccountId, util::emails};
+use service::{
+    client::EmailClient,
+    id::{AccountId, snowflake},
+    util::emails,
+};
 use tracing::{error, trace};
 
 /// Email client for sending emails.
@@ -43,6 +47,7 @@ impl EmailClient for LettreEmailClientImpl {
 
         let Ok(msg) = Message::builder()
             .from(self.from_address.clone())
+            .message_id(Some(format!("<{}-{}>", snowflake(), self.from_address)))
             .to(dest)
             .subject(template.subject())
             .multipart(MultiPart::alternative_plain_html(

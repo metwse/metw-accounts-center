@@ -1,8 +1,8 @@
 [confirm-signup]
- subject = "Verify your metw.cc account"
- text = "To complete your registration and verify your email address, please click the link below:"
- button_text = "Verify Email"
- extra_text = "If you did not create this account, please safely ignore this message."
+subject = "Verify your metw.cc account"
+text = "To complete your registration and verify your email address, please click the link below:"
+button_text = "Verify Email"
+extra_text = "If you did not create this account, please safely ignore this message."
 
 [confirm-new-email]
 subject = "Add email to your metw.cc account"
