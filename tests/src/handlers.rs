@@ -485,7 +485,6 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     #[test_log::test]
     #[ignore]
-    #[serial_test::serial]
     async fn repo() -> HandlerResult<()> {
         let pg_pool = pg_pool_from_env().await;
         let con_generator = redis_con_generator_from_env().await;

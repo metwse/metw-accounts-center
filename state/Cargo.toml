@@ -34,7 +34,6 @@ tokio = { workspace = true, features = ["full"] }
 futures-util = { workspace = true }
 
 test-log = { workspace = true, features = ["trace"] }
-serial_test = { workspace = true }
 
 tracing-subscriber = { workspace = true, features = ["fmt"] }
 

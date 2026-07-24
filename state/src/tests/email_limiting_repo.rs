@@ -11,7 +11,6 @@ use tests::util::redis_con_generator_from_env;
 #[tokio::test]
 #[test_log::test]
 #[ignore]
-#[serial_test::serial]
 async fn email_limiting_repo() -> RepoResult<()> {
     let con_generator = redis_con_generator_from_env().await;
     let repo = EmailLimitingRepoImpl::boxed_new(&con_generator).await;

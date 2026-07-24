@@ -276,7 +276,6 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     #[test_log::test]
     #[ignore]
-    #[serial_test::serial]
     async fn account_repo() -> ServiceResult<()> {
         let pool = pg_pool_from_env().await;
 
