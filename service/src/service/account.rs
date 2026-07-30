@@ -3,7 +3,7 @@ use crate::{dto, entity, id::AccountId, repo::AccountRepo, util::password};
 
 const PBKDF2_SALT_DEFAULT: &str = "metw-accounts-center";
 const PBKDF2_ITERATIONS_DEFAULT: u32 = 500_000;
-const PBKDF2_LENGTH_DEFAULT: u32 = 500_000;
+const PBKDF2_LENGTH_DEFAULT: u32 = 256;
 
 /// Account state.
 pub struct AccountService {

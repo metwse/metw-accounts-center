@@ -28,7 +28,7 @@
 //!
 //! | Function Example | Type | Description |
 //! |--|--|--|
-//! | [`insert_account`] | ipsert | Inserts a new user. |
+//! | [`insert_account`] | insert | Inserts a new user. |
 //! | [`insert_default_flags`] | insert | Inserts default user flags. |
 //!
 //! - `*Repo` variants that return a single item like "fetch one" do not return
