@@ -13,8 +13,6 @@ use std::{sync::LazyLock, time::Instant};
 use tower_http::trace::TraceLayer;
 use utoipa::{OpenApi, ToSchema};
 
-use crate::res::AppError;
-
 /// API routes.
 pub mod routes;
 
@@ -82,6 +80,6 @@ pub fn app(state: AppState) -> Router {
         .route_layer(axum::middleware::from_fn(
             middleware::extract_real_ip::extract_real_ip,
         ))
-        .fallback(async || AppError::NotFound)
+        .fallback(async || res::AppError::NotFound)
         .layer(TraceLayer::new_for_http())
 }

@@ -42,7 +42,7 @@ impl EmailVerificationSessionHandler {
         let email = email_dto.email;
 
         if self.0.account_service.is_email_taken(&email).await? {
-            return Err(ServiceError::EmailTaken)?;
+            return Err(HandlerError::Service(ServiceError::EmailTaken));
         }
 
         let Some(username) = self.0.account_service.get_primary_username(id).await? else {

@@ -48,7 +48,7 @@ impl SessionHandler {
         );
 
         if is_email_taken_res? {
-            return Err(ServiceError::EmailTaken)?;
+            return Err(HandlerError::Service(ServiceError::EmailTaken));
         }
 
         let Some(username) = username_res? else {
@@ -130,7 +130,7 @@ impl SessionHandler {
         };
 
         if current_primary_email == new_primary_email {
-            return Err(HandlerError::AlreadyPrimaryEmail)?;
+            return Err(HandlerError::AlreadyPrimaryEmail);
         }
 
         if !self
@@ -139,7 +139,7 @@ impl SessionHandler {
             .is_email_taken_by(id, &new_primary_email)
             .await?
         {
-            return Err(ServiceError::EmailNotFound)?;
+            return Err(HandlerError::Service(ServiceError::EmailNotFound));
         };
 
         let change_primary_email_jwt = self.0.token_service.sign(&Token {

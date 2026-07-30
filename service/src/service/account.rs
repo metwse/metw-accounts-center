@@ -122,7 +122,7 @@ impl AccountService {
         };
 
         Ok(dto::response::Account {
-            id: id.into(),
+            id,
 
             username,
             email,
