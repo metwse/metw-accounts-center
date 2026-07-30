@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, password_hash,\n                    server_password_hash_algorithm AS\n                        \"server_password_hash_algorithm: ServerPasswordHashAlgorithmJson\"\n                FROM accounts\n                WHERE id = (SELECT account_id FROM emails WHERE email = $1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "password_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "server_password_hash_algorithm: ServerPasswordHashAlgorithmJson",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "4384a0d9423ec0a4df3959bd3d1963c85d2da151fb81e83d83a13afb1a9d7314"
+}

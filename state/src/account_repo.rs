@@ -1,10 +1,10 @@
 use async_trait::async_trait;
 use service::{
-    dto,
+    dto, entity,
     id::AccountId,
     repo::{AccountRepo, AccountRepoTransaction, RepoResult},
 };
-use sqlx::{PgPool, PgTransaction};
+use sqlx::{PgPool, PgTransaction, types::Json};
 
 /// Account repository using PostgreSQL.
 pub struct AccountRepoImpl {
@@ -30,36 +30,64 @@ impl AccountRepo for AccountRepoImpl {
         &self,
         email: &str,
     ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
-        let login = sqlx::query_as!(
-            dto::repo::OwnedLoginCredentials,
-            r#"SELECT id, password_hash, true AS "is_email_verified!"
+        type ServerPasswordHashAlgorithmJson =
+            sqlx::types::Json<entity::ServerPasswordHashAlgorithm>;
+
+        let Some(login) = sqlx::query!(
+            r#"SELECT id, password_hash,
+                    server_password_hash_algorithm AS
+                        "server_password_hash_algorithm: ServerPasswordHashAlgorithmJson"
                 FROM accounts
                 WHERE id = (SELECT account_id FROM emails WHERE email = $1)"#,
             email
         )
         .fetch_optional(&self.pool)
-        .await;
+        .await?
+        else {
+            return Ok(None);
+        };
 
-        Ok(login?)
+        let login = dto::repo::OwnedLoginCredentials {
+            id: login.id.into(),
+            is_email_verified: true,
+            password_hash: login.password_hash,
+            server_password_hash_algorithm: login.server_password_hash_algorithm.0,
+        };
+
+        Ok(Some(login))
     }
 
     async fn get_login_credentials_by_username(
         &self,
         username: &str,
     ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
-        let login = sqlx::query_as!(
-            dto::repo::OwnedLoginCredentials,
+        type ServerPasswordHashAlgorithmJson =
+            sqlx::types::Json<entity::ServerPasswordHashAlgorithm>;
+
+        let Some(login) = sqlx::query!(
             r#"SELECT id, password_hash,
                     (SELECT is_email_verified FROM account_flags
-                        WHERE account_flags.id = accounts.id) AS "is_email_verified!"
+                        WHERE account_flags.id = accounts.id) AS "is_email_verified!",
+                    server_password_hash_algorithm AS
+                        "server_password_hash_algorithm: ServerPasswordHashAlgorithmJson"
                 FROM accounts
                 WHERE id = (SELECT account_id FROM usernames WHERE username = $1 AND expires_at IS NULL)"#,
             username
         )
         .fetch_optional(&self.pool)
-        .await;
+        .await?
+        else {
+            return Ok(None);
+        };
 
-        Ok(login?)
+        let login = dto::repo::OwnedLoginCredentials {
+            id: login.id.into(),
+            is_email_verified: login.is_email_verified,
+            password_hash: login.password_hash,
+            server_password_hash_algorithm: login.server_password_hash_algorithm.0,
+        };
+
+        Ok(Some(login))
     }
 
     async fn get_primary_username(&self, id: AccountId) -> RepoResult<Option<String>> {
@@ -106,19 +134,6 @@ impl AccountRepo for AccountRepoImpl {
         .await;
 
         Ok(emails?)
-    }
-
-    async fn get_keys(&self, id: AccountId) -> RepoResult<Option<dto::repo::OwnedKeys>> {
-        let keys = sqlx::query_as!(
-            dto::repo::OwnedKeys,
-            "SELECT identity_key, encrypted_private_key, encrypted_master_key FROM accounts
-                WHERE id = $1",
-            id as _
-        )
-        .fetch_optional(&self.pool)
-        .await;
-
-        Ok(keys?)
     }
 
     async fn set_primary_email_if_current_is(
@@ -234,22 +249,36 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         Ok(())
     }
 
-    async fn upsert_account(
-        &mut self,
-        id: AccountId,
-        password_hash: &str,
-        keys: &dto::repo::Keys,
-    ) -> RepoResult<()> {
+    async fn upsert_account(&mut self, id: AccountId, password_hash: &str) -> RepoResult<()> {
+        let client_password_kdf = Json(entity::ClientPasswordKdf::Pbkdf2Sha256 {
+            salt: "metw-accounts-center".to_string(),
+            iterations: 500000,
+            length: 256,
+        });
+        let server_password_hash_algorithm = Json(entity::ServerPasswordHashAlgorithm::Argon2id);
+
+        let master_key_kek_kdf = Json(entity::ClientPasswordKdf::None);
+        let master_key_encryption_algorithm = Json(entity::MasterKeyEncrpytionAlgorithm::None);
+        let encrypted_master_key: Option<Vec<_>> = None;
+
         sqlx::query!(
-            "INSERT INTO accounts (id, password_hash, identity_key, encrypted_master_key, encrypted_private_key)
-                VALUES ($1, $2, $3, $4, $5)
+            "INSERT INTO accounts (
+                    id,
+                    client_password_kdf, server_password_hash_algorithm, password_hash,
+                    master_key_kek_kdf, master_key_encryption_algorithm, encrypted_master_key
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
                 ON CONFLICT (id)
-                DO UPDATE SET password_hash = $2, identity_key = $3, encrypted_master_key = $4, encrypted_private_key = $5",
+                DO UPDATE SET
+                    client_password_kdf = $2, server_password_hash_algorithm = $3, password_hash = $4,
+                    master_key_kek_kdf = $5, master_key_encryption_algorithm = $6, encrypted_master_key = $7
+                ",
             id as _,
+            client_password_kdf as _,
+            server_password_hash_algorithm as _,
             password_hash,
-            keys.identity_key,
-            keys.encrypted_master_key,
-            keys.encrypted_private_key
+            master_key_kek_kdf as _,
+            master_key_encryption_algorithm as _,
+            encrypted_master_key,
         )
         .execute(&mut *self.tx)
         .await?;

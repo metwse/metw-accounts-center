@@ -1,5 +1,5 @@
 use super::{ServiceError, ServiceResult};
-use crate::{dto, id::AccountId, repo::AccountRepo, util::password};
+use crate::{dto, entity, id::AccountId, repo::AccountRepo, util::password};
 
 /// Account state.
 pub struct AccountService {
@@ -32,17 +32,9 @@ impl AccountService {
 
         let mut transaction = self.repo.begin_transaction().await?;
 
-        let keys = dto::repo::Keys {
-            identity_key: &signup_dto.keys.identity_key,
-            encrypted_private_key: &signup_dto.keys.encrypted_private_key,
-            encrypted_master_key: &signup_dto.keys.encrypted_master_key,
-        };
-
         let id = AccountId::unique();
 
-        transaction
-            .upsert_account(id, &password_hash, &keys)
-            .await?;
+        transaction.upsert_account(id, &password_hash).await?;
 
         transaction.insert_default_flags(id).await?;
 
@@ -61,7 +53,23 @@ impl AccountService {
         login_credentails: &dto::repo::OwnedLoginCredentials,
         client_password_hash: &str,
     ) -> ServiceResult<dto::service::Login> {
-        if password::check(client_password_hash, &login_credentails.password_hash).await {
+        let Some(password_hash) = &login_credentails.password_hash else {
+            return Err(ServiceError::InvalidCredentials);
+        };
+
+        if match login_credentails.server_password_hash_algorithm {
+            entity::ServerPasswordHashAlgorithm::None if client_password_hash == password_hash => {
+                true
+            }
+
+            entity::ServerPasswordHashAlgorithm::Argon2id
+                if password::check(client_password_hash, password_hash).await =>
+            {
+                true
+            }
+
+            _ => false,
+        } {
             Ok(dto::service::Login {
                 id: login_credentails.id,
                 is_email_verified: login_credentails.is_email_verified,
@@ -109,17 +117,12 @@ impl AccountService {
     /// Fetch the account details.
     #[tracing::instrument(skip(self))]
     pub async fn me(&self, id: AccountId) -> ServiceResult<dto::response::Account> {
-        let (username, username_aliases, email, secondary_emails, keys) = tokio::try_join!(
+        let (username, username_aliases, email, secondary_emails) = tokio::try_join!(
             self.repo.get_primary_username(id),
             self.repo.get_nonexpiring_username_aliases(id),
             self.repo.get_primary_email(id),
             self.repo.get_secondary_emails(id),
-            self.repo.get_keys(id)
         )?;
-
-        let Some(keys) = keys else {
-            return Err(ServiceError::AccountNotFound);
-        };
 
         Ok(dto::response::Account {
             id,
@@ -129,8 +132,6 @@ impl AccountService {
 
             username_aliases,
             secondary_emails,
-
-            keys: keys.into(),
         })
     }
 

@@ -1,4 +1,3 @@
-use super::repo;
 use crate::id::AccountId;
 use serde::Serialize;
 use utoipa::ToSchema;
@@ -18,30 +17,10 @@ pub struct Account {
     pub username_aliases: Vec<String>,
     /// Secondary emails.
     pub secondary_emails: Vec<String>,
-
-    /// Account's criptographic keys.
-    pub keys: Keys,
 }
 
 /// Base64-encoded, usually returned after sign up or log in.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct Token {
     pub token: String,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct Keys {
-    pub identity_key: Vec<u8>,
-    pub encrypted_private_key: Vec<u8>,
-    pub encrypted_master_key: Vec<u8>,
-}
-
-impl From<repo::OwnedKeys> for Keys {
-    fn from(value: repo::OwnedKeys) -> Self {
-        Self {
-            identity_key: value.identity_key,
-            encrypted_private_key: value.encrypted_private_key,
-            encrypted_master_key: value.encrypted_master_key,
-        }
-    }
 }

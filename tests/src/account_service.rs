@@ -19,11 +19,6 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
         username: username.to_string(),
         email: email.to_string(),
         client_password_hash: "passwd".to_string(),
-        keys: dto::request::Keys {
-            identity_key: vec![1],
-            encrypted_private_key: vec![2],
-            encrypted_master_key: vec![3],
-        },
     };
 
     let login_with_email_dto = dto::request::LoginWithEmail {
@@ -124,9 +119,6 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
     assert!(me.email.unwrap() == email);
     assert!(me.secondary_emails.is_empty());
     assert!(me.username_aliases.is_empty());
-    assert!(me.keys.identity_key == vec![1]);
-    assert!(me.keys.encrypted_private_key == vec![2]);
-    assert!(me.keys.encrypted_master_key == vec![3]);
 
     Ok(username)
 }
@@ -143,11 +135,6 @@ pub async fn account_creation_data_race(
         username: username.to_string(),
         email: email.to_string(),
         client_password_hash: "passwd".to_string(),
-        keys: dto::request::Keys {
-            identity_key: vec![1],
-            encrypted_private_key: vec![2],
-            encrypted_master_key: vec![3],
-        },
     };
 
     let mut signup_futures = Vec::with_capacity(16);

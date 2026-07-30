@@ -241,11 +241,6 @@ pub async fn taken_username_or_email(ctx: &TestState) -> HandlerResult<()> {
         username: taken_username.to_string(),
         email: random_email().to_string(),
         client_password_hash: "passwd".to_string(),
-        keys: dto::request::Keys {
-            identity_key: vec![1],
-            encrypted_master_key: vec![2],
-            encrypted_private_key: vec![2],
-        },
     };
 
     assert_matches!(

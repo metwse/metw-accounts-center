@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO accounts (\n                    id,\n                    client_password_kdf, server_password_hash_algorithm, password_hash,\n                    master_key_kek_kdf, master_key_encryption_algorithm, encrypted_master_key\n                ) VALUES ($1, $2, $3, $4, $5, $6, $7)\n                ON CONFLICT (id)\n                DO UPDATE SET\n                    client_password_kdf = $2, server_password_hash_algorithm = $3, password_hash = $4,\n                    master_key_kek_kdf = $5, master_key_encryption_algorithm = $6, encrypted_master_key = $7\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Jsonb",
+        "Jsonb",
+        "Text",
+        "Jsonb",
+        "Jsonb",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d641b15e48d5997325eea7ee3636c86acf6dc248218f7aa071682f4752f8fe24"
+}

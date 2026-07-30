@@ -4,10 +4,14 @@
 CREATE TABLE accounts
 (
     id bigint NOT NULL,
-    password_hash text NOT NULL,
-    identity_key bytea NOT NULL,
-    encrypted_private_key bytea NOT NULL,
-    encrypted_master_key bytea NOT NULL,
+
+    client_password_kdf jsonb NOT NULL,
+    server_password_hash_algorithm jsonb NOT NULL,
+    password_hash text,
+
+    master_key_kek_kdf jsonb NOT NULL,
+    master_key_encryption_algorithm jsonb NOT NULL,
+    encrypted_master_key bytea,
 
     -- REF: I-AR-1
     CONSTRAINT accounts_id_pkey

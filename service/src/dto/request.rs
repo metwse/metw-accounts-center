@@ -28,10 +28,6 @@ pub struct Signup {
     /// Password hashed client-side.
     #[validate(length(max = 128))]
     pub client_password_hash: String,
-
-    /// Initial keys assigned when account is created.
-    #[validate(nested)]
-    pub keys: Keys,
 }
 
 /// Login into the account.
@@ -56,20 +52,6 @@ pub struct LoginWithEmail {
     /// Argon2-hashed password.
     #[validate(length(max = 128))]
     pub client_password_hash: String,
-}
-
-/// Account's criptographic keys.
-#[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
-pub struct Keys {
-    /// Curve25519 public key in der format.
-    #[validate(length(max = 2048))]
-    pub identity_key: Vec<u8>,
-    /// Private pair of identity key, encrypted by master key.
-    #[validate(length(max = 2048))]
-    pub encrypted_private_key: Vec<u8>,
-    /// Master key, encrypted by password.
-    #[validate(length(max = 2048))]
-    pub encrypted_master_key: Vec<u8>,
 }
 
 /// Request only containing an email.

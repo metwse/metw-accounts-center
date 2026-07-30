@@ -86,11 +86,6 @@ impl TestState {
                     client_password_hash: client_password_hash.to_string(),
                     username: username.to_string(),
                     email: email.to_string(),
-                    keys: dto::request::Keys {
-                        identity_key: vec![1],
-                        encrypted_private_key: vec![2],
-                        encrypted_master_key: vec![3],
-                    },
                 },
                 random_ipv6(),
                 dto::request::Captcha {

@@ -42,6 +42,9 @@ impl AccountRepo for MockAccountRepoImpl {
                     .password_hash
                     .clone(),
                 is_email_verified: true,
+                server_password_hash_algorithm: state.accounts[&email_entity.account_id]
+                    .server_password_hash_algorithm
+                    .clone(),
             }))
         } else {
             Ok(None)
@@ -67,6 +70,9 @@ impl AccountRepo for MockAccountRepoImpl {
                     .get(&username_entity.account_id)
                     .unwrap()
                     .is_email_verified,
+                server_password_hash_algorithm: state.accounts[&username_entity.account_id]
+                    .server_password_hash_algorithm
+                    .clone(),
             }))
         } else {
             Ok(None)
@@ -126,20 +132,6 @@ impl AccountRepo for MockAccountRepoImpl {
         }
 
         Ok(secondary_emails)
-    }
-
-    async fn get_keys(&self, id: AccountId) -> RepoResult<Option<dto::repo::OwnedKeys>> {
-        let state = self.lock_state().await;
-
-        if let Some(account_entity) = state.accounts.get(&id) {
-            Ok(Some(dto::repo::OwnedKeys {
-                identity_key: account_entity.identity_key.clone(),
-                encrypted_private_key: account_entity.encrypted_private_key.clone(),
-                encrypted_master_key: account_entity.encrypted_master_key.clone(),
-            }))
-        } else {
-            Ok(None)
-        }
     }
 
     async fn set_primary_email_if_current_is(
@@ -233,20 +225,22 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         Ok(())
     }
 
-    async fn upsert_account(
-        &mut self,
-        id: AccountId,
-        password_hash: &str,
-        keys: &dto::repo::Keys,
-    ) -> RepoResult<()> {
-        let account_entity = self.state.accounts.entry(id).or_default();
+    async fn upsert_account(&mut self, id: AccountId, password_hash: &str) -> RepoResult<()> {
+        let account_entity = self.state.accounts.entry(id).or_insert(entity::Account {
+            id: AccountId::default(),
+            client_password_kdf: entity::ClientPasswordKdf::None,
+            server_password_hash_algorithm: entity::ServerPasswordHashAlgorithm::None,
+            password_hash: None,
+            master_key_kek_kdf: entity::ClientPasswordKdf::None,
+            master_key_encryption_algorithm: entity::MasterKeyEncrpytionAlgorithm::None,
+            encrypted_master_key: None,
+        });
 
         account_entity.id = id;
 
-        account_entity.password_hash = password_hash.to_string();
-        account_entity.identity_key = keys.identity_key.to_vec();
-        account_entity.encrypted_private_key = keys.encrypted_private_key.to_vec();
-        account_entity.encrypted_master_key = keys.encrypted_master_key.to_vec();
+        account_entity.server_password_hash_algorithm =
+            entity::ServerPasswordHashAlgorithm::Argon2id;
+        account_entity.password_hash = Some(password_hash.to_string());
 
         Ok(())
     }

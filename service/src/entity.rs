@@ -1,26 +1,77 @@
 use crate::id::AccountId;
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
+
+/// Key derivation algorithm applied by the server to the account's password.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "algorithm", rename_all = "snake_case")]
+pub enum ServerPasswordHashAlgorithm {
+    /// No additional server-side hashing is applied.
+    None,
+    /// Argon2id
+    Argon2id,
+}
+
+/// Key derivation applied client-side.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "algorithm", rename_all = "snake_case")]
+pub enum ClientPasswordKdf {
+    /// Plain text.
+    None,
+    /// For legacy accounts.
+    LegacySha256,
+    /// PBKDF2-SHA256.
+    Pbkdf2Sha256 {
+        /// default: metw-accounts-center
+        salt: String,
+        /// default: 500000
+        iterations: u32,
+        /// defaut: 256
+        length: u32,
+    },
+}
+
+/// Algorithm used for encrypting the account master key.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "algorithm", rename_all = "snake_case")]
+pub enum MasterKeyEncrpytionAlgorithm {
+    /// Master-key encryption is not applied.
+    None,
+    /// ChaCha20-Poly1305.
+    ChaCha20Poly1305,
+}
 
 /// Account entity.
 ///
 /// This type mainly used for storing cryptographic primitives.
-#[derive(Debug, FromRow, Default)]
+#[derive(Debug)]
 pub struct Account {
     /// Account ID generated using Twitter's snowflake algorithm.
     pub id: AccountId,
 
-    /// Argon2 hashed password.
-    pub password_hash: String,
+    /// KDF for login.
+    pub client_password_kdf: ClientPasswordKdf,
 
-    /// Identity public key in DER format.
-    pub identity_key: Vec<u8>,
+    /// Hash function applied before saving the password.
+    pub server_password_hash_algorithm: ServerPasswordHashAlgorithm,
 
-    /// Private key encrypted by the master key.
-    pub encrypted_private_key: Vec<u8>,
+    /// Server-side password representation.
+    ///
+    /// Absent for accounts that can no longer authenticate, such as deleted
+    /// accounts.
+    pub password_hash: Option<String>,
 
-    /// Master key encrypted by user's password.
-    pub encrypted_master_key: Vec<u8>,
+    /// KDF for producing the Key Encryption Key (KEK) for master key.
+    pub master_key_kek_kdf: ClientPasswordKdf,
+
+    /// Algorithm client used to encrypt its master key.
+    pub master_key_encryption_algorithm: MasterKeyEncrpytionAlgorithm,
+
+    /// Client-provided encrypted master key.
+    ///
+    /// Absent until a master key is assigned to the account.
+    pub encrypted_master_key: Option<Vec<u8>>,
 }
 
 /// Account flags entity.

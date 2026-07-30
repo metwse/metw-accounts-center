@@ -97,9 +97,6 @@ pub trait AccountRepo: Send + Sync {
     /// Returns an empty list if none have been added.
     async fn get_secondary_emails(&self, id: AccountId) -> RepoResult<Vec<String>>;
 
-    /// Get account keys - the key bundle of the account.
-    async fn get_keys(&self, id: AccountId) -> RepoResult<Option<dto::repo::OwnedKeys>>;
-
     /// Set the email primary for the account.
     ///
     /// Although `email`s are unique, the `id` parameter is also required to
@@ -133,13 +130,8 @@ pub trait AccountRepoTransaction: Send + Sync {
     /// Commit the changes.
     async fn commit(self: Box<Self>) -> RepoResult<()>;
 
-    /// Register a new account, or update its keys.
-    async fn upsert_account(
-        &mut self,
-        id: AccountId,
-        password_hash: &str,
-        keys: &dto::repo::Keys,
-    ) -> RepoResult<()>;
+    /// Register a new account, or update it.
+    async fn upsert_account(&mut self, id: AccountId, password_hash: &str) -> RepoResult<()>;
 
     /// Load default flags to user.
     async fn insert_default_flags(&mut self, id: AccountId) -> RepoResult<()>;

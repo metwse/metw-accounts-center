@@ -1,24 +1,13 @@
-use crate::id::AccountId;
+use crate::{entity, id::AccountId};
 use sqlx::prelude::FromRow;
 use std::time::Duration;
-
-pub struct Keys<'a> {
-    pub identity_key: &'a [u8],
-    pub encrypted_private_key: &'a [u8],
-    pub encrypted_master_key: &'a [u8],
-}
-
-pub struct OwnedKeys {
-    pub identity_key: Vec<u8>,
-    pub encrypted_private_key: Vec<u8>,
-    pub encrypted_master_key: Vec<u8>,
-}
 
 #[derive(FromRow)]
 pub struct OwnedLoginCredentials {
     pub id: AccountId,
     pub is_email_verified: bool,
-    pub password_hash: String,
+    pub password_hash: Option<String>,
+    pub server_password_hash_algorithm: entity::ServerPasswordHashAlgorithm,
 }
 
 #[derive(Debug)]
