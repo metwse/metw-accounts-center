@@ -241,6 +241,9 @@ pub async fn taken_username_or_email(ctx: &TestState) -> HandlerResult<()> {
         username: taken_username.to_string(),
         email: random_email().to_string(),
         client_password_hash: "passwd".to_string(),
+        pbkdf2_salt: None,
+        pbkdf2_iterations: None,
+        pbkdf2_length: None,
     };
 
     assert_matches!(

@@ -4,7 +4,7 @@ use service::{
     id::AccountId,
     repo::{AccountRepo, AccountRepoTransaction, RepoResult},
 };
-use sqlx::{types::Json, PgPool, PgTransaction};
+use sqlx::{PgPool, PgTransaction, types::Json};
 
 /// Account repository using PostgreSQL.
 pub struct AccountRepoImpl {
@@ -249,36 +249,20 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         Ok(())
     }
 
-    async fn upsert_account(&mut self, id: AccountId, password_hash: &str) -> RepoResult<()> {
-        let client_password_kdf = Json(entity::ClientPasswordKdf::Pbkdf2Sha256 {
-            salt: "metw-accounts-center".to_string(),
-            iterations: 500000,
-            length: 256,
-        });
-        let server_password_hash_algorithm = Json(entity::ServerPasswordHashAlgorithm::Argon2id);
-
-        let master_key_kek_kdf = Json(entity::ClientPasswordKdf::None);
-        let master_key_encryption_algorithm = Json(entity::MasterKeyEncryptionAlgorithm::None);
-        let encrypted_master_key: Option<Vec<_>> = None;
-
+    async fn insert_account(&mut self, account: &entity::Account) -> RepoResult<()> {
         sqlx::query!(
             "INSERT INTO accounts (
                     id,
                     client_password_kdf, server_password_hash_algorithm, password_hash,
                     master_key_kek_kdf, master_key_encryption_algorithm, encrypted_master_key
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-                ON CONFLICT (id)
-                DO UPDATE SET
-                    client_password_kdf = $2, server_password_hash_algorithm = $3, password_hash = $4,
-                    master_key_kek_kdf = $5, master_key_encryption_algorithm = $6, encrypted_master_key = $7
-                ",
-            id as _,
-            client_password_kdf as _,
-            server_password_hash_algorithm as _,
-            password_hash,
-            master_key_kek_kdf as _,
-            master_key_encryption_algorithm as _,
-            encrypted_master_key,
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+            account.id as _,
+            Json(account.client_password_kdf.clone()) as _,
+            Json(account.server_password_hash_algorithm.clone()) as _,
+            account.password_hash,
+            Json(account.master_key_kek_kdf.clone()) as _,
+            Json(account.master_key_encryption_algorithm.clone()) as _,
+            account.encrypted_master_key
         )
         .execute(&mut *self.tx)
         .await?;

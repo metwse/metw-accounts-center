@@ -28,7 +28,7 @@
 //!
 //! | Function Example | Type | Description |
 //! |--|--|--|
-//! | [`upsert_account`] | upsert | Inserts a new user or updates the existing one by account id. |
+//! | [`insert_account`] | ipsert | Inserts a new user. |
 //! | [`insert_default_flags`] | insert | Inserts default user flags. |
 //!
 //! - `*Repo` variants that return a single item like "fetch one" do not return
@@ -53,7 +53,7 @@
 //!
 //! [`set_primary_email_if_current_is`]: service::repo::AccountRepo::set_primary_email_if_current_is
 //! [`get_keys`]: service::repo::AccountRepo::get_keys
-//! [`upsert_account`]: service::repo::AccountRepoTransaction::upsert_account
+//! [`insert_account`]: service::repo::AccountRepoTransaction::insert_account
 //! [`insert_default_flags`]: service::repo::AccountRepoTransaction::insert_default_flags
 //! [`get_primary_email`]: service::repo::AccountRepo::get_primary_email
 //! [`get_secondary_emails`]: service::repo::AccountRepo::get_secondary_emails

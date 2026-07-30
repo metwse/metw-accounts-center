@@ -1,6 +1,10 @@
 use super::{ServiceError, ServiceResult};
 use crate::{dto, entity, id::AccountId, repo::AccountRepo, util::password};
 
+const PBKDF2_SALT_DEFAULT: &str = "metw-accounts-center";
+const PBKDF2_ITERATIONS_DEFAULT: u32 = 500_000;
+const PBKDF2_LENGTH_DEFAULT: u32 = 500_000;
+
 /// Account state.
 pub struct AccountService {
     repo: Box<dyn AccountRepo>,
@@ -33,8 +37,27 @@ impl AccountService {
         let mut transaction = self.repo.begin_transaction().await?;
 
         let id = AccountId::unique();
+        let account = entity::Account {
+            id,
+            client_password_kdf: entity::ClientPasswordKdf::Pbkdf2Sha256 {
+                salt: signup_dto
+                    .pbkdf2_salt
+                    .clone()
+                    .unwrap_or(String::from(PBKDF2_SALT_DEFAULT)),
+                iterations: signup_dto
+                    .pbkdf2_iterations
+                    .unwrap_or(PBKDF2_ITERATIONS_DEFAULT),
+                length: signup_dto.pbkdf2_length.unwrap_or(PBKDF2_LENGTH_DEFAULT),
+            },
+            server_password_hash_algorithm: entity::ServerPasswordHashAlgorithm::Argon2id,
+            password_hash: Some(password_hash),
 
-        transaction.upsert_account(id, &password_hash).await?;
+            master_key_kek_kdf: entity::ClientPasswordKdf::None,
+            master_key_encryption_algorithm: entity::MasterKeyEncryptionAlgorithm::None,
+            encrypted_master_key: None,
+        };
+
+        transaction.insert_account(&account).await?;
 
         transaction.insert_default_flags(id).await?;
 

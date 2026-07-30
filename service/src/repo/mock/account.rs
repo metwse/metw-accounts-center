@@ -225,22 +225,8 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         Ok(())
     }
 
-    async fn upsert_account(&mut self, id: AccountId, password_hash: &str) -> RepoResult<()> {
-        let account_entity = self.state.accounts.entry(id).or_insert(entity::Account {
-            id: AccountId::default(),
-            client_password_kdf: entity::ClientPasswordKdf::None,
-            server_password_hash_algorithm: entity::ServerPasswordHashAlgorithm::None,
-            password_hash: None,
-            master_key_kek_kdf: entity::ClientPasswordKdf::None,
-            master_key_encryption_algorithm: entity::MasterKeyEncryptionAlgorithm::None,
-            encrypted_master_key: None,
-        });
-
-        account_entity.id = id;
-
-        account_entity.server_password_hash_algorithm =
-            entity::ServerPasswordHashAlgorithm::Argon2id;
-        account_entity.password_hash = Some(password_hash.to_string());
+    async fn insert_account(&mut self, account: &entity::Account) -> RepoResult<()> {
+        self.state.accounts.insert(account.id, account.clone());
 
         Ok(())
     }

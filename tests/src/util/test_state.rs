@@ -86,6 +86,9 @@ impl TestState {
                     client_password_hash: client_password_hash.to_string(),
                     username: username.to_string(),
                     email: email.to_string(),
+                    pbkdf2_salt: None,
+                    pbkdf2_iterations: None,
+                    pbkdf2_length: None,
                 },
                 random_ipv6(),
                 dto::request::Captcha {

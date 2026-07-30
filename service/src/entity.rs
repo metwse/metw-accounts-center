@@ -16,6 +16,7 @@ pub enum ServerPasswordHashAlgorithm {
 /// Key derivation applied client-side.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "algorithm", rename_all = "snake_case")]
+#[allow(missing_docs)]
 pub enum ClientPasswordKdf {
     /// Plain text.
     None,
@@ -23,11 +24,8 @@ pub enum ClientPasswordKdf {
     LegacySha256,
     /// PBKDF2-SHA256.
     Pbkdf2Sha256 {
-        /// default: metw-accounts-center
         salt: String,
-        /// default: 500000
         iterations: u32,
-        /// defaut: 256
         length: u32,
     },
 }
@@ -45,7 +43,7 @@ pub enum MasterKeyEncryptionAlgorithm {
 /// Account entity.
 ///
 /// This type mainly used for storing cryptographic primitives.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Account {
     /// Account ID generated using Twitter's snowflake algorithm.
     pub id: AccountId,

@@ -17,6 +17,8 @@ fn validate_lowercase(s: &str) -> Result<(), validator::ValidationError> {
 }
 
 /// Sign up a new account.
+///
+/// Only PBKDF2-SHA256 is accepted.
 #[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
 pub struct Signup {
     /// Username.
@@ -25,9 +27,18 @@ pub struct Signup {
     /// Email.
     #[validate(email, custom(function = validate_lowercase))]
     pub email: String,
+
     /// Password hashed client-side.
     #[validate(length(max = 128))]
     pub client_password_hash: String,
+
+    /// default: metw-accounts-center
+    #[validate(length(max = 128))]
+    pub pbkdf2_salt: Option<String>,
+    /// default: 500000
+    pub pbkdf2_iterations: Option<u32>,
+    /// defaut: 256
+    pub pbkdf2_length: Option<u32>,
 }
 
 /// Login into the account.

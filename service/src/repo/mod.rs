@@ -1,5 +1,5 @@
 use crate::{
-    dto,
+    dto, entity,
     id::AccountId,
     token::{DecodedToken, TokenScope},
 };
@@ -130,8 +130,8 @@ pub trait AccountRepoTransaction: Send + Sync {
     /// Commit the changes.
     async fn commit(self: Box<Self>) -> RepoResult<()>;
 
-    /// Register a new account, or update it.
-    async fn upsert_account(&mut self, id: AccountId, password_hash: &str) -> RepoResult<()>;
+    /// Register a new account.
+    async fn insert_account(&mut self, account: &entity::Account) -> RepoResult<()>;
 
     /// Load default flags to user.
     async fn insert_default_flags(&mut self, id: AccountId) -> RepoResult<()>;
