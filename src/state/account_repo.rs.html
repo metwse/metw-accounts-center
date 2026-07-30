@@ -4,7 +4,7 @@
 <a href=#4 id=4 data-nosnippet>4</a>    id::AccountId,
 <a href=#5 id=5 data-nosnippet>5</a>    repo::{AccountRepo, AccountRepoTransaction, RepoResult},
 <a href=#6 id=6 data-nosnippet>6</a>};
-<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>sqlx::{PgPool, PgTransaction, types::Json};
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>sqlx::{types::Json, PgPool, PgTransaction};
 <a href=#8 id=8 data-nosnippet>8</a>
 <a href=#9 id=9 data-nosnippet>9</a><span class="doccomment">/// Account repository using PostgreSQL.
 <a href=#10 id=10 data-nosnippet>10</a></span><span class="kw">pub struct </span>AccountRepoImpl {
@@ -258,7 +258,7 @@
 <a href=#258 id=258 data-nosnippet>258</a>        <span class="kw">let </span>server_password_hash_algorithm = Json(entity::ServerPasswordHashAlgorithm::Argon2id);
 <a href=#259 id=259 data-nosnippet>259</a>
 <a href=#260 id=260 data-nosnippet>260</a>        <span class="kw">let </span>master_key_kek_kdf = Json(entity::ClientPasswordKdf::None);
-<a href=#261 id=261 data-nosnippet>261</a>        <span class="kw">let </span>master_key_encryption_algorithm = Json(entity::MasterKeyEncrpytionAlgorithm::None);
+<a href=#261 id=261 data-nosnippet>261</a>        <span class="kw">let </span>master_key_encryption_algorithm = Json(entity::MasterKeyEncryptionAlgorithm::None);
 <a href=#262 id=262 data-nosnippet>262</a>        <span class="kw">let </span>encrypted_master_key: <span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt; = <span class="prelude-val">None</span>;
 <a href=#263 id=263 data-nosnippet>263</a>
 <a href=#264 id=264 data-nosnippet>264</a>        <span class="macro">sqlx::query!</span>(
