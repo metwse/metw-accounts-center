@@ -42,7 +42,7 @@
 <a href=#42 id=42 data-nosnippet>42</a>        <span class="kw">let </span>email = email_dto.email;
 <a href=#43 id=43 data-nosnippet>43</a>
 <a href=#44 id=44 data-nosnippet>44</a>        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.account_service.is_email_taken(<span class="kw-2">&amp;</span>email).<span class="kw">await</span><span class="question-mark">? </span>{
-<a href=#45 id=45 data-nosnippet>45</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(ServiceError::EmailTaken)<span class="question-mark">?</span>;
+<a href=#45 id=45 data-nosnippet>45</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(HandlerError::Service(ServiceError::EmailTaken));
 <a href=#46 id=46 data-nosnippet>46</a>        }
 <a href=#47 id=47 data-nosnippet>47</a>
 <a href=#48 id=48 data-nosnippet>48</a>        <span class="kw">let </span><span class="prelude-val">Some</span>(username) = <span class="self">self</span>.<span class="number">0</span>.account_service.get_primary_username(id).<span class="kw">await</span><span class="question-mark">? </span><span class="kw">else </span>{
