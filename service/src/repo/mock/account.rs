@@ -232,7 +232,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
             server_password_hash_algorithm: entity::ServerPasswordHashAlgorithm::None,
             password_hash: None,
             master_key_kek_kdf: entity::ClientPasswordKdf::None,
-            master_key_encryption_algorithm: entity::MasterKeyEncrpytionAlgorithm::None,
+            master_key_encryption_algorithm: entity::MasterKeyEncryptionAlgorithm::None,
             encrypted_master_key: None,
         });
 

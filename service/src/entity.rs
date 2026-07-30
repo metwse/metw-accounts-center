@@ -35,7 +35,7 @@ pub enum ClientPasswordKdf {
 /// Algorithm used for encrypting the account master key.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "algorithm", rename_all = "snake_case")]
-pub enum MasterKeyEncrpytionAlgorithm {
+pub enum MasterKeyEncryptionAlgorithm {
     /// Master-key encryption is not applied.
     None,
     /// ChaCha20-Poly1305.
@@ -66,7 +66,7 @@ pub struct Account {
     pub master_key_kek_kdf: ClientPasswordKdf,
 
     /// Algorithm client used to encrypt its master key.
-    pub master_key_encryption_algorithm: MasterKeyEncrpytionAlgorithm,
+    pub master_key_encryption_algorithm: MasterKeyEncryptionAlgorithm,
 
     /// Client-provided encrypted master key.
     ///

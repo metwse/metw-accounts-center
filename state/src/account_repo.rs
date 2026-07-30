@@ -4,7 +4,7 @@ use service::{
     id::AccountId,
     repo::{AccountRepo, AccountRepoTransaction, RepoResult},
 };
-use sqlx::{PgPool, PgTransaction, types::Json};
+use sqlx::{types::Json, PgPool, PgTransaction};
 
 /// Account repository using PostgreSQL.
 pub struct AccountRepoImpl {
@@ -258,7 +258,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         let server_password_hash_algorithm = Json(entity::ServerPasswordHashAlgorithm::Argon2id);
 
         let master_key_kek_kdf = Json(entity::ClientPasswordKdf::None);
-        let master_key_encryption_algorithm = Json(entity::MasterKeyEncrpytionAlgorithm::None);
+        let master_key_encryption_algorithm = Json(entity::MasterKeyEncryptionAlgorithm::None);
         let encrypted_master_key: Option<Vec<_>> = None;
 
         sqlx::query!(
