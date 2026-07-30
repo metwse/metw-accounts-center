@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["AppError"],"struct":["AppJson"],"type":["AppMiddlewareResult","AppResult"]};
+window.SIDEBAR_ITEMS = {"enum":["AppError"],"struct":["AppJson","AppQuery"],"type":["AppMiddlewareResult","AppResult"]};
