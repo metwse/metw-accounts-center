@@ -4,7 +4,7 @@
 <a href=#4 id=4 data-nosnippet>4</a>    id::AccountId,
 <a href=#5 id=5 data-nosnippet>5</a>    repo::{AccountRepo, AccountRepoTransaction, RepoResult},
 <a href=#6 id=6 data-nosnippet>6</a>};
-<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>sqlx::{types::Json, PgPool, PgTransaction};
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>sqlx::{PgPool, PgTransaction, types::Json};
 <a href=#8 id=8 data-nosnippet>8</a>
 <a href=#9 id=9 data-nosnippet>9</a><span class="doccomment">/// Account repository using PostgreSQL.
 <a href=#10 id=10 data-nosnippet>10</a></span><span class="kw">pub struct </span>AccountRepoImpl {
@@ -249,101 +249,85 @@
 <a href=#249 id=249 data-nosnippet>249</a>        <span class="prelude-val">Ok</span>(())
 <a href=#250 id=250 data-nosnippet>250</a>    }
 <a href=#251 id=251 data-nosnippet>251</a>
-<a href=#252 id=252 data-nosnippet>252</a>    <span class="kw">async fn </span>upsert_account(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: AccountId, password_hash: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;()&gt; {
-<a href=#253 id=253 data-nosnippet>253</a>        <span class="kw">let </span>client_password_kdf = Json(entity::ClientPasswordKdf::Pbkdf2Sha256 {
-<a href=#254 id=254 data-nosnippet>254</a>            salt: <span class="string">"metw-accounts-center"</span>.to_string(),
-<a href=#255 id=255 data-nosnippet>255</a>            iterations: <span class="number">500000</span>,
-<a href=#256 id=256 data-nosnippet>256</a>            length: <span class="number">256</span>,
-<a href=#257 id=257 data-nosnippet>257</a>        });
-<a href=#258 id=258 data-nosnippet>258</a>        <span class="kw">let </span>server_password_hash_algorithm = Json(entity::ServerPasswordHashAlgorithm::Argon2id);
-<a href=#259 id=259 data-nosnippet>259</a>
-<a href=#260 id=260 data-nosnippet>260</a>        <span class="kw">let </span>master_key_kek_kdf = Json(entity::ClientPasswordKdf::None);
-<a href=#261 id=261 data-nosnippet>261</a>        <span class="kw">let </span>master_key_encryption_algorithm = Json(entity::MasterKeyEncryptionAlgorithm::None);
-<a href=#262 id=262 data-nosnippet>262</a>        <span class="kw">let </span>encrypted_master_key: <span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt; = <span class="prelude-val">None</span>;
-<a href=#263 id=263 data-nosnippet>263</a>
-<a href=#264 id=264 data-nosnippet>264</a>        <span class="macro">sqlx::query!</span>(
-<a href=#265 id=265 data-nosnippet>265</a>            <span class="string">"INSERT INTO accounts (
-<a href=#266 id=266 data-nosnippet>266</a>                    id,
-<a href=#267 id=267 data-nosnippet>267</a>                    client_password_kdf, server_password_hash_algorithm, password_hash,
-<a href=#268 id=268 data-nosnippet>268</a>                    master_key_kek_kdf, master_key_encryption_algorithm, encrypted_master_key
-<a href=#269 id=269 data-nosnippet>269</a>                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-<a href=#270 id=270 data-nosnippet>270</a>                ON CONFLICT (id)
-<a href=#271 id=271 data-nosnippet>271</a>                DO UPDATE SET
-<a href=#272 id=272 data-nosnippet>272</a>                    client_password_kdf = $2, server_password_hash_algorithm = $3, password_hash = $4,
-<a href=#273 id=273 data-nosnippet>273</a>                    master_key_kek_kdf = $5, master_key_encryption_algorithm = $6, encrypted_master_key = $7
-<a href=#274 id=274 data-nosnippet>274</a>                "</span>,
-<a href=#275 id=275 data-nosnippet>275</a>            id <span class="kw">as _</span>,
-<a href=#276 id=276 data-nosnippet>276</a>            client_password_kdf <span class="kw">as _</span>,
-<a href=#277 id=277 data-nosnippet>277</a>            server_password_hash_algorithm <span class="kw">as _</span>,
-<a href=#278 id=278 data-nosnippet>278</a>            password_hash,
-<a href=#279 id=279 data-nosnippet>279</a>            master_key_kek_kdf <span class="kw">as _</span>,
-<a href=#280 id=280 data-nosnippet>280</a>            master_key_encryption_algorithm <span class="kw">as _</span>,
-<a href=#281 id=281 data-nosnippet>281</a>            encrypted_master_key,
-<a href=#282 id=282 data-nosnippet>282</a>        )
-<a href=#283 id=283 data-nosnippet>283</a>        .execute(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.tx)
-<a href=#284 id=284 data-nosnippet>284</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#285 id=285 data-nosnippet>285</a>
-<a href=#286 id=286 data-nosnippet>286</a>        <span class="prelude-val">Ok</span>(())
-<a href=#287 id=287 data-nosnippet>287</a>    }
-<a href=#288 id=288 data-nosnippet>288</a>
-<a href=#289 id=289 data-nosnippet>289</a>    <span class="kw">async fn </span>insert_default_flags(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: AccountId) -&gt; RepoResult&lt;()&gt; {
-<a href=#290 id=290 data-nosnippet>290</a>        <span class="macro">sqlx::query!</span>(
-<a href=#291 id=291 data-nosnippet>291</a>            <span class="string">"INSERT INTO account_flags (id, is_email_verified) VALUES ($1, false)"</span>,
-<a href=#292 id=292 data-nosnippet>292</a>            id <span class="kw">as _
-<a href=#293 id=293 data-nosnippet>293</a>        </span>)
-<a href=#294 id=294 data-nosnippet>294</a>        .execute(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.tx)
-<a href=#295 id=295 data-nosnippet>295</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#296 id=296 data-nosnippet>296</a>
-<a href=#297 id=297 data-nosnippet>297</a>        <span class="prelude-val">Ok</span>(())
-<a href=#298 id=298 data-nosnippet>298</a>    }
-<a href=#299 id=299 data-nosnippet>299</a>
-<a href=#300 id=300 data-nosnippet>300</a>    <span class="kw">async fn </span>add_email(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: AccountId, email: <span class="kw-2">&amp;</span>str, is_primary: bool) -&gt; RepoResult&lt;()&gt; {
-<a href=#301 id=301 data-nosnippet>301</a>        <span class="macro">sqlx::query!</span>(
-<a href=#302 id=302 data-nosnippet>302</a>            <span class="string">"INSERT INTO emails (account_id, email, is_primary)
-<a href=#303 id=303 data-nosnippet>303</a>                VALUES ($1, $2, $3)"</span>,
-<a href=#304 id=304 data-nosnippet>304</a>            id <span class="kw">as _</span>,
-<a href=#305 id=305 data-nosnippet>305</a>            email,
-<a href=#306 id=306 data-nosnippet>306</a>            is_primary
-<a href=#307 id=307 data-nosnippet>307</a>        )
-<a href=#308 id=308 data-nosnippet>308</a>        .execute(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.tx)
-<a href=#309 id=309 data-nosnippet>309</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#310 id=310 data-nosnippet>310</a>
-<a href=#311 id=311 data-nosnippet>311</a>        <span class="prelude-val">Ok</span>(())
-<a href=#312 id=312 data-nosnippet>312</a>    }
+<a href=#252 id=252 data-nosnippet>252</a>    <span class="kw">async fn </span>insert_account(<span class="kw-2">&amp;mut </span><span class="self">self</span>, account: <span class="kw-2">&amp;</span>entity::Account) -&gt; RepoResult&lt;()&gt; {
+<a href=#253 id=253 data-nosnippet>253</a>        <span class="macro">sqlx::query!</span>(
+<a href=#254 id=254 data-nosnippet>254</a>            <span class="string">"INSERT INTO accounts (
+<a href=#255 id=255 data-nosnippet>255</a>                    id,
+<a href=#256 id=256 data-nosnippet>256</a>                    client_password_kdf, server_password_hash_algorithm, password_hash,
+<a href=#257 id=257 data-nosnippet>257</a>                    master_key_kek_kdf, master_key_encryption_algorithm, encrypted_master_key
+<a href=#258 id=258 data-nosnippet>258</a>                ) VALUES ($1, $2, $3, $4, $5, $6, $7)"</span>,
+<a href=#259 id=259 data-nosnippet>259</a>            account.id <span class="kw">as _</span>,
+<a href=#260 id=260 data-nosnippet>260</a>            Json(account.client_password_kdf.clone()) <span class="kw">as _</span>,
+<a href=#261 id=261 data-nosnippet>261</a>            Json(account.server_password_hash_algorithm.clone()) <span class="kw">as _</span>,
+<a href=#262 id=262 data-nosnippet>262</a>            account.password_hash,
+<a href=#263 id=263 data-nosnippet>263</a>            Json(account.master_key_kek_kdf.clone()) <span class="kw">as _</span>,
+<a href=#264 id=264 data-nosnippet>264</a>            Json(account.master_key_encryption_algorithm.clone()) <span class="kw">as _</span>,
+<a href=#265 id=265 data-nosnippet>265</a>            account.encrypted_master_key
+<a href=#266 id=266 data-nosnippet>266</a>        )
+<a href=#267 id=267 data-nosnippet>267</a>        .execute(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.tx)
+<a href=#268 id=268 data-nosnippet>268</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#269 id=269 data-nosnippet>269</a>
+<a href=#270 id=270 data-nosnippet>270</a>        <span class="prelude-val">Ok</span>(())
+<a href=#271 id=271 data-nosnippet>271</a>    }
+<a href=#272 id=272 data-nosnippet>272</a>
+<a href=#273 id=273 data-nosnippet>273</a>    <span class="kw">async fn </span>insert_default_flags(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: AccountId) -&gt; RepoResult&lt;()&gt; {
+<a href=#274 id=274 data-nosnippet>274</a>        <span class="macro">sqlx::query!</span>(
+<a href=#275 id=275 data-nosnippet>275</a>            <span class="string">"INSERT INTO account_flags (id, is_email_verified) VALUES ($1, false)"</span>,
+<a href=#276 id=276 data-nosnippet>276</a>            id <span class="kw">as _
+<a href=#277 id=277 data-nosnippet>277</a>        </span>)
+<a href=#278 id=278 data-nosnippet>278</a>        .execute(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.tx)
+<a href=#279 id=279 data-nosnippet>279</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#280 id=280 data-nosnippet>280</a>
+<a href=#281 id=281 data-nosnippet>281</a>        <span class="prelude-val">Ok</span>(())
+<a href=#282 id=282 data-nosnippet>282</a>    }
+<a href=#283 id=283 data-nosnippet>283</a>
+<a href=#284 id=284 data-nosnippet>284</a>    <span class="kw">async fn </span>add_email(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: AccountId, email: <span class="kw-2">&amp;</span>str, is_primary: bool) -&gt; RepoResult&lt;()&gt; {
+<a href=#285 id=285 data-nosnippet>285</a>        <span class="macro">sqlx::query!</span>(
+<a href=#286 id=286 data-nosnippet>286</a>            <span class="string">"INSERT INTO emails (account_id, email, is_primary)
+<a href=#287 id=287 data-nosnippet>287</a>                VALUES ($1, $2, $3)"</span>,
+<a href=#288 id=288 data-nosnippet>288</a>            id <span class="kw">as _</span>,
+<a href=#289 id=289 data-nosnippet>289</a>            email,
+<a href=#290 id=290 data-nosnippet>290</a>            is_primary
+<a href=#291 id=291 data-nosnippet>291</a>        )
+<a href=#292 id=292 data-nosnippet>292</a>        .execute(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.tx)
+<a href=#293 id=293 data-nosnippet>293</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#294 id=294 data-nosnippet>294</a>
+<a href=#295 id=295 data-nosnippet>295</a>        <span class="prelude-val">Ok</span>(())
+<a href=#296 id=296 data-nosnippet>296</a>    }
+<a href=#297 id=297 data-nosnippet>297</a>
+<a href=#298 id=298 data-nosnippet>298</a>    <span class="kw">async fn </span>add_username(
+<a href=#299 id=299 data-nosnippet>299</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#300 id=300 data-nosnippet>300</a>        id: AccountId,
+<a href=#301 id=301 data-nosnippet>301</a>        username: <span class="kw-2">&amp;</span>str,
+<a href=#302 id=302 data-nosnippet>302</a>        is_primary: bool,
+<a href=#303 id=303 data-nosnippet>303</a>    ) -&gt; RepoResult&lt;()&gt; {
+<a href=#304 id=304 data-nosnippet>304</a>        <span class="macro">sqlx::query!</span>(
+<a href=#305 id=305 data-nosnippet>305</a>            <span class="string">"INSERT INTO usernames (account_id, username, is_primary)
+<a href=#306 id=306 data-nosnippet>306</a>                VALUES ($1, $2, $3)"</span>,
+<a href=#307 id=307 data-nosnippet>307</a>            id <span class="kw">as _</span>,
+<a href=#308 id=308 data-nosnippet>308</a>            username,
+<a href=#309 id=309 data-nosnippet>309</a>            is_primary
+<a href=#310 id=310 data-nosnippet>310</a>        )
+<a href=#311 id=311 data-nosnippet>311</a>        .execute(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.tx)
+<a href=#312 id=312 data-nosnippet>312</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#313 id=313 data-nosnippet>313</a>
-<a href=#314 id=314 data-nosnippet>314</a>    <span class="kw">async fn </span>add_username(
-<a href=#315 id=315 data-nosnippet>315</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#316 id=316 data-nosnippet>316</a>        id: AccountId,
-<a href=#317 id=317 data-nosnippet>317</a>        username: <span class="kw-2">&amp;</span>str,
-<a href=#318 id=318 data-nosnippet>318</a>        is_primary: bool,
-<a href=#319 id=319 data-nosnippet>319</a>    ) -&gt; RepoResult&lt;()&gt; {
-<a href=#320 id=320 data-nosnippet>320</a>        <span class="macro">sqlx::query!</span>(
-<a href=#321 id=321 data-nosnippet>321</a>            <span class="string">"INSERT INTO usernames (account_id, username, is_primary)
-<a href=#322 id=322 data-nosnippet>322</a>                VALUES ($1, $2, $3)"</span>,
-<a href=#323 id=323 data-nosnippet>323</a>            id <span class="kw">as _</span>,
-<a href=#324 id=324 data-nosnippet>324</a>            username,
-<a href=#325 id=325 data-nosnippet>325</a>            is_primary
-<a href=#326 id=326 data-nosnippet>326</a>        )
+<a href=#314 id=314 data-nosnippet>314</a>        <span class="prelude-val">Ok</span>(())
+<a href=#315 id=315 data-nosnippet>315</a>    }
+<a href=#316 id=316 data-nosnippet>316</a>
+<a href=#317 id=317 data-nosnippet>317</a>    <span class="kw">async fn </span>set_is_email_verified_flag(
+<a href=#318 id=318 data-nosnippet>318</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#319 id=319 data-nosnippet>319</a>        id: AccountId,
+<a href=#320 id=320 data-nosnippet>320</a>        is_email_verified: bool,
+<a href=#321 id=321 data-nosnippet>321</a>    ) -&gt; RepoResult&lt;()&gt; {
+<a href=#322 id=322 data-nosnippet>322</a>        <span class="macro">sqlx::query!</span>(
+<a href=#323 id=323 data-nosnippet>323</a>            <span class="string">"UPDATE account_flags SET is_email_verified = $1 WHERE id = $2"</span>,
+<a href=#324 id=324 data-nosnippet>324</a>            is_email_verified,
+<a href=#325 id=325 data-nosnippet>325</a>            id <span class="kw">as _
+<a href=#326 id=326 data-nosnippet>326</a>        </span>)
 <a href=#327 id=327 data-nosnippet>327</a>        .execute(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.tx)
 <a href=#328 id=328 data-nosnippet>328</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#329 id=329 data-nosnippet>329</a>
 <a href=#330 id=330 data-nosnippet>330</a>        <span class="prelude-val">Ok</span>(())
 <a href=#331 id=331 data-nosnippet>331</a>    }
-<a href=#332 id=332 data-nosnippet>332</a>
-<a href=#333 id=333 data-nosnippet>333</a>    <span class="kw">async fn </span>set_is_email_verified_flag(
-<a href=#334 id=334 data-nosnippet>334</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#335 id=335 data-nosnippet>335</a>        id: AccountId,
-<a href=#336 id=336 data-nosnippet>336</a>        is_email_verified: bool,
-<a href=#337 id=337 data-nosnippet>337</a>    ) -&gt; RepoResult&lt;()&gt; {
-<a href=#338 id=338 data-nosnippet>338</a>        <span class="macro">sqlx::query!</span>(
-<a href=#339 id=339 data-nosnippet>339</a>            <span class="string">"UPDATE account_flags SET is_email_verified = $1 WHERE id = $2"</span>,
-<a href=#340 id=340 data-nosnippet>340</a>            is_email_verified,
-<a href=#341 id=341 data-nosnippet>341</a>            id <span class="kw">as _
-<a href=#342 id=342 data-nosnippet>342</a>        </span>)
-<a href=#343 id=343 data-nosnippet>343</a>        .execute(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.tx)
-<a href=#344 id=344 data-nosnippet>344</a>        .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#345 id=345 data-nosnippet>345</a>
-<a href=#346 id=346 data-nosnippet>346</a>        <span class="prelude-val">Ok</span>(())
-<a href=#347 id=347 data-nosnippet>347</a>    }
-<a href=#348 id=348 data-nosnippet>348</a>}
+<a href=#332 id=332 data-nosnippet>332</a>}
 </code></pre></div></section></main></body></html>
