@@ -1,6 +1,9 @@
 use axum::{
     Json,
-    extract::{FromRequest, rejection::JsonRejection},
+    extract::{
+        FromRequest, FromRequestParts,
+        rejection::{JsonRejection, QueryRejection},
+    },
     http::StatusCode,
     response::{IntoResponse, Response},
 };
@@ -19,8 +22,14 @@ pub enum AppError {
     #[error("json rejection: {0}")]
     JsonRejection(#[from] JsonRejection),
 
+    #[error("query rejection: {0}")]
+    QueryRejection(#[from] QueryRejection),
+
     #[error("missing or invalid X-Real-IP")]
     MissingOrInvalidXRealIp,
+
+    #[error("not found")]
+    NotFound,
 
     #[error("rate limited: {0:?}")]
     RateLimited(Duration),
@@ -36,6 +45,11 @@ pub type AppMiddlewareResult<T> = Result<T, AppError>;
 #[derive(FromRequest)]
 #[from_request(via(axum::Json), rejection(AppError))]
 pub struct AppJson<T>(pub T);
+
+/// Axum Query extractor.
+#[derive(FromRequestParts)]
+#[from_request(via(axum::extract::Query), rejection(AppError))]
+pub struct AppQuery<T>(pub T);
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
@@ -70,7 +84,7 @@ impl<T: Serialize> IntoResponse for AppJson<T> {
 impl AppError {
     fn status_code(&self) -> StatusCode {
         match self {
-            Self::JsonRejection(..) => StatusCode::BAD_REQUEST,
+            Self::JsonRejection(..) | Self::QueryRejection(..) => StatusCode::BAD_REQUEST,
 
             Self::Handler(handler_error) => match handler_error {
                 HandlerError::Service(service_error) => match service_error {
@@ -92,6 +106,8 @@ impl AppError {
             },
 
             Self::MissingOrInvalidXRealIp => StatusCode::INTERNAL_SERVER_ERROR,
+
+            Self::NotFound => StatusCode::NOT_FOUND,
 
             Self::RateLimited(..) => StatusCode::TOO_MANY_REQUESTS,
         }

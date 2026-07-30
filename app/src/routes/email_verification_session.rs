@@ -6,14 +6,9 @@ use crate::{
         extract_real_ip::GovernorIpKeyExtractor,
         limiter,
     },
-    res::{AppJson, AppResult},
+    res::{AppJson, AppQuery, AppResult},
 };
-use axum::{
-    Extension, Router,
-    extract::{Query, State},
-    middleware,
-    routing::post,
-};
+use axum::{Extension, Router, extract::State, middleware, routing::post};
 use service::{AppState, dto, handlers::EmailVerificationSessionHandler, id::AccountId};
 use std::{net::IpAddr, time::Duration};
 use utoipa::OpenApi;
@@ -31,7 +26,7 @@ async fn retry_signup(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
     Extension(real_ip): Extension<IpAddr>,
-    Query(captcha): Query<dto::request::Captcha>,
+    AppQuery(captcha): AppQuery<dto::request::Captcha>,
     AppJson(email_dto): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
     Ok(AppJson(

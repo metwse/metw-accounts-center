@@ -2,13 +2,9 @@
 
 use crate::{
     middleware::{extract_real_ip::GovernorIpKeyExtractor, limiter::basic},
-    res::{AppJson, AppResult},
+    res::{AppJson, AppQuery, AppResult},
 };
-use axum::{
-    Extension, Router,
-    extract::{Query, State},
-    routing::post,
-};
+use axum::{Extension, Router, extract::State, routing::post};
 use service::{AppState, dto, handlers::AuthenticationHandler};
 use std::{net::IpAddr, time::Duration};
 use utoipa::OpenApi;
@@ -25,7 +21,7 @@ use utoipa::OpenApi;
 async fn signup(
     State(state): State<AppState>,
     Extension(real_ip): Extension<IpAddr>,
-    Query(captcha): Query<dto::request::Captcha>,
+    AppQuery(captcha): AppQuery<dto::request::Captcha>,
     AppJson(signup_dto): AppJson<dto::request::Signup>,
 ) -> AppResult<dto::response::Token> {
     Ok(AppJson(

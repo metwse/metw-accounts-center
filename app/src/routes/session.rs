@@ -6,11 +6,11 @@ use crate::{
         extract_real_ip::GovernorIpKeyExtractor,
         limiter,
     },
-    res::{AppJson, AppResult},
+    res::{AppJson, AppQuery, AppResult},
 };
 use axum::{
     Extension, Router,
-    extract::{Query, State},
+    extract::State,
     middleware,
     routing::{delete, get, post},
 };
@@ -45,7 +45,7 @@ async fn add_email(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
     Extension(real_ip): Extension<IpAddr>,
-    Query(captcha): Query<dto::request::Captcha>,
+    AppQuery(captcha): AppQuery<dto::request::Captcha>,
     AppJson(email_dto): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
     Ok(AppJson(
@@ -85,7 +85,7 @@ async fn delete_email(
 async fn set_primary_email(
     State(state): State<AppState>,
     Extension(id): Extension<AccountId>,
-    Query(captcha): Query<dto::request::Captcha>,
+    AppQuery(captcha): AppQuery<dto::request::Captcha>,
     AppJson(email_dto): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
     Ok(AppJson(
