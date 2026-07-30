@@ -97,168 +97,160 @@
 <a href=#97 id=97 data-nosnippet>97</a>    /// Returns an empty list if none have been added.
 <a href=#98 id=98 data-nosnippet>98</a>    </span><span class="kw">async fn </span>get_secondary_emails(<span class="kw-2">&amp;</span><span class="self">self</span>, id: AccountId) -&gt; RepoResult&lt;Vec&lt;String&gt;&gt;;
 <a href=#99 id=99 data-nosnippet>99</a>
-<a href=#100 id=100 data-nosnippet>100</a>    <span class="doccomment">/// Get account keys - the key bundle of the account.
-<a href=#101 id=101 data-nosnippet>101</a>    </span><span class="kw">async fn </span>get_keys(<span class="kw-2">&amp;</span><span class="self">self</span>, id: AccountId) -&gt; RepoResult&lt;<span class="prelude-ty">Option</span>&lt;dto::repo::OwnedKeys&gt;&gt;;
-<a href=#102 id=102 data-nosnippet>102</a>
-<a href=#103 id=103 data-nosnippet>103</a>    <span class="doccomment">/// Set the email primary for the account.
-<a href=#104 id=104 data-nosnippet>104</a>    ///
-<a href=#105 id=105 data-nosnippet>105</a>    /// Although `email`s are unique, the `id` parameter is also required to
-<a href=#106 id=106 data-nosnippet>106</a>    /// prevent race conditions. It is highly unlikely that the owner of an
-<a href=#107 id=107 data-nosnippet>107</a>    /// email would change at the exact moment their email is being set as
-<a href=#108 id=108 data-nosnippet>108</a>    /// the primary email, but it is still a safety hazard that must still be
-<a href=#109 id=109 data-nosnippet>109</a>    /// prevented.
-<a href=#110 id=110 data-nosnippet>110</a>    </span><span class="kw">async fn </span>set_primary_email_if_current_is(
-<a href=#111 id=111 data-nosnippet>111</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#112 id=112 data-nosnippet>112</a>        id: AccountId,
-<a href=#113 id=113 data-nosnippet>113</a>        current_primary_email: <span class="kw-2">&amp;</span>str,
-<a href=#114 id=114 data-nosnippet>114</a>        new_primary_email: <span class="kw-2">&amp;</span>str,
-<a href=#115 id=115 data-nosnippet>115</a>    ) -&gt; RepoResult&lt;bool&gt;;
+<a href=#100 id=100 data-nosnippet>100</a>    <span class="doccomment">/// Set the email primary for the account.
+<a href=#101 id=101 data-nosnippet>101</a>    ///
+<a href=#102 id=102 data-nosnippet>102</a>    /// Although `email`s are unique, the `id` parameter is also required to
+<a href=#103 id=103 data-nosnippet>103</a>    /// prevent race conditions. It is highly unlikely that the owner of an
+<a href=#104 id=104 data-nosnippet>104</a>    /// email would change at the exact moment their email is being set as
+<a href=#105 id=105 data-nosnippet>105</a>    /// the primary email, but it is still a safety hazard that must still be
+<a href=#106 id=106 data-nosnippet>106</a>    /// prevented.
+<a href=#107 id=107 data-nosnippet>107</a>    </span><span class="kw">async fn </span>set_primary_email_if_current_is(
+<a href=#108 id=108 data-nosnippet>108</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#109 id=109 data-nosnippet>109</a>        id: AccountId,
+<a href=#110 id=110 data-nosnippet>110</a>        current_primary_email: <span class="kw-2">&amp;</span>str,
+<a href=#111 id=111 data-nosnippet>111</a>        new_primary_email: <span class="kw-2">&amp;</span>str,
+<a href=#112 id=112 data-nosnippet>112</a>    ) -&gt; RepoResult&lt;bool&gt;;
+<a href=#113 id=113 data-nosnippet>113</a>
+<a href=#114 id=114 data-nosnippet>114</a>    <span class="doccomment">/// Remove the email if it is not primary email of the account.
+<a href=#115 id=115 data-nosnippet>115</a>    </span><span class="kw">async fn </span>remove_email_if_not_primary(<span class="kw-2">&amp;</span><span class="self">self</span>, id: AccountId, email: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;bool&gt;;
 <a href=#116 id=116 data-nosnippet>116</a>
-<a href=#117 id=117 data-nosnippet>117</a>    <span class="doccomment">/// Remove the email if it is not primary email of the account.
-<a href=#118 id=118 data-nosnippet>118</a>    </span><span class="kw">async fn </span>remove_email_if_not_primary(<span class="kw-2">&amp;</span><span class="self">self</span>, id: AccountId, email: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;bool&gt;;
+<a href=#117 id=117 data-nosnippet>117</a>    <span class="doccomment">/// Returns true if the username has been taken.
+<a href=#118 id=118 data-nosnippet>118</a>    </span><span class="kw">async fn </span>is_username_taken(<span class="kw-2">&amp;</span><span class="self">self</span>, username: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;bool&gt;;
 <a href=#119 id=119 data-nosnippet>119</a>
-<a href=#120 id=120 data-nosnippet>120</a>    <span class="doccomment">/// Returns true if the username has been taken.
-<a href=#121 id=121 data-nosnippet>121</a>    </span><span class="kw">async fn </span>is_username_taken(<span class="kw-2">&amp;</span><span class="self">self</span>, username: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;bool&gt;;
+<a href=#120 id=120 data-nosnippet>120</a>    <span class="doccomment">/// Returns true if the email has been taken.
+<a href=#121 id=121 data-nosnippet>121</a>    </span><span class="kw">async fn </span>is_email_taken(<span class="kw-2">&amp;</span><span class="self">self</span>, email: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;bool&gt;;
 <a href=#122 id=122 data-nosnippet>122</a>
-<a href=#123 id=123 data-nosnippet>123</a>    <span class="doccomment">/// Returns true if the email has been taken.
-<a href=#124 id=124 data-nosnippet>124</a>    </span><span class="kw">async fn </span>is_email_taken(<span class="kw-2">&amp;</span><span class="self">self</span>, email: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;bool&gt;;
-<a href=#125 id=125 data-nosnippet>125</a>
-<a href=#126 id=126 data-nosnippet>126</a>    <span class="doccomment">/// Returns true if the email has been taken by the given account.
-<a href=#127 id=127 data-nosnippet>127</a>    </span><span class="kw">async fn </span>is_email_taken_by(<span class="kw-2">&amp;</span><span class="self">self</span>, id: AccountId, email: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;bool&gt;;
-<a href=#128 id=128 data-nosnippet>128</a>}
-<a href=#129 id=129 data-nosnippet>129</a>
-<a href=#130 id=130 data-nosnippet>130</a><span class="doccomment">/// Transactional repository access wrapper.
-<a href=#131 id=131 data-nosnippet>131</a></span><span class="attr">#[async_trait]
-<a href=#132 id=132 data-nosnippet>132</a></span><span class="kw">pub trait </span>AccountRepoTransaction: Send + Sync {
-<a href=#133 id=133 data-nosnippet>133</a>    <span class="doccomment">/// Commit the changes.
-<a href=#134 id=134 data-nosnippet>134</a>    </span><span class="kw">async fn </span>commit(<span class="self">self</span>: Box&lt;<span class="self">Self</span>&gt;) -&gt; RepoResult&lt;()&gt;;
+<a href=#123 id=123 data-nosnippet>123</a>    <span class="doccomment">/// Returns true if the email has been taken by the given account.
+<a href=#124 id=124 data-nosnippet>124</a>    </span><span class="kw">async fn </span>is_email_taken_by(<span class="kw-2">&amp;</span><span class="self">self</span>, id: AccountId, email: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;bool&gt;;
+<a href=#125 id=125 data-nosnippet>125</a>}
+<a href=#126 id=126 data-nosnippet>126</a>
+<a href=#127 id=127 data-nosnippet>127</a><span class="doccomment">/// Transactional repository access wrapper.
+<a href=#128 id=128 data-nosnippet>128</a></span><span class="attr">#[async_trait]
+<a href=#129 id=129 data-nosnippet>129</a></span><span class="kw">pub trait </span>AccountRepoTransaction: Send + Sync {
+<a href=#130 id=130 data-nosnippet>130</a>    <span class="doccomment">/// Commit the changes.
+<a href=#131 id=131 data-nosnippet>131</a>    </span><span class="kw">async fn </span>commit(<span class="self">self</span>: Box&lt;<span class="self">Self</span>&gt;) -&gt; RepoResult&lt;()&gt;;
+<a href=#132 id=132 data-nosnippet>132</a>
+<a href=#133 id=133 data-nosnippet>133</a>    <span class="doccomment">/// Register a new account, or update it.
+<a href=#134 id=134 data-nosnippet>134</a>    </span><span class="kw">async fn </span>upsert_account(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: AccountId, password_hash: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;()&gt;;
 <a href=#135 id=135 data-nosnippet>135</a>
-<a href=#136 id=136 data-nosnippet>136</a>    <span class="doccomment">/// Register a new account, or update its keys.
-<a href=#137 id=137 data-nosnippet>137</a>    </span><span class="kw">async fn </span>upsert_account(
-<a href=#138 id=138 data-nosnippet>138</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#139 id=139 data-nosnippet>139</a>        id: AccountId,
-<a href=#140 id=140 data-nosnippet>140</a>        password_hash: <span class="kw-2">&amp;</span>str,
-<a href=#141 id=141 data-nosnippet>141</a>        keys: <span class="kw-2">&amp;</span>dto::repo::Keys,
-<a href=#142 id=142 data-nosnippet>142</a>    ) -&gt; RepoResult&lt;()&gt;;
-<a href=#143 id=143 data-nosnippet>143</a>
-<a href=#144 id=144 data-nosnippet>144</a>    <span class="doccomment">/// Load default flags to user.
-<a href=#145 id=145 data-nosnippet>145</a>    </span><span class="kw">async fn </span>insert_default_flags(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: AccountId) -&gt; RepoResult&lt;()&gt;;
-<a href=#146 id=146 data-nosnippet>146</a>
-<a href=#147 id=147 data-nosnippet>147</a>    <span class="doccomment">/// Add a secondary email to the account.
-<a href=#148 id=148 data-nosnippet>148</a>    </span><span class="kw">async fn </span>add_email(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: AccountId, email: <span class="kw-2">&amp;</span>str, is_primary: bool) -&gt; RepoResult&lt;()&gt;;
+<a href=#136 id=136 data-nosnippet>136</a>    <span class="doccomment">/// Load default flags to user.
+<a href=#137 id=137 data-nosnippet>137</a>    </span><span class="kw">async fn </span>insert_default_flags(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: AccountId) -&gt; RepoResult&lt;()&gt;;
+<a href=#138 id=138 data-nosnippet>138</a>
+<a href=#139 id=139 data-nosnippet>139</a>    <span class="doccomment">/// Add a secondary email to the account.
+<a href=#140 id=140 data-nosnippet>140</a>    </span><span class="kw">async fn </span>add_email(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: AccountId, email: <span class="kw-2">&amp;</span>str, is_primary: bool) -&gt; RepoResult&lt;()&gt;;
+<a href=#141 id=141 data-nosnippet>141</a>
+<a href=#142 id=142 data-nosnippet>142</a>    <span class="doccomment">/// Add username alias to the account.
+<a href=#143 id=143 data-nosnippet>143</a>    </span><span class="kw">async fn </span>add_username(
+<a href=#144 id=144 data-nosnippet>144</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#145 id=145 data-nosnippet>145</a>        id: AccountId,
+<a href=#146 id=146 data-nosnippet>146</a>        username: <span class="kw-2">&amp;</span>str,
+<a href=#147 id=147 data-nosnippet>147</a>        is_primary: bool,
+<a href=#148 id=148 data-nosnippet>148</a>    ) -&gt; RepoResult&lt;()&gt;;
 <a href=#149 id=149 data-nosnippet>149</a>
-<a href=#150 id=150 data-nosnippet>150</a>    <span class="doccomment">/// Add username alias to the account.
-<a href=#151 id=151 data-nosnippet>151</a>    </span><span class="kw">async fn </span>add_username(
+<a href=#150 id=150 data-nosnippet>150</a>    <span class="doccomment">/// Set the is email verified flag of the account.
+<a href=#151 id=151 data-nosnippet>151</a>    </span><span class="kw">async fn </span>set_is_email_verified_flag(
 <a href=#152 id=152 data-nosnippet>152</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#153 id=153 data-nosnippet>153</a>        id: AccountId,
-<a href=#154 id=154 data-nosnippet>154</a>        username: <span class="kw-2">&amp;</span>str,
-<a href=#155 id=155 data-nosnippet>155</a>        is_primary: bool,
-<a href=#156 id=156 data-nosnippet>156</a>    ) -&gt; RepoResult&lt;()&gt;;
+<a href=#154 id=154 data-nosnippet>154</a>        is_email_verified: bool,
+<a href=#155 id=155 data-nosnippet>155</a>    ) -&gt; RepoResult&lt;()&gt;;
+<a href=#156 id=156 data-nosnippet>156</a>}
 <a href=#157 id=157 data-nosnippet>157</a>
-<a href=#158 id=158 data-nosnippet>158</a>    <span class="doccomment">/// Set the is email verified flag of the account.
-<a href=#159 id=159 data-nosnippet>159</a>    </span><span class="kw">async fn </span>set_is_email_verified_flag(
-<a href=#160 id=160 data-nosnippet>160</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#161 id=161 data-nosnippet>161</a>        id: AccountId,
-<a href=#162 id=162 data-nosnippet>162</a>        is_email_verified: bool,
-<a href=#163 id=163 data-nosnippet>163</a>    ) -&gt; RepoResult&lt;()&gt;;
-<a href=#164 id=164 data-nosnippet>164</a>}
-<a href=#165 id=165 data-nosnippet>165</a>
-<a href=#166 id=166 data-nosnippet>166</a><span class="doccomment">/// Token revocation state.
+<a href=#158 id=158 data-nosnippet>158</a><span class="doccomment">/// Token revocation state.
+<a href=#159 id=159 data-nosnippet>159</a>///
+<a href=#160 id=160 data-nosnippet>160</a>/// A token is considered revoked if any revocation policy invalidates it. This
+<a href=#161 id=161 data-nosnippet>161</a>/// includes:
+<a href=#162 id=162 data-nosnippet>162</a>///
+<a href=#163 id=163 data-nosnippet>163</a>/// - token-level revocation
+<a href=#164 id=164 data-nosnippet>164</a>/// - scope-level revocation
+<a href=#165 id=165 data-nosnippet>165</a>/// - account-level revocation
+<a href=#166 id=166 data-nosnippet>166</a>///
 <a href=#167 id=167 data-nosnippet>167</a>///
-<a href=#168 id=168 data-nosnippet>168</a>/// A token is considered revoked if any revocation policy invalidates it. This
-<a href=#169 id=169 data-nosnippet>169</a>/// includes:
-<a href=#170 id=170 data-nosnippet>170</a>///
-<a href=#171 id=171 data-nosnippet>171</a>/// - token-level revocation
-<a href=#172 id=172 data-nosnippet>172</a>/// - scope-level revocation
-<a href=#173 id=173 data-nosnippet>173</a>/// - account-level revocation
-<a href=#174 id=174 data-nosnippet>174</a>///
+<a href=#168 id=168 data-nosnippet>168</a>/// ## Check-and-Revoke Operations
+<a href=#169 id=169 data-nosnippet>169</a>///
+<a href=#170 id=170 data-nosnippet>170</a>/// The check-and-revoke methods perform the revocation check and the
+<a href=#171 id=171 data-nosnippet>171</a>/// corresponding revocation atomically within their own revocation level.
+<a href=#172 id=172 data-nosnippet>172</a>///
+<a href=#173 id=173 data-nosnippet>173</a>/// For example, concurrent calls to [`check_and_revoke_token`] guarantee that
+<a href=#174 id=174 data-nosnippet>174</a>/// at most one call succeeds and all others observe the token as revoked.
 <a href=#175 id=175 data-nosnippet>175</a>///
-<a href=#176 id=176 data-nosnippet>176</a>/// ## Check-and-Revoke Operations
-<a href=#177 id=177 data-nosnippet>177</a>///
-<a href=#178 id=178 data-nosnippet>178</a>/// The check-and-revoke methods perform the revocation check and the
-<a href=#179 id=179 data-nosnippet>179</a>/// corresponding revocation atomically within their own revocation level.
-<a href=#180 id=180 data-nosnippet>180</a>///
-<a href=#181 id=181 data-nosnippet>181</a>/// For example, concurrent calls to [`check_and_revoke_token`] guarantee that
-<a href=#182 id=182 data-nosnippet>182</a>/// at most one call succeeds and all others observe the token as revoked.
-<a href=#183 id=183 data-nosnippet>183</a>///
-<a href=#184 id=184 data-nosnippet>184</a>/// However, atomicity is not guaranteed across different revocation levels.
-<a href=#185 id=185 data-nosnippet>185</a>/// Concurrent calls to [`check_and_revoke_token`] and
-<a href=#186 id=186 data-nosnippet>186</a>/// [`check_and_revoke_account_tokens_with_scope`] on the same token have
-<a href=#187 id=187 data-nosnippet>187</a>/// unspecified behavior. Do not use multiple variants of `check_and_revoke*`
-<a href=#188 id=188 data-nosnippet>188</a>/// for a token scope; use only one level of check-and-revoke.
-<a href=#189 id=189 data-nosnippet>189</a>///
-<a href=#190 id=190 data-nosnippet>190</a>/// [`check_and_revoke_token`]: TokenRepo::check_and_revoke_token
-<a href=#191 id=191 data-nosnippet>191</a>/// [`check_and_revoke_account_tokens_with_scope`]: TokenRepo::check_and_revoke_account_tokens_with_scope
-<a href=#192 id=192 data-nosnippet>192</a>///
-<a href=#193 id=193 data-nosnippet>193</a>///
-<a href=#194 id=194 data-nosnippet>194</a>/// ## Revoke Operations
-<a href=#195 id=195 data-nosnippet>195</a>///
-<a href=#196 id=196 data-nosnippet>196</a>/// With these methods, no token revocation check is performed; revocation is
-<a href=#197 id=197 data-nosnippet>197</a>/// applied directly at the account level.
-<a href=#198 id=198 data-nosnippet>198</a></span><span class="attr">#[async_trait]
-<a href=#199 id=199 data-nosnippet>199</a></span><span class="kw">pub trait </span>TokenRepo: Send + Sync {
-<a href=#200 id=200 data-nosnippet>200</a>    <span class="doccomment">/// Check whether the token has been revoked, and if it has not, revoke it.
-<a href=#201 id=201 data-nosnippet>201</a>    ///
-<a href=#202 id=202 data-nosnippet>202</a>    /// Returns true if the token has already been revoked.
-<a href=#203 id=203 data-nosnippet>203</a>    </span><span class="kw">async fn </span>check_and_revoke_token(<span class="kw-2">&amp;</span><span class="self">self</span>, token: <span class="kw-2">&amp;</span>DecodedToken) -&gt; RepoResult&lt;bool&gt;;
-<a href=#204 id=204 data-nosnippet>204</a>
-<a href=#205 id=205 data-nosnippet>205</a>    <span class="doccomment">/// Check whether the token has been revoked, and if it has not, revoke all
-<a href=#206 id=206 data-nosnippet>206</a>    /// tokens in the account that share the same scope as this token.
-<a href=#207 id=207 data-nosnippet>207</a>    ///
-<a href=#208 id=208 data-nosnippet>208</a>    /// Returns true if the token has already been revoked.
-<a href=#209 id=209 data-nosnippet>209</a>    </span><span class="kw">async fn </span>check_and_revoke_account_tokens_with_scope(
-<a href=#210 id=210 data-nosnippet>210</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#211 id=211 data-nosnippet>211</a>        token: <span class="kw-2">&amp;</span>DecodedToken,
-<a href=#212 id=212 data-nosnippet>212</a>    ) -&gt; RepoResult&lt;bool&gt;;
-<a href=#213 id=213 data-nosnippet>213</a>
-<a href=#214 id=214 data-nosnippet>214</a>    <span class="doccomment">/// Check whether the token has been revoked, and if it has not, revoke all
-<a href=#215 id=215 data-nosnippet>215</a>    /// tokens associated with the account.
-<a href=#216 id=216 data-nosnippet>216</a>    ///
-<a href=#217 id=217 data-nosnippet>217</a>    /// Returns true if the token has already been revoked.
-<a href=#218 id=218 data-nosnippet>218</a>    </span><span class="kw">async fn </span>check_and_revoke_account_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, token: <span class="kw-2">&amp;</span>DecodedToken) -&gt; RepoResult&lt;bool&gt;;
-<a href=#219 id=219 data-nosnippet>219</a>
-<a href=#220 id=220 data-nosnippet>220</a>    <span class="doccomment">/// Revoke all tokens belonging to the account that have the specified
-<a href=#221 id=221 data-nosnippet>221</a>    /// scope.
-<a href=#222 id=222 data-nosnippet>222</a>    ///
-<a href=#223 id=223 data-nosnippet>223</a>    /// This operation atomically updates the revocation cutoff time for the
-<a href=#224 id=224 data-nosnippet>224</a>    /// `(account_id, scope)` pair and returns the previous cutoff time.
-<a href=#225 id=225 data-nosnippet>225</a>    </span><span class="kw">async fn </span>revoke_account_tokens_with_scope(
-<a href=#226 id=226 data-nosnippet>226</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#227 id=227 data-nosnippet>227</a>        account_id: AccountId,
-<a href=#228 id=228 data-nosnippet>228</a>        scope: <span class="kw-2">&amp;</span>TokenScope,
-<a href=#229 id=229 data-nosnippet>229</a>    ) -&gt; RepoResult&lt;<span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt;;
-<a href=#230 id=230 data-nosnippet>230</a>
-<a href=#231 id=231 data-nosnippet>231</a>    <span class="doccomment">/// Revoke all tokens belonging to the account.
-<a href=#232 id=232 data-nosnippet>232</a>    ///
-<a href=#233 id=233 data-nosnippet>233</a>    /// This operation atomically updates the account's token cutoff time,
-<a href=#234 id=234 data-nosnippet>234</a>    /// and returns the previous cutoff time.
-<a href=#235 id=235 data-nosnippet>235</a>    </span><span class="kw">async fn </span>revoke_account_tokens(
-<a href=#236 id=236 data-nosnippet>236</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#237 id=237 data-nosnippet>237</a>        account_id: AccountId,
-<a href=#238 id=238 data-nosnippet>238</a>    ) -&gt; RepoResult&lt;<span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt;;
-<a href=#239 id=239 data-nosnippet>239</a>
-<a href=#240 id=240 data-nosnippet>240</a>    <span class="doccomment">/// Returns true if the token is considered revoked by any revocation rule.
-<a href=#241 id=241 data-nosnippet>241</a>    </span><span class="kw">async fn </span>is_revoked(<span class="kw-2">&amp;</span><span class="self">self</span>, token: <span class="kw-2">&amp;</span>DecodedToken) -&gt; RepoResult&lt;bool&gt;;
-<a href=#242 id=242 data-nosnippet>242</a>}
-<a href=#243 id=243 data-nosnippet>243</a>
-<a href=#244 id=244 data-nosnippet>244</a><span class="doccomment">/// IP and email address based rate limiting for new emails.
-<a href=#245 id=245 data-nosnippet>245</a></span><span class="attr">#[async_trait]
-<a href=#246 id=246 data-nosnippet>246</a></span><span class="kw">pub trait </span>EmailLimitingRepo: Send + Sync {
-<a href=#247 id=247 data-nosnippet>247</a>    <span class="doccomment">/// Checks whether an email may be sent and consumes the associated
-<a href=#248 id=248 data-nosnippet>248</a>    /// rate limit quota if allowed.
-<a href=#249 id=249 data-nosnippet>249</a>    </span><span class="kw">async fn </span>check_and_consume_quota(
-<a href=#250 id=250 data-nosnippet>250</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#251 id=251 data-nosnippet>251</a>        ip: <span class="kw-2">&amp;</span>IpAddr,
-<a href=#252 id=252 data-nosnippet>252</a>        email: <span class="kw-2">&amp;</span>str,
-<a href=#253 id=253 data-nosnippet>253</a>    ) -&gt; RepoResult&lt;dto::repo::EmailLimitingResult&gt;;
-<a href=#254 id=254 data-nosnippet>254</a>
-<a href=#255 id=255 data-nosnippet>255</a>    <span class="doccomment">/// Refunds one IP quota unit previously consumed by
-<a href=#256 id=256 data-nosnippet>256</a>    /// [`check_and_consume_quota`].
-<a href=#257 id=257 data-nosnippet>257</a>    ///
-<a href=#258 id=258 data-nosnippet>258</a>    /// [`check_and_consume_quota`]: EmailLimitingRepo::check_and_consume_quota
-<a href=#259 id=259 data-nosnippet>259</a>    </span><span class="kw">async fn </span>refund_ip_quota(<span class="kw-2">&amp;</span><span class="self">self</span>, ip: <span class="kw-2">&amp;</span>IpAddr, email: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;()&gt;;
-<a href=#260 id=260 data-nosnippet>260</a>
-<a href=#261 id=261 data-nosnippet>261</a>    <span class="doccomment">/// Removes all rate limiting state associated with the email address.
-<a href=#262 id=262 data-nosnippet>262</a>    </span><span class="kw">async fn </span>clear_email_limit(<span class="kw-2">&amp;</span><span class="self">self</span>, email: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;()&gt;;
-<a href=#263 id=263 data-nosnippet>263</a>}
+<a href=#176 id=176 data-nosnippet>176</a>/// However, atomicity is not guaranteed across different revocation levels.
+<a href=#177 id=177 data-nosnippet>177</a>/// Concurrent calls to [`check_and_revoke_token`] and
+<a href=#178 id=178 data-nosnippet>178</a>/// [`check_and_revoke_account_tokens_with_scope`] on the same token have
+<a href=#179 id=179 data-nosnippet>179</a>/// unspecified behavior. Do not use multiple variants of `check_and_revoke*`
+<a href=#180 id=180 data-nosnippet>180</a>/// for a token scope; use only one level of check-and-revoke.
+<a href=#181 id=181 data-nosnippet>181</a>///
+<a href=#182 id=182 data-nosnippet>182</a>/// [`check_and_revoke_token`]: TokenRepo::check_and_revoke_token
+<a href=#183 id=183 data-nosnippet>183</a>/// [`check_and_revoke_account_tokens_with_scope`]: TokenRepo::check_and_revoke_account_tokens_with_scope
+<a href=#184 id=184 data-nosnippet>184</a>///
+<a href=#185 id=185 data-nosnippet>185</a>///
+<a href=#186 id=186 data-nosnippet>186</a>/// ## Revoke Operations
+<a href=#187 id=187 data-nosnippet>187</a>///
+<a href=#188 id=188 data-nosnippet>188</a>/// With these methods, no token revocation check is performed; revocation is
+<a href=#189 id=189 data-nosnippet>189</a>/// applied directly at the account level.
+<a href=#190 id=190 data-nosnippet>190</a></span><span class="attr">#[async_trait]
+<a href=#191 id=191 data-nosnippet>191</a></span><span class="kw">pub trait </span>TokenRepo: Send + Sync {
+<a href=#192 id=192 data-nosnippet>192</a>    <span class="doccomment">/// Check whether the token has been revoked, and if it has not, revoke it.
+<a href=#193 id=193 data-nosnippet>193</a>    ///
+<a href=#194 id=194 data-nosnippet>194</a>    /// Returns true if the token has already been revoked.
+<a href=#195 id=195 data-nosnippet>195</a>    </span><span class="kw">async fn </span>check_and_revoke_token(<span class="kw-2">&amp;</span><span class="self">self</span>, token: <span class="kw-2">&amp;</span>DecodedToken) -&gt; RepoResult&lt;bool&gt;;
+<a href=#196 id=196 data-nosnippet>196</a>
+<a href=#197 id=197 data-nosnippet>197</a>    <span class="doccomment">/// Check whether the token has been revoked, and if it has not, revoke all
+<a href=#198 id=198 data-nosnippet>198</a>    /// tokens in the account that share the same scope as this token.
+<a href=#199 id=199 data-nosnippet>199</a>    ///
+<a href=#200 id=200 data-nosnippet>200</a>    /// Returns true if the token has already been revoked.
+<a href=#201 id=201 data-nosnippet>201</a>    </span><span class="kw">async fn </span>check_and_revoke_account_tokens_with_scope(
+<a href=#202 id=202 data-nosnippet>202</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#203 id=203 data-nosnippet>203</a>        token: <span class="kw-2">&amp;</span>DecodedToken,
+<a href=#204 id=204 data-nosnippet>204</a>    ) -&gt; RepoResult&lt;bool&gt;;
+<a href=#205 id=205 data-nosnippet>205</a>
+<a href=#206 id=206 data-nosnippet>206</a>    <span class="doccomment">/// Check whether the token has been revoked, and if it has not, revoke all
+<a href=#207 id=207 data-nosnippet>207</a>    /// tokens associated with the account.
+<a href=#208 id=208 data-nosnippet>208</a>    ///
+<a href=#209 id=209 data-nosnippet>209</a>    /// Returns true if the token has already been revoked.
+<a href=#210 id=210 data-nosnippet>210</a>    </span><span class="kw">async fn </span>check_and_revoke_account_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, token: <span class="kw-2">&amp;</span>DecodedToken) -&gt; RepoResult&lt;bool&gt;;
+<a href=#211 id=211 data-nosnippet>211</a>
+<a href=#212 id=212 data-nosnippet>212</a>    <span class="doccomment">/// Revoke all tokens belonging to the account that have the specified
+<a href=#213 id=213 data-nosnippet>213</a>    /// scope.
+<a href=#214 id=214 data-nosnippet>214</a>    ///
+<a href=#215 id=215 data-nosnippet>215</a>    /// This operation atomically updates the revocation cutoff time for the
+<a href=#216 id=216 data-nosnippet>216</a>    /// `(account_id, scope)` pair and returns the previous cutoff time.
+<a href=#217 id=217 data-nosnippet>217</a>    </span><span class="kw">async fn </span>revoke_account_tokens_with_scope(
+<a href=#218 id=218 data-nosnippet>218</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#219 id=219 data-nosnippet>219</a>        account_id: AccountId,
+<a href=#220 id=220 data-nosnippet>220</a>        scope: <span class="kw-2">&amp;</span>TokenScope,
+<a href=#221 id=221 data-nosnippet>221</a>    ) -&gt; RepoResult&lt;<span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt;;
+<a href=#222 id=222 data-nosnippet>222</a>
+<a href=#223 id=223 data-nosnippet>223</a>    <span class="doccomment">/// Revoke all tokens belonging to the account.
+<a href=#224 id=224 data-nosnippet>224</a>    ///
+<a href=#225 id=225 data-nosnippet>225</a>    /// This operation atomically updates the account's token cutoff time,
+<a href=#226 id=226 data-nosnippet>226</a>    /// and returns the previous cutoff time.
+<a href=#227 id=227 data-nosnippet>227</a>    </span><span class="kw">async fn </span>revoke_account_tokens(
+<a href=#228 id=228 data-nosnippet>228</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#229 id=229 data-nosnippet>229</a>        account_id: AccountId,
+<a href=#230 id=230 data-nosnippet>230</a>    ) -&gt; RepoResult&lt;<span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt;;
+<a href=#231 id=231 data-nosnippet>231</a>
+<a href=#232 id=232 data-nosnippet>232</a>    <span class="doccomment">/// Returns true if the token is considered revoked by any revocation rule.
+<a href=#233 id=233 data-nosnippet>233</a>    </span><span class="kw">async fn </span>is_revoked(<span class="kw-2">&amp;</span><span class="self">self</span>, token: <span class="kw-2">&amp;</span>DecodedToken) -&gt; RepoResult&lt;bool&gt;;
+<a href=#234 id=234 data-nosnippet>234</a>}
+<a href=#235 id=235 data-nosnippet>235</a>
+<a href=#236 id=236 data-nosnippet>236</a><span class="doccomment">/// IP and email address based rate limiting for new emails.
+<a href=#237 id=237 data-nosnippet>237</a></span><span class="attr">#[async_trait]
+<a href=#238 id=238 data-nosnippet>238</a></span><span class="kw">pub trait </span>EmailLimitingRepo: Send + Sync {
+<a href=#239 id=239 data-nosnippet>239</a>    <span class="doccomment">/// Checks whether an email may be sent and consumes the associated
+<a href=#240 id=240 data-nosnippet>240</a>    /// rate limit quota if allowed.
+<a href=#241 id=241 data-nosnippet>241</a>    </span><span class="kw">async fn </span>check_and_consume_quota(
+<a href=#242 id=242 data-nosnippet>242</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#243 id=243 data-nosnippet>243</a>        ip: <span class="kw-2">&amp;</span>IpAddr,
+<a href=#244 id=244 data-nosnippet>244</a>        email: <span class="kw-2">&amp;</span>str,
+<a href=#245 id=245 data-nosnippet>245</a>    ) -&gt; RepoResult&lt;dto::repo::EmailLimitingResult&gt;;
+<a href=#246 id=246 data-nosnippet>246</a>
+<a href=#247 id=247 data-nosnippet>247</a>    <span class="doccomment">/// Refunds one IP quota unit previously consumed by
+<a href=#248 id=248 data-nosnippet>248</a>    /// [`check_and_consume_quota`].
+<a href=#249 id=249 data-nosnippet>249</a>    ///
+<a href=#250 id=250 data-nosnippet>250</a>    /// [`check_and_consume_quota`]: EmailLimitingRepo::check_and_consume_quota
+<a href=#251 id=251 data-nosnippet>251</a>    </span><span class="kw">async fn </span>refund_ip_quota(<span class="kw-2">&amp;</span><span class="self">self</span>, ip: <span class="kw-2">&amp;</span>IpAddr, email: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;()&gt;;
+<a href=#252 id=252 data-nosnippet>252</a>
+<a href=#253 id=253 data-nosnippet>253</a>    <span class="doccomment">/// Removes all rate limiting state associated with the email address.
+<a href=#254 id=254 data-nosnippet>254</a>    </span><span class="kw">async fn </span>clear_email_limit(<span class="kw-2">&amp;</span><span class="self">self</span>, email: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;()&gt;;
+<a href=#255 id=255 data-nosnippet>255</a>}
 </code></pre></div></section></main></body></html>

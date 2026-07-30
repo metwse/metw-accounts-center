@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Account","AccountFlags","Email","Username"]};
+window.SIDEBAR_ITEMS = {"enum":["ClientPasswordKdf","MasterKeyEncrpytionAlgorithm","ServerPasswordHashAlgorithm"],"struct":["Account","AccountFlags","Email","Username"]};
