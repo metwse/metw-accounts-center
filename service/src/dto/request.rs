@@ -28,17 +28,23 @@ pub struct Signup {
     #[validate(email, custom(function = validate_lowercase))]
     pub email: String,
 
-    /// Password hashed client-side.
-    #[validate(length(max = 128))]
-    pub client_password_hash: String,
+    /// Password hash with KDF parameters.
+    pub password: ClientDerivedPassword,
+}
 
-    /// default: metw-accounts-center
+/// Password hashed client-side, with PBKDF2-SHA256 parameters.
+#[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
+#[allow(missing_docs)]
+pub struct ClientDerivedPassword {
     #[validate(length(max = 128))]
-    pub pbkdf2_salt: Option<String>,
-    /// default: 500000
-    pub pbkdf2_iterations: Option<u32>,
-    /// defaut: 256
-    pub pbkdf2_length: Option<u32>,
+    pub base64_hash: String,
+
+    #[validate(length(max = 128))]
+    pub pbkdf2_salt: String,
+
+    pub pbkdf2_iterations: u32,
+
+    pub pbkdf2_length: u32,
 }
 
 /// Login into the account.

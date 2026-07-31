@@ -253,10 +253,12 @@ pub async fn taken_username_or_email(ctx: &TestState) -> HandlerResult<()> {
     let mut signup_dto = dto::request::Signup {
         username: taken_username.to_string(),
         email: random_email().to_string(),
-        client_password_hash: "passwd".to_string(),
-        pbkdf2_salt: None,
-        pbkdf2_iterations: None,
-        pbkdf2_length: None,
+        password: dto::request::ClientDerivedPassword {
+            base64_hash: "passwd".to_string(),
+            pbkdf2_salt: "metw-accounts-center".into(),
+            pbkdf2_iterations: 500_000,
+            pbkdf2_length: 256,
+        },
     };
 
     assert_matches!(

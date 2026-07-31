@@ -1,10 +1,6 @@
 use super::{ServiceError, ServiceResult};
 use crate::{dto, entity, id::AccountId, repo::AccountRepo, util::password};
 
-const PBKDF2_SALT_DEFAULT: &str = "metw-accounts-center";
-const PBKDF2_ITERATIONS_DEFAULT: u32 = 500_000;
-const PBKDF2_LENGTH_DEFAULT: u32 = 256;
-
 /// Account state.
 pub struct AccountService {
     repo: Box<dyn AccountRepo>,
@@ -32,7 +28,7 @@ impl AccountService {
             return Err(ServiceError::UsernameTaken);
         }
 
-        let password_hash = password::hash(&signup_dto.client_password_hash).await;
+        let password_hash = password::hash(&signup_dto.password.base64_hash).await;
 
         let mut transaction = self.repo.begin_transaction().await?;
 
@@ -40,14 +36,9 @@ impl AccountService {
         let account = entity::Account {
             id,
             client_password_kdf: entity::ClientPasswordKdf::Base64EncodedPbkdf2Sha256 {
-                salt: signup_dto
-                    .pbkdf2_salt
-                    .clone()
-                    .unwrap_or(String::from(PBKDF2_SALT_DEFAULT)),
-                iterations: signup_dto
-                    .pbkdf2_iterations
-                    .unwrap_or(PBKDF2_ITERATIONS_DEFAULT),
-                length: signup_dto.pbkdf2_length.unwrap_or(PBKDF2_LENGTH_DEFAULT),
+                salt: signup_dto.password.pbkdf2_salt.clone(),
+                iterations: signup_dto.password.pbkdf2_iterations,
+                length: signup_dto.password.pbkdf2_length,
             },
             server_password_hash_algorithm: entity::ServerPasswordHashAlgorithm::Argon2id,
             password_hash: Some(password_hash),

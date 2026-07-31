@@ -83,12 +83,14 @@ impl TestState {
         let email_verification_jwt = AuthenticationHandler(self.state.clone())
             .signup(
                 dto::request::Signup {
-                    client_password_hash: client_password_hash.to_string(),
                     username: username.to_string(),
                     email: email.to_string(),
-                    pbkdf2_salt: None,
-                    pbkdf2_iterations: None,
-                    pbkdf2_length: None,
+                    password: dto::request::ClientDerivedPassword {
+                        base64_hash: client_password_hash.to_string(),
+                        pbkdf2_salt: "metw-accounts-center".into(),
+                        pbkdf2_iterations: 500_000,
+                        pbkdf2_length: 256,
+                    },
                 },
                 random_ipv6(),
                 dto::request::Captcha {

@@ -18,10 +18,12 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
     let mut signup_dto = dto::request::Signup {
         username: username.to_string(),
         email: email.to_string(),
-        client_password_hash: "passwd".to_string(),
-        pbkdf2_salt: Some("test-salt".into()),
-        pbkdf2_iterations: Some(123),
-        pbkdf2_length: Some(321),
+        password: dto::request::ClientDerivedPassword {
+            base64_hash: "passwd".to_string(),
+            pbkdf2_salt: "test-salt".into(),
+            pbkdf2_iterations: 123,
+            pbkdf2_length: 321,
+        },
     };
 
     let login_with_email_dto = dto::request::LoginWithEmail {
@@ -151,10 +153,12 @@ pub async fn account_creation_data_race(
     let signup_dto = dto::request::Signup {
         username: username.to_string(),
         email: email.to_string(),
-        client_password_hash: "passwd".to_string(),
-        pbkdf2_salt: None,
-        pbkdf2_iterations: None,
-        pbkdf2_length: None,
+        password: dto::request::ClientDerivedPassword {
+            base64_hash: "passwd".to_string(),
+            pbkdf2_salt: "metw-accounts-center".into(),
+            pbkdf2_iterations: 500_000,
+            pbkdf2_length: 256,
+        },
     };
 
     let mut signup_futures = Vec::with_capacity(16);
