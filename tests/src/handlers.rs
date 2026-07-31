@@ -27,6 +27,19 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
             .is_err()
     );
 
+    AuthenticationHandler(ctx.state.clone())
+        .get_kdf_by_email(dto::request::Email {
+            email: email_unverified.into(),
+        })
+        .await
+        .unwrap_err();
+
+    AuthenticationHandler(ctx.state.clone())
+        .get_kdf_by_username(dto::request::Username {
+            username: username.into(),
+        })
+        .await?;
+
     let login_account_id = AuthenticationHandler(ctx.state.clone())
         .auth_email_verification_session(email_verification_session_jwt)
         .await?;

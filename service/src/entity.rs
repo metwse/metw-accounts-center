@@ -14,16 +14,16 @@ pub enum ServerPasswordHashAlgorithm {
 }
 
 /// Key derivation applied client-side.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
 #[serde(tag = "algorithm", rename_all = "snake_case")]
 #[allow(missing_docs)]
 pub enum ClientPasswordKdf {
     /// Plain text.
     None,
     /// For legacy accounts.
-    LegacySha256,
-    /// PBKDF2-SHA256.
-    Pbkdf2Sha256 {
+    LegacySha256Hex,
+    /// Base64-encoded PBKDF2-SHA256.
+    Base64EncodedPbkdf2Sha256 {
         salt: String,
         iterations: u32,
         length: u32,

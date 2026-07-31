@@ -154,6 +154,40 @@ impl AuthenticationHandler {
         }
     }
 
+    /// Returns KDFs of an account.
+    #[tracing::instrument(skip_all)]
+    pub async fn get_kdf_by_username(
+        &self,
+        username_dto: dto::request::Username,
+    ) -> HandlerResult<dto::response::AccountKdf> {
+        username_dto.validate()?;
+
+        let kdf = self
+            .0
+            .account_service
+            .get_kdf_by_username(&username_dto.username)
+            .await?;
+
+        Ok(kdf)
+    }
+
+    /// Returns KDFs of an account.
+    #[tracing::instrument(skip_all)]
+    pub async fn get_kdf_by_email(
+        &self,
+        email_dto: dto::request::Email,
+    ) -> HandlerResult<dto::response::AccountKdf> {
+        email_dto.validate()?;
+
+        let kdf = self
+            .0
+            .account_service
+            .get_kdf_by_email(&email_dto.email)
+            .await?;
+
+        Ok(kdf)
+    }
+
     /// Revokes the JWT.
     ///
     /// Both the session tokens and authorization tokens can be revoked using

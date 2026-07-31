@@ -79,6 +79,42 @@ impl AccountRepo for MockAccountRepoImpl {
         }
     }
 
+    async fn get_client_password_kdf_by_email(
+        &self,
+        email: &str,
+    ) -> RepoResult<Option<entity::ClientPasswordKdf>> {
+        let state = self.lock_state().await;
+
+        if let Some(email_entity) = state.emails.get(email) {
+            Ok(Some(
+                state.accounts[&email_entity.account_id]
+                    .client_password_kdf
+                    .clone(),
+            ))
+        } else {
+            Ok(None)
+        }
+    }
+
+    async fn get_client_password_kdf_by_username(
+        &self,
+        username: &str,
+    ) -> RepoResult<Option<entity::ClientPasswordKdf>> {
+        let state = self.lock_state().await;
+
+        if let Some(username_entity) = state.usernames.get(username)
+            && username_entity.expires_at.is_none()
+        {
+            Ok(Some(
+                state.accounts[&username_entity.account_id]
+                    .client_password_kdf
+                    .clone(),
+            ))
+        } else {
+            Ok(None)
+        }
+    }
+
     async fn get_primary_username(&self, id: AccountId) -> RepoResult<Option<String>> {
         let state = self.lock_state().await;
 

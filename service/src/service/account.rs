@@ -39,7 +39,7 @@ impl AccountService {
         let id = AccountId::unique();
         let account = entity::Account {
             id,
-            client_password_kdf: entity::ClientPasswordKdf::Pbkdf2Sha256 {
+            client_password_kdf: entity::ClientPasswordKdf::Base64EncodedPbkdf2Sha256 {
                 salt: signup_dto
                     .pbkdf2_salt
                     .clone()
@@ -135,6 +135,38 @@ impl AccountService {
         };
 
         self.login(&login, &login_dto.client_password_hash).await
+    }
+
+    /// Account's key derivation functions.
+    #[tracing::instrument(skip(self))]
+    pub async fn get_kdf_by_email(&self, email: &str) -> ServiceResult<dto::response::AccountKdf> {
+        let Some(client_password_kdf) = self.repo.get_client_password_kdf_by_email(email).await?
+        else {
+            return Err(ServiceError::AccountNotFound);
+        };
+
+        Ok(dto::response::AccountKdf {
+            client_password_kdf,
+        })
+    }
+
+    /// Account's key derivation functions.
+    #[tracing::instrument(skip(self))]
+    pub async fn get_kdf_by_username(
+        &self,
+        username: &str,
+    ) -> ServiceResult<dto::response::AccountKdf> {
+        let Some(client_password_kdf) = self
+            .repo
+            .get_client_password_kdf_by_username(username)
+            .await?
+        else {
+            return Err(ServiceError::AccountNotFound);
+        };
+
+        Ok(dto::response::AccountKdf {
+            client_password_kdf,
+        })
     }
 
     /// Fetch the account details.

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT client_password_kdf AS\n                        \"client_password_kdf: ClientPasswordKdfJson\"\n                FROM accounts\n                WHERE id = (SELECT account_id FROM emails WHERE email = $1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "client_password_kdf: ClientPasswordKdfJson",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "115ef6bfa5da45bdc99df8d43d266ade473c7642f92c9d2d8457531564359682"
+}

@@ -56,23 +56,29 @@ pub trait AccountRepo: Send + Sync {
     /// Begin a new transactional unit.
     async fn begin_transaction(&self) -> RepoResult<Box<dyn AccountRepoTransaction>>;
 
-    /// Get password by email.
-    ///
-    /// Returns Argon2-hashed password with account id. Higher layers shall do
-    /// hash verifications.
+    /// Get password and server-side password hashing algorithm by email.
     async fn get_login_credentials_by_email(
         &self,
         email: &str,
     ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>>;
 
-    /// Get password by username.
-    ///
-    /// The behavior is exactly the same with `get_login_with_email`, but also
-    /// includes a flag to check wheter account's email is verified.
+    /// Get password and server-side password hashing algorithm by username.
     async fn get_login_credentials_by_username(
         &self,
         username: &str,
     ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>>;
+
+    /// Get client-side password derivation algorithm by email.
+    async fn get_client_password_kdf_by_email(
+        &self,
+        email: &str,
+    ) -> RepoResult<Option<entity::ClientPasswordKdf>>;
+
+    /// Get client-side password derivation algorithm by username.
+    async fn get_client_password_kdf_by_username(
+        &self,
+        username: &str,
+    ) -> RepoResult<Option<entity::ClientPasswordKdf>>;
 
     /// Get primary username if, exists.
     ///

@@ -18,6 +18,9 @@ impl AccountRepoImpl {
     }
 }
 
+type ServerPasswordHashAlgorithmJson = sqlx::types::Json<entity::ServerPasswordHashAlgorithm>;
+type ClientPasswordKdfJson = sqlx::types::Json<entity::ClientPasswordKdf>;
+
 #[async_trait]
 impl AccountRepo for AccountRepoImpl {
     async fn begin_transaction(&self) -> RepoResult<Box<dyn AccountRepoTransaction>> {
@@ -30,9 +33,6 @@ impl AccountRepo for AccountRepoImpl {
         &self,
         email: &str,
     ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
-        type ServerPasswordHashAlgorithmJson =
-            sqlx::types::Json<entity::ServerPasswordHashAlgorithm>;
-
         let Some(login) = sqlx::query!(
             r#"SELECT id, password_hash,
                     server_password_hash_algorithm AS
@@ -61,9 +61,6 @@ impl AccountRepo for AccountRepoImpl {
         &self,
         username: &str,
     ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
-        type ServerPasswordHashAlgorithmJson =
-            sqlx::types::Json<entity::ServerPasswordHashAlgorithm>;
-
         let Some(login) = sqlx::query!(
             r#"SELECT id, password_hash,
                     (SELECT is_email_verified FROM account_flags
@@ -88,6 +85,46 @@ impl AccountRepo for AccountRepoImpl {
         };
 
         Ok(Some(login))
+    }
+
+    async fn get_client_password_kdf_by_email(
+        &self,
+        email: &str,
+    ) -> RepoResult<Option<entity::ClientPasswordKdf>> {
+        let Some(client_password_kdf_json) = sqlx::query_scalar!(
+            r#"SELECT client_password_kdf AS
+                        "client_password_kdf: ClientPasswordKdfJson"
+                FROM accounts
+                WHERE id = (SELECT account_id FROM emails WHERE email = $1)"#,
+            email
+        )
+        .fetch_optional(&self.pool)
+        .await?
+        else {
+            return Ok(None);
+        };
+
+        Ok(Some(client_password_kdf_json.0))
+    }
+
+    async fn get_client_password_kdf_by_username(
+        &self,
+        username: &str,
+    ) -> RepoResult<Option<entity::ClientPasswordKdf>> {
+        let Some(client_password_kdf_json) = sqlx::query_scalar!(
+            r#"SELECT client_password_kdf AS
+                        "client_password_kdf: ClientPasswordKdfJson"
+                FROM accounts
+                WHERE id = (SELECT account_id FROM usernames WHERE username = $1 AND expires_at IS NULL)"#,
+            username
+        )
+        .fetch_optional(&self.pool)
+        .await?
+        else {
+            return Ok(None);
+        };
+
+        Ok(Some(client_password_kdf_json.0))
     }
 
     async fn get_primary_username(&self, id: AccountId) -> RepoResult<Option<String>> {
@@ -257,11 +294,11 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
                     master_key_kek_kdf, master_key_encryption_algorithm, encrypted_master_key
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7)",
             account.id as _,
-            Json(account.client_password_kdf.clone()) as _,
-            Json(account.server_password_hash_algorithm.clone()) as _,
+            Json(&account.client_password_kdf) as _,
+            Json(&account.server_password_hash_algorithm) as _,
             account.password_hash,
-            Json(account.master_key_kek_kdf.clone()) as _,
-            Json(account.master_key_encryption_algorithm.clone()) as _,
+            Json(&account.master_key_kek_kdf) as _,
+            Json(&account.master_key_encryption_algorithm) as _,
             account.encrypted_master_key
         )
         .execute(&mut *self.tx)

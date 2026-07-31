@@ -4,7 +4,11 @@ use crate::{
     middleware::{extract_real_ip::GovernorIpKeyExtractor, limiter::basic},
     res::{AppJson, AppQuery, AppResult},
 };
-use axum::{Extension, Router, extract::State, routing::post};
+use axum::{
+    Extension, Router,
+    extract::{Path, State},
+    routing::{get, post},
+};
 use service::{AppState, dto, handlers::AuthenticationHandler};
 use std::{net::IpAddr, time::Duration};
 use utoipa::OpenApi;
@@ -70,6 +74,40 @@ async fn login_with_email(
 }
 
 #[utoipa::path(
+    get, path = "login/username/{username}/kdf",
+    responses(
+        (status = OK, description = "KDF", body = dto::response::AccountKdf)
+    )
+)]
+async fn kdf_by_username(
+    State(state): State<AppState>,
+    Path(username): Path<String>,
+) -> AppResult<dto::response::AccountKdf> {
+    Ok(AppJson(
+        AuthenticationHandler(state)
+            .get_kdf_by_username(dto::request::Username { username })
+            .await?,
+    ))
+}
+
+#[utoipa::path(
+    get, path = "login/email/{email}/kdf",
+    responses(
+        (status = OK, description = "KDF", body = dto::response::AccountKdf)
+    )
+)]
+async fn kdf_by_email(
+    State(state): State<AppState>,
+    Path(email): Path<String>,
+) -> AppResult<dto::response::AccountKdf> {
+    Ok(AppJson(
+        AuthenticationHandler(state)
+            .get_kdf_by_email(dto::request::Email { email })
+            .await?,
+    ))
+}
+
+#[utoipa::path(
     post, path = "logout",
     request_body = dto::request::Token,
     responses(
@@ -91,11 +129,16 @@ pub fn routes(state: AppState) -> Router {
         .route("/signup", post(signup))
         .route("/login/email", post(login_with_email))
         .route("/login/username", post(login_with_username))
+        .route("/login/email/{email}/kdf", get(kdf_by_email))
+        .route("/login/username/{username}/kdf", get(kdf_by_username))
         .route("/logout", post(logout))
         .layer(basic::<GovernorIpKeyExtractor>(2, Duration::from_secs(5)))
         .with_state(state.clone())
 }
 
 #[derive(OpenApi)]
-#[openapi(paths(signup, login_with_email, login_with_username, logout))]
+#[openapi(
+    paths(signup, login_with_email, login_with_username, logout),
+    components(schemas(dto::request::Email, dto::request::Username))
+)]
 pub struct ApiDoc;

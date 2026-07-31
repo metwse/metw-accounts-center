@@ -65,6 +65,14 @@ pub struct LoginWithEmail {
     pub client_password_hash: String,
 }
 
+/// Request only containing an username.
+#[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
+pub struct Username {
+    /// Username.
+    #[validate(length(min = 2, max = 20), regex(path = *USERNAME_REGEX))]
+    pub username: String,
+}
+
 /// Request only containing an email.
 #[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
 pub struct Email {

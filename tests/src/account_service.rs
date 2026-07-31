@@ -1,5 +1,5 @@
 use service::{
-    dto,
+    dto, entity,
     service::{AccountService, ServiceError, ServiceResult},
     testutil::{random_email, random_username},
 };
@@ -39,10 +39,10 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
         client_password_hash: "incorrect_passwd".to_string(),
     };
 
-    // Sign up the account. User cannot log into the account as it is not
-    // verified.
+    // Sign up the account.
     assert!(!account_service.is_username_taken(username).await?);
     assert!(!account_service.is_email_taken(email).await?);
+
     let account_id = account_service.signup(&signup_dto).await?;
     assert!(account_service.is_username_taken(username).await?);
     assert!(!account_service.is_email_taken(email).await?);
@@ -70,12 +70,26 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
         .login_with_username(&login_with_username_dto)
         .await?;
 
+    assert_matches!(
+        account_service
+            .get_kdf_by_username(username)
+            .await?
+            .client_password_kdf,
+        entity::ClientPasswordKdf::Base64EncodedPbkdf2Sha256 {
+            salt,
+            iterations: 123,
+            length: 321
+        } if salt == "test-salt"
+    );
+
     // Complete sign up and enable the account. Now user can log into its
     // account.
     account_service
         .auth_complete_signup(account_id, email)
         .await?;
     assert!(account_service.is_email_taken(email).await?);
+
+    account_service.get_kdf_by_email(email).await?;
 
     assert!(
         account_service

@@ -1,4 +1,4 @@
-use crate::id::AccountId;
+use crate::{entity, id::AccountId};
 use serde::Serialize;
 use utoipa::ToSchema;
 
@@ -17,6 +17,13 @@ pub struct Account {
     pub username_aliases: Vec<String>,
     /// Secondary emails.
     pub secondary_emails: Vec<String>,
+}
+
+/// Key derivation functions used in account.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct AccountKdf {
+    /// Key derivation applied to login password, client-side.
+    pub client_password_kdf: entity::ClientPasswordKdf,
 }
 
 /// Base64-encoded, usually returned after sign up or log in.
