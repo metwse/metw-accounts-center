@@ -5,11 +5,11 @@ use crate::{
     res::{AppJson, AppQuery, AppResult},
 };
 use axum::{
-    Extension, Router,
     extract::{Path, State},
     routing::{get, post},
+    Extension, Router,
 };
-use service::{AppState, dto, handlers::AuthenticationHandler};
+use service::{dto, handlers::AuthenticationHandler, AppState};
 use std::{net::IpAddr, time::Duration};
 use utoipa::OpenApi;
 
@@ -138,7 +138,14 @@ pub fn routes(state: AppState) -> Router {
 
 #[derive(OpenApi)]
 #[openapi(
-    paths(signup, login_with_email, login_with_username, logout),
+    paths(
+        signup,
+        login_with_email,
+        login_with_username,
+        kdf_by_email,
+        kdf_by_username,
+        logout
+    ),
     components(schemas(dto::request::Email, dto::request::Username))
 )]
 pub struct ApiDoc;
