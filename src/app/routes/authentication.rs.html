@@ -132,7 +132,7 @@
 <a href=#132 id=132 data-nosnippet>132</a>        .route(<span class="string">"/login/email/{email}/kdf"</span>, get(kdf_by_email))
 <a href=#133 id=133 data-nosnippet>133</a>        .route(<span class="string">"/login/username/{username}/kdf"</span>, get(kdf_by_username))
 <a href=#134 id=134 data-nosnippet>134</a>        .route(<span class="string">"/logout"</span>, post(logout))
-<a href=#135 id=135 data-nosnippet>135</a>        .layer(basic::&lt;GovernorIpKeyExtractor&gt;(<span class="number">2</span>, Duration::from_secs(<span class="number">5</span>)))
+<a href=#135 id=135 data-nosnippet>135</a>        .layer(basic::&lt;GovernorIpKeyExtractor&gt;(<span class="number">5</span>, Duration::from_secs(<span class="number">5</span>)))
 <a href=#136 id=136 data-nosnippet>136</a>        .with_state(state.clone())
 <a href=#137 id=137 data-nosnippet>137</a>}
 <a href=#138 id=138 data-nosnippet>138</a>
