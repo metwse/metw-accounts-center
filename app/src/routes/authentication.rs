@@ -132,7 +132,7 @@ pub fn routes(state: AppState) -> Router {
         .route("/login/email/{email}/kdf", get(kdf_by_email))
         .route("/login/username/{username}/kdf", get(kdf_by_username))
         .route("/logout", post(logout))
-        .layer(basic::<GovernorIpKeyExtractor>(2, Duration::from_secs(5)))
+        .layer(basic::<GovernorIpKeyExtractor>(5, Duration::from_secs(5)))
         .with_state(state.clone())
 }
 
