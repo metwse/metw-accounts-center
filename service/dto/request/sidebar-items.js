@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Captcha","Email","LoginWithEmail","LoginWithUsername","Signup","Token","Username"]};
+window.SIDEBAR_ITEMS = {"struct":["Captcha","ClientDerivedPassword","Email","LoginWithEmail","LoginWithUsername","Signup","Token","Username"]};
