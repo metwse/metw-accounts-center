@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT password_hash,\n                    (SELECT is_email_verified FROM account_flags\n                        WHERE account_flags.id = $1) AS \"is_email_verified!\",\n                    server_password_hash_algorithm AS\n                        \"server_password_hash_algorithm: ServerPasswordHashAlgorithmJson\"\n                FROM accounts\n                WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "password_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "is_email_verified!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "server_password_hash_algorithm: ServerPasswordHashAlgorithmJson",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      false
+    ]
+  },
+  "hash": "9febea7e6cfb0448ecbdf01f318f6905368f4e89eac994204e37e10a5d5d9592"
+}

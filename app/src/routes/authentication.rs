@@ -146,7 +146,7 @@ pub fn routes(state: AppState) -> Router {
         .route("/login/username", post(login_with_username))
         .route("/login/email/{email}/kdf", get(kdf_by_email))
         .route("/login/username/{username}/kdf", get(kdf_by_username))
-        .route("/login/id/{username}/kdf", get(kdf_by_id))
+        .route("/login/id/{id}/kdf", get(kdf_by_id))
         .route("/logout", post(logout))
         .layer(basic::<GovernorIpKeyExtractor>(5, Duration::from_secs(5)))
         .with_state(state.clone())
