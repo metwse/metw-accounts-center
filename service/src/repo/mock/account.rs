@@ -29,6 +29,24 @@ impl AccountRepo for MockAccountRepoImpl {
         }))
     }
 
+    async fn get_login_credentials_by_id(
+        &self,
+        id: AccountId,
+    ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
+        let state = self.lock_state().await;
+
+        if let Some(account) = state.accounts.get(&id) {
+            Ok(Some(dto::repo::OwnedLoginCredentials {
+                id,
+                password_hash: account.password_hash.clone(),
+                is_email_verified: state.account_flags[&id].is_email_verified,
+                server_password_hash_algorithm: account.server_password_hash_algorithm.clone(),
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
     async fn get_login_credentials_by_email(
         &self,
         email: &str,
@@ -110,6 +128,19 @@ impl AccountRepo for MockAccountRepoImpl {
                     .client_password_kdf
                     .clone(),
             ))
+        } else {
+            Ok(None)
+        }
+    }
+
+    async fn get_client_password_kdf_by_id(
+        &self,
+        id: AccountId,
+    ) -> RepoResult<Option<entity::ClientPasswordKdf>> {
+        let state = self.lock_state().await;
+
+        if let Some(account_entity) = state.accounts.get(&id) {
+            Ok(Some(account_entity.client_password_kdf.clone()))
         } else {
             Ok(None)
         }
@@ -328,6 +359,24 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
     ) -> RepoResult<()> {
         if let Some(account_flags_entity) = self.state.account_flags.get_mut(&id) {
             account_flags_entity.is_email_verified = is_email_verified;
+
+            Ok(())
+        } else {
+            Err(RepoError::Internal("account does not exists"))
+        }
+    }
+
+    async fn change_password(
+        &mut self,
+        id: AccountId,
+        password_hash: &str,
+        client_password_kdf: &entity::ClientPasswordKdf,
+        server_password_hash_algorithm: &entity::ServerPasswordHashAlgorithm,
+    ) -> RepoResult<()> {
+        if let Some(account_entity) = self.state.accounts.get_mut(&id) {
+            account_entity.password_hash = Some(password_hash.into());
+            account_entity.client_password_kdf = client_password_kdf.clone();
+            account_entity.server_password_hash_algorithm = server_password_hash_algorithm.clone();
 
             Ok(())
         } else {

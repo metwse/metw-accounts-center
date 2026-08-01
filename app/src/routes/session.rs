@@ -95,12 +95,29 @@ async fn set_primary_email(
     ))
 }
 
+#[utoipa::path(
+    post, path = "change-password",
+    request_body = dto::request::ChangePassword,
+)]
+async fn change_password(
+    State(state): State<AppState>,
+    Extension(id): Extension<AccountId>,
+    AppJson(change_password_dto): AppJson<dto::request::ChangePassword>,
+) -> AppResult<()> {
+    Ok(AppJson(
+        SessionHandler(state)
+            .change_password(id, change_password_dto)
+            .await?,
+    ))
+}
+
 pub fn routes(state: AppState) -> Router {
     Router::new()
         .route("/me", get(me))
         .route("/me/emails", post(add_email))
         .route("/me/emails", delete(delete_email))
         .route("/me/emails/set-primary", post(set_primary_email))
+        .route("/me/change-password", post(change_password))
         .layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
             5,
             Duration::from_secs(5),
@@ -115,8 +132,12 @@ pub fn routes(state: AppState) -> Router {
 
 #[derive(OpenApi)]
 #[openapi(
-    paths(me, add_email, delete_email, set_primary_email),
-    components(schemas(dto::response::Account, dto::request::Email)),
+    paths(me, add_email, delete_email, set_primary_email, change_password),
+    components(schemas(
+        dto::response::Account,
+        dto::request::Email,
+        dto::request::ChangePassword
+    )),
     modifiers(&ApiDocAuthAddon),
     security(("session_jwt" = []))
 )]

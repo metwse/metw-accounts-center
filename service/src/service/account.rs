@@ -160,6 +160,18 @@ impl AccountService {
         })
     }
 
+    /// Account's key derivation functions.
+    #[tracing::instrument(skip(self))]
+    pub async fn get_kdf_by_id(&self, id: AccountId) -> ServiceResult<dto::response::AccountKdf> {
+        let Some(client_password_kdf) = self.repo.get_client_password_kdf_by_id(id).await? else {
+            return Err(ServiceError::AccountNotFound);
+        };
+
+        Ok(dto::response::AccountKdf {
+            client_password_kdf,
+        })
+    }
+
     /// Fetch the account details.
     #[tracing::instrument(skip(self))]
     pub async fn me(&self, id: AccountId) -> ServiceResult<dto::response::Account> {
@@ -179,6 +191,45 @@ impl AccountService {
             username_aliases,
             secondary_emails,
         })
+    }
+
+    /// Change account's password.
+    #[tracing::instrument(skip(self, change_password_dto))]
+    pub async fn change_password(
+        &self,
+        id: AccountId,
+        change_password_dto: &dto::request::ChangePassword,
+    ) -> ServiceResult<()> {
+        let Some(login_credentials) = self.repo.get_login_credentials_by_id(id).await? else {
+            return Err(ServiceError::AccountNotFound);
+        };
+
+        self.login(
+            &login_credentials,
+            &change_password_dto.current_password_hash,
+        )
+        .await?;
+
+        let new_password = &change_password_dto.new_password;
+
+        let server_derived = password::hash(&new_password.base64_hash).await;
+
+        let mut transaction = self.repo.begin_transaction().await?;
+        transaction
+            .change_password(
+                id,
+                &server_derived,
+                &entity::ClientPasswordKdf::Base64EncodedPbkdf2Sha256 {
+                    salt: new_password.pbkdf2_salt.clone(),
+                    iterations: new_password.pbkdf2_iterations,
+                    length: new_password.pbkdf2_length,
+                },
+                &entity::ServerPasswordHashAlgorithm::Argon2id,
+            )
+            .await?;
+        transaction.commit().await?;
+
+        Ok(())
     }
 
     /// Wheter or not the username has been taken.

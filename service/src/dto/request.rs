@@ -29,6 +29,7 @@ pub struct Signup {
     pub email: String,
 
     /// Password hash with KDF parameters.
+    #[validate(nested)]
     pub password: ClientDerivedPassword,
 }
 
@@ -69,6 +70,18 @@ pub struct LoginWithEmail {
     /// Argon2-hashed password.
     #[validate(length(max = 128))]
     pub client_password_hash: String,
+}
+
+/// Change the account password.
+#[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
+pub struct ChangePassword {
+    /// Current password.
+    #[validate(length(max = 128))]
+    pub current_password_hash: String,
+
+    /// Password hash with KDF parameters.
+    #[validate(nested)]
+    pub new_password: ClientDerivedPassword,
 }
 
 /// Request only containing an username.

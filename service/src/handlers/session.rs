@@ -164,4 +164,21 @@ impl SessionHandler {
 
         Ok(())
     }
+
+    /// Update account password.
+    #[tracing::instrument(skip_all)]
+    pub async fn change_password(
+        &self,
+        id: AccountId,
+        change_password_dto: dto::request::ChangePassword,
+    ) -> HandlerResult<()> {
+        change_password_dto.validate()?;
+
+        self.0
+            .account_service
+            .change_password(id, &change_password_dto)
+            .await?;
+
+        Ok(())
+    }
 }

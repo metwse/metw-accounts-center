@@ -56,6 +56,12 @@ pub trait AccountRepo: Send + Sync {
     /// Begin a new transactional unit.
     async fn begin_transaction(&self) -> RepoResult<Box<dyn AccountRepoTransaction>>;
 
+    /// Get password and server-side password hashing algorithm by id.
+    async fn get_login_credentials_by_id(
+        &self,
+        id: AccountId,
+    ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>>;
+
     /// Get password and server-side password hashing algorithm by email.
     async fn get_login_credentials_by_email(
         &self,
@@ -78,6 +84,12 @@ pub trait AccountRepo: Send + Sync {
     async fn get_client_password_kdf_by_username(
         &self,
         username: &str,
+    ) -> RepoResult<Option<entity::ClientPasswordKdf>>;
+
+    /// Get client-side password derivation algorithm by id.
+    async fn get_client_password_kdf_by_id(
+        &self,
+        id: AccountId,
     ) -> RepoResult<Option<entity::ClientPasswordKdf>>;
 
     /// Get primary username if, exists.
@@ -158,6 +170,15 @@ pub trait AccountRepoTransaction: Send + Sync {
         &mut self,
         id: AccountId,
         is_email_verified: bool,
+    ) -> RepoResult<()>;
+
+    /// Change account password.
+    async fn change_password(
+        &mut self,
+        id: AccountId,
+        password_hash: &str,
+        client_password_kdf: &entity::ClientPasswordKdf,
+        server_password_hash_algorithm: &entity::ServerPasswordHashAlgorithm,
     ) -> RepoResult<()>;
 }
 

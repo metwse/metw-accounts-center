@@ -156,6 +156,14 @@ impl AuthenticationHandler {
 
     /// Returns KDFs of an account.
     #[tracing::instrument(skip_all)]
+    pub async fn get_kdf_by_id(&self, id: AccountId) -> HandlerResult<dto::response::AccountKdf> {
+        let kdf = self.0.account_service.get_kdf_by_id(id).await?;
+
+        Ok(kdf)
+    }
+
+    /// Returns KDFs of an account.
+    #[tracing::instrument(skip_all)]
     pub async fn get_kdf_by_username(
         &self,
         username_dto: dto::request::Username,

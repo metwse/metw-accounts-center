@@ -29,6 +29,36 @@ impl AccountRepo for AccountRepoImpl {
         ))
     }
 
+    async fn get_login_credentials_by_id(
+        &self,
+        id: AccountId,
+    ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
+        let Some(login) = sqlx::query!(
+            r#"SELECT password_hash,
+                    (SELECT is_email_verified FROM account_flags
+                        WHERE account_flags.id = $1) AS "is_email_verified!",
+                    server_password_hash_algorithm AS
+                        "server_password_hash_algorithm: ServerPasswordHashAlgorithmJson"
+                FROM accounts
+                WHERE id = $1"#,
+            id as _
+        )
+        .fetch_optional(&self.pool)
+        .await?
+        else {
+            return Ok(None);
+        };
+
+        let login = dto::repo::OwnedLoginCredentials {
+            id,
+            is_email_verified: login.is_email_verified,
+            password_hash: login.password_hash,
+            server_password_hash_algorithm: login.server_password_hash_algorithm.0,
+        };
+
+        Ok(Some(login))
+    }
+
     async fn get_login_credentials_by_email(
         &self,
         email: &str,
@@ -117,6 +147,26 @@ impl AccountRepo for AccountRepoImpl {
                 FROM accounts
                 WHERE id = (SELECT account_id FROM usernames WHERE username = $1 AND expires_at IS NULL)"#,
             username
+        )
+        .fetch_optional(&self.pool)
+        .await?
+        else {
+            return Ok(None);
+        };
+
+        Ok(Some(client_password_kdf_json.0))
+    }
+
+    async fn get_client_password_kdf_by_id(
+        &self,
+        id: AccountId,
+    ) -> RepoResult<Option<entity::ClientPasswordKdf>> {
+        let Some(client_password_kdf_json) = sqlx::query_scalar!(
+            r#"SELECT client_password_kdf AS
+                        "client_password_kdf: ClientPasswordKdfJson"
+                FROM accounts
+                WHERE id = $1"#,
+            id as _
         )
         .fetch_optional(&self.pool)
         .await?
@@ -360,6 +410,33 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
             "UPDATE account_flags SET is_email_verified = $1 WHERE id = $2",
             is_email_verified,
             id as _
+        )
+        .execute(&mut *self.tx)
+        .await?;
+
+        Ok(())
+    }
+
+    async fn change_password(
+        &mut self,
+        id: AccountId,
+        password_hash: &str,
+        client_password_kdf: &entity::ClientPasswordKdf,
+        server_password_hash_algorithm: &entity::ServerPasswordHashAlgorithm,
+    ) -> RepoResult<()> {
+        let client_password_kdf_json = Json(client_password_kdf);
+        let server_password_hash_algorithm_json = Json(server_password_hash_algorithm);
+
+        sqlx::query!(
+            r#"UPDATE accounts SET
+                    password_hash = $2,
+                    client_password_kdf = $3,
+                    server_password_hash_algorithm = $4
+                WHERE id = $1"#,
+            id as _,
+            password_hash,
+            client_password_kdf_json as _,
+            server_password_hash_algorithm_json as _
         )
         .execute(&mut *self.tx)
         .await?;
