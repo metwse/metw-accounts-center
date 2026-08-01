@@ -95,30 +95,51 @@
 <a href=#95 id=95 data-nosnippet>95</a>    ))
 <a href=#96 id=96 data-nosnippet>96</a>}
 <a href=#97 id=97 data-nosnippet>97</a>
-<a href=#98 id=98 data-nosnippet>98</a><span class="kw">pub fn </span>routes(state: AppState) -&gt; Router {
-<a href=#99 id=99 data-nosnippet>99</a>    Router::new()
-<a href=#100 id=100 data-nosnippet>100</a>        .route(<span class="string">"/me"</span>, get(me))
-<a href=#101 id=101 data-nosnippet>101</a>        .route(<span class="string">"/me/emails"</span>, post(add_email))
-<a href=#102 id=102 data-nosnippet>102</a>        .route(<span class="string">"/me/emails"</span>, delete(delete_email))
-<a href=#103 id=103 data-nosnippet>103</a>        .route(<span class="string">"/me/emails/set-primary"</span>, post(set_primary_email))
-<a href=#104 id=104 data-nosnippet>104</a>        .layer(limiter::basic::&lt;GovernorAccountIdKeyExtractor&gt;(
-<a href=#105 id=105 data-nosnippet>105</a>            <span class="number">5</span>,
-<a href=#106 id=106 data-nosnippet>106</a>            Duration::from_secs(<span class="number">5</span>),
-<a href=#107 id=107 data-nosnippet>107</a>        ))
-<a href=#108 id=108 data-nosnippet>108</a>        .layer(limiter::basic::&lt;GovernorIpKeyExtractor&gt;(
-<a href=#109 id=109 data-nosnippet>109</a>            <span class="number">25</span>,
-<a href=#110 id=110 data-nosnippet>110</a>            Duration::from_secs(<span class="number">5</span>),
-<a href=#111 id=111 data-nosnippet>111</a>        ))
-<a href=#112 id=112 data-nosnippet>112</a>        .route_layer(middleware::from_fn_with_state(state.clone(), auth_session))
-<a href=#113 id=113 data-nosnippet>113</a>        .with_state(state)
-<a href=#114 id=114 data-nosnippet>114</a>}
-<a href=#115 id=115 data-nosnippet>115</a>
-<a href=#116 id=116 data-nosnippet>116</a><span class="attr">#[derive(OpenApi)]
-<a href=#117 id=117 data-nosnippet>117</a>#[openapi(
-<a href=#118 id=118 data-nosnippet>118</a>    paths(me, add_email, delete_email, set_primary_email),
-<a href=#119 id=119 data-nosnippet>119</a>    components(schemas(dto::response::Account, dto::request::Email)),
-<a href=#120 id=120 data-nosnippet>120</a>    modifiers(<span class="kw-2">&amp;</span>ApiDocAuthAddon),
-<a href=#121 id=121 data-nosnippet>121</a>    security((<span class="string">"session_jwt" </span>= []</span>))
-<a href=#122 id=122 data-nosnippet>122</a>)]
-<a href=#123 id=123 data-nosnippet>123</a><span class="kw">pub struct </span>ApiDoc;
+<a href=#98 id=98 data-nosnippet>98</a><span class="attr">#[utoipa::path(
+<a href=#99 id=99 data-nosnippet>99</a>    post, path = <span class="string">"change-password"</span>,
+<a href=#100 id=100 data-nosnippet>100</a>    request_body = dto::request::ChangePassword,
+<a href=#101 id=101 data-nosnippet>101</a>)]
+<a href=#102 id=102 data-nosnippet>102</a></span><span class="kw">async fn </span>change_password(
+<a href=#103 id=103 data-nosnippet>103</a>    State(state): State&lt;AppState&gt;,
+<a href=#104 id=104 data-nosnippet>104</a>    Extension(id): Extension&lt;AccountId&gt;,
+<a href=#105 id=105 data-nosnippet>105</a>    AppJson(change_password_dto): AppJson&lt;dto::request::ChangePassword&gt;,
+<a href=#106 id=106 data-nosnippet>106</a>) -&gt; AppResult&lt;()&gt; {
+<a href=#107 id=107 data-nosnippet>107</a>    <span class="prelude-val">Ok</span>(AppJson(
+<a href=#108 id=108 data-nosnippet>108</a>        SessionHandler(state)
+<a href=#109 id=109 data-nosnippet>109</a>            .change_password(id, change_password_dto)
+<a href=#110 id=110 data-nosnippet>110</a>            .<span class="kw">await</span><span class="question-mark">?</span>,
+<a href=#111 id=111 data-nosnippet>111</a>    ))
+<a href=#112 id=112 data-nosnippet>112</a>}
+<a href=#113 id=113 data-nosnippet>113</a>
+<a href=#114 id=114 data-nosnippet>114</a><span class="kw">pub fn </span>routes(state: AppState) -&gt; Router {
+<a href=#115 id=115 data-nosnippet>115</a>    Router::new()
+<a href=#116 id=116 data-nosnippet>116</a>        .route(<span class="string">"/me"</span>, get(me))
+<a href=#117 id=117 data-nosnippet>117</a>        .route(<span class="string">"/me/emails"</span>, post(add_email))
+<a href=#118 id=118 data-nosnippet>118</a>        .route(<span class="string">"/me/emails"</span>, delete(delete_email))
+<a href=#119 id=119 data-nosnippet>119</a>        .route(<span class="string">"/me/emails/set-primary"</span>, post(set_primary_email))
+<a href=#120 id=120 data-nosnippet>120</a>        .route(<span class="string">"/me/change-password"</span>, post(change_password))
+<a href=#121 id=121 data-nosnippet>121</a>        .layer(limiter::basic::&lt;GovernorAccountIdKeyExtractor&gt;(
+<a href=#122 id=122 data-nosnippet>122</a>            <span class="number">5</span>,
+<a href=#123 id=123 data-nosnippet>123</a>            Duration::from_secs(<span class="number">5</span>),
+<a href=#124 id=124 data-nosnippet>124</a>        ))
+<a href=#125 id=125 data-nosnippet>125</a>        .layer(limiter::basic::&lt;GovernorIpKeyExtractor&gt;(
+<a href=#126 id=126 data-nosnippet>126</a>            <span class="number">25</span>,
+<a href=#127 id=127 data-nosnippet>127</a>            Duration::from_secs(<span class="number">5</span>),
+<a href=#128 id=128 data-nosnippet>128</a>        ))
+<a href=#129 id=129 data-nosnippet>129</a>        .route_layer(middleware::from_fn_with_state(state.clone(), auth_session))
+<a href=#130 id=130 data-nosnippet>130</a>        .with_state(state)
+<a href=#131 id=131 data-nosnippet>131</a>}
+<a href=#132 id=132 data-nosnippet>132</a>
+<a href=#133 id=133 data-nosnippet>133</a><span class="attr">#[derive(OpenApi)]
+<a href=#134 id=134 data-nosnippet>134</a>#[openapi(
+<a href=#135 id=135 data-nosnippet>135</a>    paths(me, add_email, delete_email, set_primary_email, change_password),
+<a href=#136 id=136 data-nosnippet>136</a>    components(schemas(
+<a href=#137 id=137 data-nosnippet>137</a>        dto::response::Account,
+<a href=#138 id=138 data-nosnippet>138</a>        dto::request::Email,
+<a href=#139 id=139 data-nosnippet>139</a>        dto::request::ChangePassword
+<a href=#140 id=140 data-nosnippet>140</a>    )),
+<a href=#141 id=141 data-nosnippet>141</a>    modifiers(<span class="kw-2">&amp;</span>ApiDocAuthAddon),
+<a href=#142 id=142 data-nosnippet>142</a>    security((<span class="string">"session_jwt" </span>= []</span>))
+<a href=#143 id=143 data-nosnippet>143</a>)]
+<a href=#144 id=144 data-nosnippet>144</a><span class="kw">pub struct </span>ApiDoc;
 </code></pre></div></section></main></body></html>
