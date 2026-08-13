@@ -62,7 +62,7 @@ impl AccountService {
     }
 
     /// For use with login.
-    async fn login(
+    async fn login_with_credentials(
         &self,
         login_credentails: &dto::repo::OwnedLoginCredentials,
         client_password_hash: &str,
@@ -95,37 +95,28 @@ impl AccountService {
 
     /// Log into the account
     #[tracing::instrument(skip_all)]
-    pub async fn login_with_email(
+    pub async fn login(
         &self,
-        login_dto: &dto::request::LoginWithEmail,
+        login_dto: &dto::request::Login,
     ) -> ServiceResult<dto::service::Login> {
-        let Some(login_credentails) = self
-            .repo
-            .get_login_credentials_by_email(&login_dto.email)
-            .await?
-        else {
+        let Some(login_credentails) = (match &login_dto.account {
+            dto::request::AccountIdentifier::Username(username) => {
+                self.repo
+                    .get_login_credentials_by_username(&username.username)
+                    .await?
+            }
+            dto::request::AccountIdentifier::Email(email) => {
+                self.repo
+                    .get_login_credentials_by_email(&email.email)
+                    .await?
+            }
+            dto::request::AccountIdentifier::Id(_) => todo!("get login credentials by email"),
+        }) else {
             return Err(ServiceError::InvalidCredentials);
         };
 
-        self.login(&login_credentails, &login_dto.client_password_hash)
+        self.login_with_credentials(&login_credentails, &login_dto.client_password_hash)
             .await
-    }
-
-    /// Log into the account
-    #[tracing::instrument(skip_all)]
-    pub async fn login_with_username(
-        &self,
-        login_dto: &dto::request::LoginWithUsername,
-    ) -> ServiceResult<dto::service::Login> {
-        let Some(login) = self
-            .repo
-            .get_login_credentials_by_username(&login_dto.username)
-            .await?
-        else {
-            return Err(ServiceError::InvalidCredentials);
-        };
-
-        self.login(&login, &login_dto.client_password_hash).await
     }
 
     /// Account's key derivation functions.
@@ -204,7 +195,7 @@ impl AccountService {
             return Err(ServiceError::AccountNotFound);
         };
 
-        self.login(
+        self.login_with_credentials(
             &login_credentials,
             &change_password_dto.current_password_hash,
         )

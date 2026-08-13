@@ -1,6 +1,7 @@
+use crate::id::AccountId;
 use serde::Deserialize;
-use std::sync::LazyLock;
-use utoipa::{IntoParams, ToSchema};
+use std::{str::FromStr, sync::LazyLock};
+use utoipa::{IntoParams, PartialSchema, ToSchema};
 use validator::Validate;
 
 static USERNAME_REGEX_STR: &str = "^[a-z]([_.]?[a-z0-9])*$";
@@ -72,6 +73,32 @@ pub struct LoginWithEmail {
     pub client_password_hash: String,
 }
 
+/// Login into the account.
+#[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
+pub struct Login {
+    #[validate(nested)]
+    pub account: AccountIdentifier,
+
+    /// Argon2-hashed password.
+    #[validate(length(max = 128))]
+    pub client_password_hash: String,
+}
+
+/// Identify accounts by public or private identifiers.
+#[derive(Debug, Clone)]
+pub enum AccountIdentifier {
+    Email(Email),
+    Username(Username),
+    Id(AccountId),
+}
+
+/// Identify accounts only by public identifiers.
+#[derive(Debug, Clone)]
+pub enum PublicAccountIdentifier {
+    Username(Username),
+    Id(AccountId),
+}
+
 /// Change the account password.
 #[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
 pub struct ChangePassword {
@@ -110,6 +137,93 @@ pub struct Token {
 #[derive(Debug, Clone, Deserialize, IntoParams)]
 pub struct Captcha {
     pub captcha: String,
+}
+
+impl Validate for AccountIdentifier {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        match self {
+            Self::Email(email) => email.validate(),
+            Self::Username(username) => username.validate(),
+            Self::Id(_) => Ok(()),
+        }
+    }
+}
+
+impl PartialSchema for AccountIdentifier {
+    fn schema() -> utoipa::openapi::RefOr<utoipa::openapi::schema::Schema> {
+        String::schema()
+    }
+}
+
+impl ToSchema for AccountIdentifier {
+    fn name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("String")
+    }
+}
+
+impl AccountIdentifier {
+    fn parse(s: String) -> Self {
+        if let Ok(id) = AccountId::from_str(&s) {
+            AccountIdentifier::Id(id)
+        } else if s.contains('@') {
+            AccountIdentifier::Email(Email { email: s })
+        } else {
+            AccountIdentifier::Username(Username { username: s })
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for AccountIdentifier {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+
+        Ok(Self::parse(s))
+    }
+}
+
+impl Validate for PublicAccountIdentifier {
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        match self {
+            Self::Username(username) => username.validate(),
+            Self::Id(_) => Ok(()),
+        }
+    }
+}
+
+impl PartialSchema for PublicAccountIdentifier {
+    fn schema() -> utoipa::openapi::RefOr<utoipa::openapi::schema::Schema> {
+        String::schema()
+    }
+}
+
+impl ToSchema for PublicAccountIdentifier {
+    fn name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("String")
+    }
+}
+
+impl PublicAccountIdentifier {
+    fn parse(s: String) -> Self {
+        if let Ok(id) = AccountId::from_str(&s) {
+            PublicAccountIdentifier::Id(id)
+        } else {
+            PublicAccountIdentifier::Username(Username { username: s })
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for PublicAccountIdentifier {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+
+        Ok(Self::parse(s))
+    }
 }
 
 #[cfg(test)]

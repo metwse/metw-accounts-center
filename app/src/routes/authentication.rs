@@ -5,11 +5,11 @@ use crate::{
     res::{AppJson, AppQuery, AppResult},
 };
 use axum::{
+    Extension, Router,
     extract::{Path, State},
     routing::{get, post},
-    Extension, Router,
 };
-use service::{dto, handlers::AuthenticationHandler, id::AccountId, AppState};
+use service::{AppState, dto, handlers::AuthenticationHandler, id::AccountId};
 use std::{net::IpAddr, time::Duration};
 use utoipa::OpenApi;
 
@@ -49,7 +49,12 @@ async fn login_with_username(
 ) -> AppResult<dto::response::Token> {
     Ok(AppJson(
         AuthenticationHandler(state)
-            .login_with_username(login_dto)
+            .login(dto::request::Login {
+                account: dto::request::AccountIdentifier::Username(dto::request::Username {
+                    username: login_dto.username,
+                }),
+                client_password_hash: login_dto.client_password_hash,
+            })
             .await?,
     ))
 }
@@ -68,7 +73,12 @@ async fn login_with_email(
 ) -> AppResult<dto::response::Token> {
     Ok(AppJson(
         AuthenticationHandler(state)
-            .login_with_email(login_dto)
+            .login(dto::request::Login {
+                account: dto::request::AccountIdentifier::Email(dto::request::Email {
+                    email: login_dto.email,
+                }),
+                client_password_hash: login_dto.client_password_hash,
+            })
             .await?,
     ))
 }

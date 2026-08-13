@@ -26,18 +26,24 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
         },
     };
 
-    let login_with_email_dto = dto::request::LoginWithEmail {
-        email: email.to_string(),
+    let login_with_email_dto = dto::request::Login {
+        account: dto::request::AccountIdentifier::Email(dto::request::Email {
+            email: email.to_string(),
+        }),
         client_password_hash: "passwd".to_string(),
     };
 
-    let login_with_username_dto = dto::request::LoginWithUsername {
-        username: username.to_string(),
+    let login_with_username_dto = dto::request::Login {
+        account: dto::request::AccountIdentifier::Username(dto::request::Username {
+            username: username.to_string(),
+        }),
         client_password_hash: "passwd".to_string(),
     };
 
-    let login_with_incorrect_password = dto::request::LoginWithUsername {
-        username: username.to_string(),
+    let login_with_incorrect_password = dto::request::Login {
+        account: dto::request::AccountIdentifier::Username(dto::request::Username {
+            username: username.to_string(),
+        }),
         client_password_hash: "incorrect_passwd".to_string(),
     };
 
@@ -61,16 +67,12 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
     );
 
     assert_matches!(
-        account_service
-            .login_with_email(&login_with_email_dto)
-            .await,
+        account_service.login(&login_with_email_dto).await,
         Err(ServiceError::InvalidCredentials)
     );
 
     // Permit log into the pending activation session.
-    account_service
-        .login_with_username(&login_with_username_dto)
-        .await?;
+    account_service.login(&login_with_username_dto).await?;
 
     assert_matches!(
         account_service
@@ -93,24 +95,10 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
 
     account_service.get_kdf_by_email(email).await?;
 
-    assert!(
-        account_service
-            .login_with_email(&login_with_email_dto)
-            .await?
-            .id
-            == account_id
-    );
-    assert!(
-        account_service
-            .login_with_username(&login_with_username_dto)
-            .await?
-            .id
-            == account_id
-    );
+    assert!(account_service.login(&login_with_email_dto).await?.id == account_id);
+    assert!(account_service.login(&login_with_username_dto).await?.id == account_id);
     assert_matches!(
-        account_service
-            .login_with_username(&login_with_incorrect_password)
-            .await,
+        account_service.login(&login_with_incorrect_password).await,
         Err(ServiceError::InvalidCredentials)
     );
 
@@ -180,8 +168,10 @@ pub async fn email_change(
     account_service: Arc<AccountService>,
 ) -> ServiceResult<()> {
     let account_id = account_service
-        .login_with_username(&dto::request::LoginWithUsername {
-            username: username.to_string(),
+        .login(&dto::request::Login {
+            account: dto::request::AccountIdentifier::Username(dto::request::Username {
+                username: username.to_string(),
+            }),
             client_password_hash: "passwd".to_string(),
         })
         .await?

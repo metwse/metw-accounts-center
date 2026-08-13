@@ -147,8 +147,10 @@ impl TestState {
         client_password_hash: &'static str,
     ) -> HandlerResult<String> {
         AuthenticationHandler(self.state.clone())
-            .login_with_username(dto::request::LoginWithUsername {
-                username: username.to_string(),
+            .login(dto::request::Login {
+                account: dto::request::AccountIdentifier::Username(dto::request::Username {
+                    username: username.to_string(),
+                }),
                 client_password_hash: client_password_hash.to_string(),
             })
             .await
@@ -162,8 +164,10 @@ impl TestState {
         client_password_hash: &'static str,
     ) -> HandlerResult<String> {
         AuthenticationHandler(self.state.clone())
-            .login_with_email(dto::request::LoginWithEmail {
-                email: email.to_string(),
+            .login(dto::request::Login {
+                account: dto::request::AccountIdentifier::Email(dto::request::Email {
+                    email: email.to_string(),
+                }),
                 client_password_hash: client_password_hash.to_string(),
             })
             .await

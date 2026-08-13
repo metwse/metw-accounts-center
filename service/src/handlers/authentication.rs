@@ -107,37 +107,15 @@ impl AuthenticationHandler {
 
     /// Returns a session JWT, with [`TokenScope::Session`] or
     /// [`TokenScope::EmailVerificationSession`] scope.
-    #[tracing::instrument(skip_all, fields(username = login_dto.username))]
-    pub async fn login_with_username(
+    #[tracing::instrument(skip_all, fields(account = ?login_dto.account))]
+    pub async fn login(
         self,
-        login_dto: dto::request::LoginWithUsername,
+        login_dto: dto::request::Login,
     ) -> HandlerResult<dto::response::Token> {
         login_dto.validate()?;
 
-        let login = self
-            .0
-            .account_service
-            .login_with_username(&login_dto)
-            .await?;
+        let login = self.0.account_service.login(&login_dto).await?;
 
-        Ok(self.login(login))
-    }
-
-    /// Returns a session JWT, with [`TokenScope::Session`] or
-    /// [`TokenScope::EmailVerificationSession`] scope.
-    #[tracing::instrument(skip_all, fields(email = login_dto.email))]
-    pub async fn login_with_email(
-        self,
-        login_dto: dto::request::LoginWithEmail,
-    ) -> HandlerResult<dto::response::Token> {
-        login_dto.validate()?;
-
-        let login = self.0.account_service.login_with_email(&login_dto).await?;
-
-        Ok(self.login(login))
-    }
-
-    fn login(self, login: dto::service::Login) -> dto::response::Token {
         tracing::trace!(%login.id);
 
         let token_scope = if login.is_email_verified {
@@ -146,12 +124,12 @@ impl AuthenticationHandler {
             TokenScope::EmailVerificationSession
         };
 
-        dto::response::Token {
+        Ok(dto::response::Token {
             token: self.0.token_service.sign(&Token {
                 id: login.id,
                 scope: token_scope,
             }),
-        }
+        })
     }
 
     /// Returns KDFs of an account.

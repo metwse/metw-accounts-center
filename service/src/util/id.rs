@@ -2,6 +2,7 @@ use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use serde::{Deserialize, Serialize};
 use serde_with::{DisplayFromStr, serde_as};
 use std::{
+    str::FromStr,
     sync::{LazyLock, Mutex},
     time::Duration,
 };
@@ -35,6 +36,13 @@ macro_rules! id_newtype {
                 }
             }
 
+            impl FromStr for [< $name Id >] {
+                type Err = std::num::ParseIntError;
+
+                fn from_str(src: &str) -> Result<Self, Self::Err> {
+                    i64::from_str(src).map([< $name Id >])
+                }
+            }
 
             impl std::fmt::Display for [< $name Id >] {
                 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
