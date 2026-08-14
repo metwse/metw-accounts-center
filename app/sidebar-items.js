@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["app"],"mod":["middleware","res","routes"],"struct":["ApiDoc"]};
+window.SIDEBAR_ITEMS = {"fn":["app","otel_layer"],"mod":["middleware","res","routes"],"struct":["ApiDoc"]};
