@@ -5,6 +5,7 @@ use service::{
         AuthenticationHandler, AuthorizationHandler, EmailVerificationSessionHandler, HandlerError,
         HandlerResult, SessionHandler,
     },
+    id::AccountId,
     service::ServiceError,
     testutil::{random_email, random_ipv6, random_username},
     token::TokenScope,
@@ -46,6 +47,10 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
 
     let login_account_id = AuthenticationHandler(ctx.state.clone())
         .auth_email_verification_session(email_verification_session_jwt)
+        .await?;
+
+    AuthenticationHandler(ctx.state.clone())
+        .get_kdf(dto::request::AccountIdentifier::Id(login_account_id))
         .await?;
 
     assert!(account_id == login_account_id);
@@ -142,21 +147,24 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
     assert!(me.email.unwrap() == email);
 
     // Try logging in with username and password.
-    let session_jwt_from_email = ctx.login_with_email(email, "passwd").await?;
-    let session_jwt_from_username = ctx.login_with_username(username, "passwd").await?;
+    let (session_jwt_from_email, session_jwt_from_username, session_jwt_from_id) = tokio::try_join!(
+        ctx.login_with_email(email, "passwd"),
+        ctx.login_with_username(username, "passwd"),
+        ctx.login_with_id(account_id, "passwd"),
+    )?;
 
-    assert!(
-        AuthenticationHandler(ctx.state.clone())
-            .auth_session(session_jwt_from_email.clone())
-            .await?
-            == account_id
-    );
-    assert!(
-        AuthenticationHandler(ctx.state.clone())
-            .auth_session(session_jwt_from_username.clone())
-            .await?
-            == account_id
-    );
+    for jwt in [
+        session_jwt_from_email.clone(),
+        session_jwt_from_username.clone(),
+        session_jwt_from_id.clone(),
+    ] {
+        assert!(
+            AuthenticationHandler(ctx.state.clone())
+                .auth_session(jwt)
+                .await?
+                == account_id
+        );
+    }
 
     // Check invalid credentials.
     assert_matches!(
@@ -179,6 +187,18 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
     );
     assert_matches!(
         ctx.login_with_username("invalid_username", "passwd")
+            .await
+            .unwrap_err(),
+        HandlerError::Service(ServiceError::InvalidCredentials)
+    );
+    assert_matches!(
+        ctx.login_with_id(account_id, "invalid_passwd")
+            .await
+            .unwrap_err(),
+        HandlerError::Service(ServiceError::InvalidCredentials)
+    );
+    assert_matches!(
+        ctx.login_with_id(AccountId::unique(), "passwd")
             .await
             .unwrap_err(),
         HandlerError::Service(ServiceError::InvalidCredentials)

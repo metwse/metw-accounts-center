@@ -174,6 +174,21 @@ impl TestState {
             .map(|jwt| jwt.token)
     }
 
+    /// Login with ID.
+    pub async fn login_with_id(
+        &self,
+        id: AccountId,
+        client_password_hash: &'static str,
+    ) -> HandlerResult<String> {
+        AuthenticationHandler(self.state.clone())
+            .login(dto::request::Login {
+                account: dto::request::AccountIdentifier::Id(id),
+                client_password_hash: client_password_hash.to_string(),
+            })
+            .await
+            .map(|jwt| jwt.token)
+    }
+
     /// Get the last email sent to the account.
     pub async fn last_email(&self, account_id: AccountId) -> emails::Template {
         let emails = self.emails.lock().await;

@@ -138,6 +138,8 @@ impl AuthenticationHandler {
         &self,
         account_identifier: dto::request::AccountIdentifier,
     ) -> HandlerResult<dto::response::AccountKdf> {
+        account_identifier.validate()?;
+
         let kdf = self.0.account_service.get_kdf(&account_identifier).await?;
 
         Ok(kdf)

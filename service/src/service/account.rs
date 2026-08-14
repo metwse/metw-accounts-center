@@ -110,7 +110,9 @@ impl AccountService {
                     .get_login_credentials_by_email(&email.email)
                     .await?
             }
-            dto::request::AccountIdentifier::Id(_) => todo!("get login credentials by email"),
+            dto::request::AccountIdentifier::Id(id) => {
+                self.repo.get_login_credentials_by_id(*id).await?
+            }
         }) else {
             return Err(ServiceError::InvalidCredentials);
         };
