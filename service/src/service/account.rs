@@ -99,7 +99,7 @@ impl AccountService {
         &self,
         login_dto: &dto::request::Login,
     ) -> ServiceResult<dto::service::Login> {
-        let Some(login_credentails) = (match &login_dto.account {
+        let Some(login_credentails) = (match &login_dto.account_identifier {
             dto::request::AccountIdentifier::Username(username) => {
                 self.repo
                     .get_login_credentials_by_username(&username.username)
@@ -114,7 +114,7 @@ impl AccountService {
                 self.repo.get_login_credentials_by_id(*id).await?
             }
         }) else {
-            return Err(ServiceError::InvalidCredentials);
+            return Err(ServiceError::AccountNotFound);
         };
 
         self.login_with_credentials(&login_credentails, &login_dto.client_password_hash)

@@ -27,21 +27,21 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
     };
 
     let login_with_email_dto = dto::request::Login {
-        account: dto::request::AccountIdentifier::Email(dto::request::Email {
+        account_identifier: dto::request::AccountIdentifier::Email(dto::request::Email {
             email: email.to_string(),
         }),
         client_password_hash: "passwd".to_string(),
     };
 
     let login_with_username_dto = dto::request::Login {
-        account: dto::request::AccountIdentifier::Username(dto::request::Username {
+        account_identifier: dto::request::AccountIdentifier::Username(dto::request::Username {
             username: username.to_string(),
         }),
         client_password_hash: "passwd".to_string(),
     };
 
     let login_with_incorrect_password = dto::request::Login {
-        account: dto::request::AccountIdentifier::Username(dto::request::Username {
+        account_identifier: dto::request::AccountIdentifier::Username(dto::request::Username {
             username: username.to_string(),
         }),
         client_password_hash: "incorrect_passwd".to_string(),
@@ -68,7 +68,7 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
 
     assert_matches!(
         account_service.login(&login_with_email_dto).await,
-        Err(ServiceError::InvalidCredentials)
+        Err(ServiceError::AccountNotFound)
     );
 
     // Permit log into the pending activation session.
@@ -175,7 +175,7 @@ pub async fn email_change(
 ) -> ServiceResult<()> {
     let account_id = account_service
         .login(&dto::request::Login {
-            account: dto::request::AccountIdentifier::Username(dto::request::Username {
+            account_identifier: dto::request::AccountIdentifier::Username(dto::request::Username {
                 username: username.to_string(),
             }),
             client_password_hash: "passwd".to_string(),

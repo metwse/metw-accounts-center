@@ -49,7 +49,10 @@ impl AuthenticationHandler {
     /// Creates an unverified account and sends a [`ConfirmSignup`] email.
     ///
     /// [`ConfirmSignup`]: emails::Template::ConfirmSignup
-    #[tracing::instrument(skip_all, fields(username = signup_dto.username, email = signup_dto.email))]
+    #[tracing::instrument(
+        skip_all,
+        fields(username = signup_dto.username, email = signup_dto.email, ip = ?ip)
+    )]
     pub async fn signup(
         self,
         signup_dto: dto::request::Signup,
@@ -107,7 +110,7 @@ impl AuthenticationHandler {
 
     /// Returns a session JWT, with [`TokenScope::Session`] or
     /// [`TokenScope::EmailVerificationSession`] scope.
-    #[tracing::instrument(skip_all, fields(account = ?login_dto.account))]
+    #[tracing::instrument(skip_all, fields(account = ?login_dto.account_identifier))]
     pub async fn login(
         self,
         login_dto: dto::request::Login,

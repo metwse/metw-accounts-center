@@ -148,9 +148,11 @@ impl TestState {
     ) -> HandlerResult<String> {
         AuthenticationHandler(self.state.clone())
             .login(dto::request::Login {
-                account: dto::request::AccountIdentifier::Username(dto::request::Username {
-                    username: username.to_string(),
-                }),
+                account_identifier: dto::request::AccountIdentifier::Username(
+                    dto::request::Username {
+                        username: username.to_string(),
+                    },
+                ),
                 client_password_hash: client_password_hash.to_string(),
             })
             .await
@@ -165,7 +167,7 @@ impl TestState {
     ) -> HandlerResult<String> {
         AuthenticationHandler(self.state.clone())
             .login(dto::request::Login {
-                account: dto::request::AccountIdentifier::Email(dto::request::Email {
+                account_identifier: dto::request::AccountIdentifier::Email(dto::request::Email {
                     email: email.to_string(),
                 }),
                 client_password_hash: client_password_hash.to_string(),
@@ -182,7 +184,7 @@ impl TestState {
     ) -> HandlerResult<String> {
         AuthenticationHandler(self.state.clone())
             .login(dto::request::Login {
-                account: dto::request::AccountIdentifier::Id(id),
+                account_identifier: dto::request::AccountIdentifier::Id(id),
                 client_password_hash: client_password_hash.to_string(),
             })
             .await

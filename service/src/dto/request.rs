@@ -53,7 +53,7 @@ pub struct ClientDerivedPassword {
 #[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
 pub struct Login {
     #[validate(nested)]
-    pub account: AccountIdentifier,
+    pub account_identifier: AccountIdentifier,
 
     /// Argon2-hashed password.
     #[validate(length(max = 128))]

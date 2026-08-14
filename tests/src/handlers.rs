@@ -177,7 +177,7 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
         ctx.login_with_email("invalid@email.com", "passwd")
             .await
             .unwrap_err(),
-        HandlerError::Service(ServiceError::InvalidCredentials)
+        HandlerError::Service(ServiceError::AccountNotFound)
     );
     assert_matches!(
         ctx.login_with_username(username, "invalid_passwd")
@@ -189,7 +189,7 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
         ctx.login_with_username("invalid_username", "passwd")
             .await
             .unwrap_err(),
-        HandlerError::Service(ServiceError::InvalidCredentials)
+        HandlerError::Service(ServiceError::AccountNotFound)
     );
     assert_matches!(
         ctx.login_with_id(account_id, "invalid_passwd")
@@ -201,7 +201,7 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
         ctx.login_with_id(AccountId::unique(), "passwd")
             .await
             .unwrap_err(),
-        HandlerError::Service(ServiceError::InvalidCredentials)
+        HandlerError::Service(ServiceError::AccountNotFound)
     );
 
     // Provide session tokens to authorization handler.
