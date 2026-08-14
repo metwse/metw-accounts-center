@@ -36,7 +36,7 @@ async fn me(
     post, path = "/emails",
     security(("session_jwt" = [])),
     request_body = dto::request::Email,
-    params(dto::request::Captcha),
+    params(("captcha" = dto::request::Captcha, Query)),
     responses(
         (status = OK)
     )
@@ -77,7 +77,7 @@ async fn delete_email(
     post, path = "/emails/set-primary",
     security(("session_jwt" = [])),
     request_body = dto::request::Email,
-    params(dto::request::Captcha),
+    params(("captcha" = dto::request::Captcha, Query)),
     responses(
         (status = OK)
     )
@@ -96,7 +96,7 @@ async fn set_primary_email(
 }
 
 #[utoipa::path(
-    post, path = "change-password",
+    post, path = "/change-password",
     request_body = dto::request::ChangePassword,
 )]
 async fn change_password(

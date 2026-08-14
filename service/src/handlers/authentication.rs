@@ -134,42 +134,11 @@ impl AuthenticationHandler {
 
     /// Returns KDFs of an account.
     #[tracing::instrument(skip_all)]
-    pub async fn get_kdf_by_id(&self, id: AccountId) -> HandlerResult<dto::response::AccountKdf> {
-        let kdf = self.0.account_service.get_kdf_by_id(id).await?;
-
-        Ok(kdf)
-    }
-
-    /// Returns KDFs of an account.
-    #[tracing::instrument(skip_all)]
-    pub async fn get_kdf_by_username(
+    pub async fn get_kdf(
         &self,
-        username_dto: dto::request::Username,
+        account_identifier: dto::request::AccountIdentifier,
     ) -> HandlerResult<dto::response::AccountKdf> {
-        username_dto.validate()?;
-
-        let kdf = self
-            .0
-            .account_service
-            .get_kdf_by_username(&username_dto.username)
-            .await?;
-
-        Ok(kdf)
-    }
-
-    /// Returns KDFs of an account.
-    #[tracing::instrument(skip_all)]
-    pub async fn get_kdf_by_email(
-        &self,
-        email_dto: dto::request::Email,
-    ) -> HandlerResult<dto::response::AccountKdf> {
-        email_dto.validate()?;
-
-        let kdf = self
-            .0
-            .account_service
-            .get_kdf_by_email(&email_dto.email)
-            .await?;
+        let kdf = self.0.account_service.get_kdf(&account_identifier).await?;
 
         Ok(kdf)
     }

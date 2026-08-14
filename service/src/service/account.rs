@@ -121,40 +121,25 @@ impl AccountService {
 
     /// Account's key derivation functions.
     #[tracing::instrument(skip(self))]
-    pub async fn get_kdf_by_email(&self, email: &str) -> ServiceResult<dto::response::AccountKdf> {
-        let Some(client_password_kdf) = self.repo.get_client_password_kdf_by_email(email).await?
-        else {
-            return Err(ServiceError::AccountNotFound);
-        };
-
-        Ok(dto::response::AccountKdf {
-            client_password_kdf,
-        })
-    }
-
-    /// Account's key derivation functions.
-    #[tracing::instrument(skip(self))]
-    pub async fn get_kdf_by_username(
+    pub async fn get_kdf(
         &self,
-        username: &str,
+        account_identifier: &dto::request::AccountIdentifier,
     ) -> ServiceResult<dto::response::AccountKdf> {
-        let Some(client_password_kdf) = self
-            .repo
-            .get_client_password_kdf_by_username(username)
-            .await?
-        else {
-            return Err(ServiceError::AccountNotFound);
-        };
-
-        Ok(dto::response::AccountKdf {
-            client_password_kdf,
-        })
-    }
-
-    /// Account's key derivation functions.
-    #[tracing::instrument(skip(self))]
-    pub async fn get_kdf_by_id(&self, id: AccountId) -> ServiceResult<dto::response::AccountKdf> {
-        let Some(client_password_kdf) = self.repo.get_client_password_kdf_by_id(id).await? else {
+        let Some(client_password_kdf) = (match account_identifier {
+            dto::request::AccountIdentifier::Username(username) => {
+                self.repo
+                    .get_client_password_kdf_by_username(&username.username)
+                    .await?
+            }
+            dto::request::AccountIdentifier::Email(email) => {
+                self.repo
+                    .get_client_password_kdf_by_email(&email.email)
+                    .await?
+            }
+            dto::request::AccountIdentifier::Id(id) => {
+                self.repo.get_client_password_kdf_by_id(*id).await?
+            }
+        }) else {
             return Err(ServiceError::AccountNotFound);
         };
 

@@ -76,7 +76,7 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
 
     assert_matches!(
         account_service
-            .get_kdf_by_username(username)
+            .get_kdf(&dto::request::AccountIdentifier::Username(dto::request::Username { username: username.to_string() }))
             .await?
             .client_password_kdf,
         entity::ClientPasswordKdf::Base64EncodedPbkdf2Sha256 {
@@ -93,7 +93,13 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
         .await?;
     assert!(account_service.is_email_taken(email).await?);
 
-    account_service.get_kdf_by_email(email).await?;
+    account_service
+        .get_kdf(&dto::request::AccountIdentifier::Email(
+            dto::request::Email {
+                email: email.to_string(),
+            },
+        ))
+        .await?;
 
     assert!(account_service.login(&login_with_email_dto).await?.id == account_id);
     assert!(account_service.login(&login_with_username_dto).await?.id == account_id);

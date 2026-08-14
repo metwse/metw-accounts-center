@@ -51,30 +51,6 @@ pub struct ClientDerivedPassword {
 
 /// Login into the account.
 #[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
-pub struct LoginWithUsername {
-    /// Username.
-    #[validate(length(min = 2, max = 20), regex(path = *USERNAME_REGEX))]
-    pub username: String,
-
-    /// Password hashed client-side.
-    #[validate(length(max = 128))]
-    pub client_password_hash: String,
-}
-
-/// Login into the account.
-#[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
-pub struct LoginWithEmail {
-    /// Email.
-    #[validate(email, custom(function = validate_lowercase))]
-    pub email: String,
-
-    /// Argon2-hashed password.
-    #[validate(length(max = 128))]
-    pub client_password_hash: String,
-}
-
-/// Login into the account.
-#[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
 pub struct Login {
     #[validate(nested)]
     pub account: AccountIdentifier,
@@ -134,7 +110,7 @@ pub struct Token {
 }
 
 /// Request containing CAPTCHA response.
-#[derive(Debug, Clone, Deserialize, IntoParams)]
+#[derive(Debug, Clone, Deserialize, IntoParams, ToSchema)]
 pub struct Captcha {
     pub captcha: String,
 }

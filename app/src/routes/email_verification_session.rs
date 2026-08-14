@@ -17,7 +17,7 @@ use utoipa::OpenApi;
     post, path = "signup/retry",
     security(("email_verification_session_jwt" = [])),
     request_body = dto::request::Email,
-    params(dto::request::Captcha),
+    params(("captcha" = dto::request::Captcha, Query)),
     responses(
         (status = OK)
     )
