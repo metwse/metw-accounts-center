@@ -177,7 +177,7 @@
 <a href=#177 id=177 data-nosnippet>177</a>        ctx.login_with_email(<span class="string">"invalid@email.com"</span>, <span class="string">"passwd"</span>)
 <a href=#178 id=178 data-nosnippet>178</a>            .<span class="kw">await
 <a href=#179 id=179 data-nosnippet>179</a>            </span>.unwrap_err(),
-<a href=#180 id=180 data-nosnippet>180</a>        HandlerError::Service(ServiceError::InvalidCredentials)
+<a href=#180 id=180 data-nosnippet>180</a>        HandlerError::Service(ServiceError::AccountNotFound)
 <a href=#181 id=181 data-nosnippet>181</a>    );
 <a href=#182 id=182 data-nosnippet>182</a>    <span class="macro">assert_matches!</span>(
 <a href=#183 id=183 data-nosnippet>183</a>        ctx.login_with_username(username, <span class="string">"invalid_passwd"</span>)
@@ -189,7 +189,7 @@
 <a href=#189 id=189 data-nosnippet>189</a>        ctx.login_with_username(<span class="string">"invalid_username"</span>, <span class="string">"passwd"</span>)
 <a href=#190 id=190 data-nosnippet>190</a>            .<span class="kw">await
 <a href=#191 id=191 data-nosnippet>191</a>            </span>.unwrap_err(),
-<a href=#192 id=192 data-nosnippet>192</a>        HandlerError::Service(ServiceError::InvalidCredentials)
+<a href=#192 id=192 data-nosnippet>192</a>        HandlerError::Service(ServiceError::AccountNotFound)
 <a href=#193 id=193 data-nosnippet>193</a>    );
 <a href=#194 id=194 data-nosnippet>194</a>    <span class="macro">assert_matches!</span>(
 <a href=#195 id=195 data-nosnippet>195</a>        ctx.login_with_id(account_id, <span class="string">"invalid_passwd"</span>)
@@ -201,7 +201,7 @@
 <a href=#201 id=201 data-nosnippet>201</a>        ctx.login_with_id(AccountId::unique(), <span class="string">"passwd"</span>)
 <a href=#202 id=202 data-nosnippet>202</a>            .<span class="kw">await
 <a href=#203 id=203 data-nosnippet>203</a>            </span>.unwrap_err(),
-<a href=#204 id=204 data-nosnippet>204</a>        HandlerError::Service(ServiceError::InvalidCredentials)
+<a href=#204 id=204 data-nosnippet>204</a>        HandlerError::Service(ServiceError::AccountNotFound)
 <a href=#205 id=205 data-nosnippet>205</a>    );
 <a href=#206 id=206 data-nosnippet>206</a>
 <a href=#207 id=207 data-nosnippet>207</a>    <span class="comment">// Provide session tokens to authorization handler.
