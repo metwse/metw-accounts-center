@@ -15,6 +15,10 @@ utoipa = { workspace = true, features = ["axum_extras"] }
 
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+tracing-opentelemetry = { version = "0.33", optional = true }
+opentelemetry = { version = "0.32", optional = true }
+opentelemetry-otlp = { version = "0.32", features = ["grpc-tonic"], optional = true }
+opentelemetry_sdk = { version = "0.32", optional = true }
 
 thiserror = { workspace = true }
 dotenvy = { workspace = true }
@@ -26,6 +30,7 @@ service = { path = "../service/" }
 
 [features]
 transparent-errors = []
+otel = ["dep:opentelemetry", "dep:tracing-opentelemetry", "dep:opentelemetry-otlp", "dep:opentelemetry_sdk"]
 
 [lints]
 workspace = true

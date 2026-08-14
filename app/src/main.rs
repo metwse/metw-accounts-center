@@ -5,17 +5,22 @@ use state::Config;
 use std::{env, net::SocketAddr};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+#[cfg(feature = "otel")]
+use app::otel_layer;
+
 #[tokio::main(flavor = "multi_thread")]
 async fn main() {
     dotenvy::dotenv().ok();
 
-    tracing_subscriber::registry()
-        .with(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| format!("{}=info", env!("CARGO_CRATE_NAME")).into()),
-        )
-        .with(tracing_subscriber::fmt::layer())
-        .init();
+    let tracing_registry = tracing_subscriber::registry().with(
+        tracing_subscriber::EnvFilter::try_from_default_env()
+            .unwrap_or_else(|_| format!("{}=info", env!("CARGO_CRATE_NAME")).into()),
+    ).with(tracing_subscriber::fmt::layer());
+
+    #[cfg(feature = "otel")]
+    let tracing_registry = tracing_registry.with(otel_layer());
+
+    tracing_registry.init();
 
     let sock_addr: SocketAddr = env::var("HOST")
         .unwrap_or_else(|_| {

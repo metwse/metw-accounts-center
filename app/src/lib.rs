@@ -22,6 +22,12 @@ pub mod middleware;
 /// API results.
 pub mod res;
 
+#[cfg(feature = "otel")]
+mod otel;
+
+#[cfg(feature = "otel")]
+pub use otel::otel_layer;
+
 /// OpenAPI documentation.
 #[derive(OpenApi)]
 #[openapi(
