@@ -12,10 +12,12 @@ use app::otel_layer;
 async fn main() {
     dotenvy::dotenv().ok();
 
-    let tracing_registry = tracing_subscriber::registry().with(
-        tracing_subscriber::EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| format!("{}=info", env!("CARGO_CRATE_NAME")).into()),
-    ).with(tracing_subscriber::fmt::layer());
+    let tracing_registry = tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| format!("{}=info", env!("CARGO_CRATE_NAME")).into()),
+        )
+        .with(tracing_subscriber::fmt::layer());
 
     #[cfg(feature = "otel")]
     let tracing_registry = tracing_registry.with(otel_layer());
