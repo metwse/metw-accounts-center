@@ -1,6 +1,6 @@
 {text}
 
-{{callback_url}}{{token}}
+{{callback_url}}?{{callback_parameters}}
 
 Do not share this link with anyone. This email was sent to @{{username}}.
 {extra_text}

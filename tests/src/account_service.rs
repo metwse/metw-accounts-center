@@ -24,6 +24,7 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
             pbkdf2_iterations: 123,
             pbkdf2_length: 321,
         },
+        redirect_url: None,
     };
 
     let login_with_email_dto = dto::request::Login {
@@ -153,6 +154,7 @@ pub async fn account_creation_data_race(
             pbkdf2_iterations: 500_000,
             pbkdf2_length: 256,
         },
+        redirect_url: None,
     };
 
     let mut signup_futures = Vec::with_capacity(16);

@@ -31,7 +31,7 @@ pub fn minimize_email_templates() {
     for (template_name, mut value) in templates.into_iter() {
         value.insert(
             "callback_not_minimized".to_string(),
-            r#"href="{callback_url}{token}""#.to_string(),
+            r#"href="{callback_url}?{callback_parameters}""#.to_string(),
         );
 
         let html = strfmt::strfmt(&html_template, &value).unwrap();

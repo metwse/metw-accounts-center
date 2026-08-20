@@ -91,6 +91,7 @@ impl TestState {
                         pbkdf2_iterations: 500_000,
                         pbkdf2_length: 256,
                     },
+                    redirect_url: None,
                 },
                 random_ipv6(),
                 dto::request::Captcha {

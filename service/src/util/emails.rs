@@ -9,7 +9,11 @@ pub enum Template {
     /// See [`CompleteSignup`].
     ///
     /// [`CompleteSignup`]: `crate::token::TokenScope::CompleteSignup`
-    ConfirmSignup { username: String, token: String },
+    ConfirmSignup {
+        username: String,
+        token: String,
+        redirect_url: Option<String>,
+    },
 
     /// See [`AddEmail`].
     ///
@@ -63,12 +67,20 @@ macro_rules! build_email {
             let callback_url = $callback_url;
 
             match $template {
-                Self::ConfirmSignup { username, token } => format!(
-                    get_template!($ty "confirm-signup"),
-                    callback_url = callback_url,
-                    username = username,
-                    token = token
-                ),
+                Self::ConfirmSignup { username, token, redirect_url } => {
+                    let callback_parameters = if let Some(redirect_url) = redirect_url {
+                        format!("redirect_url={}&auth={}", redirect_url, token)
+                    } else {
+                        format!("auth={}", token)
+                    };
+
+                    format!(
+                        get_template!($ty "confirm-signup"),
+                        callback_url = callback_url,
+                        username = username,
+                        callback_parameters = callback_parameters,
+                    )
+                },
                 Self::ConfirmNewEmail {
                     username,
                     token,
@@ -77,7 +89,7 @@ macro_rules! build_email {
                     get_template!($ty "confirm-new-email"),
                     callback_url = callback_url,
                     username = username,
-                    token = token
+                    callback_parameters = format!("auth={}", token)
                 ),
                 Self::ConfirmPrimaryEmailChange {
                     username,
@@ -90,7 +102,7 @@ macro_rules! build_email {
                     username = username,
                     current_primary_email = current_primary_email,
                     new_primary_email = new_primary_email,
-                    token = token
+                    callback_parameters = format!("auth={}", token)
                 ),
             }
         }

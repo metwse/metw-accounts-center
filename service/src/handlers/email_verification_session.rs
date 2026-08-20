@@ -30,16 +30,16 @@ impl EmailVerificationSessionHandler {
     pub async fn retry_signup(
         self,
         id: AccountId,
-        email_dto: dto::request::Email,
+        retry_signup_dto: dto::request::RetrySignup,
         ip: IpAddr,
         captcha: dto::request::Captcha,
     ) -> HandlerResult<()> {
-        email_dto.validate()?;
+        retry_signup_dto.validate()?;
         if !self.0.captcha_client.validate(captcha.captcha).await {
             return Err(HandlerError::InvalidCaptcha);
         }
 
-        let email = email_dto.email;
+        let email = retry_signup_dto.email;
 
         if self.0.account_service.is_email_taken(&email).await? {
             return Err(HandlerError::Service(ServiceError::EmailTaken));
@@ -64,6 +64,7 @@ impl EmailVerificationSessionHandler {
         let template = emails::Template::ConfirmSignup {
             username,
             token: complete_signup_jwt,
+            redirect_url: retry_signup_dto.redirect_url,
         };
 
         self.0.email_client.send(email, id, template).await;

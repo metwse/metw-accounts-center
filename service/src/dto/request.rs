@@ -5,9 +5,13 @@ use utoipa::{IntoParams, PartialSchema, ToSchema};
 use validator::Validate;
 
 static USERNAME_REGEX_STR: &str = "^[a-z]([_.]?[a-z0-9])*$";
+static REDIRECT_URL_REGEX_STR: &str = "^/";
 
 static USERNAME_REGEX: LazyLock<regex::Regex> =
     LazyLock::new(|| regex::Regex::new(USERNAME_REGEX_STR).unwrap());
+
+static REDIRECT_URL_REGEX: LazyLock<regex::Regex> =
+    LazyLock::new(|| regex::Regex::new(REDIRECT_URL_REGEX_STR).unwrap());
 
 fn validate_lowercase(s: &str) -> Result<(), validator::ValidationError> {
     if s.bytes().all(|b| !b.is_ascii_uppercase()) {
@@ -32,6 +36,22 @@ pub struct Signup {
     /// Password hash with KDF parameters.
     #[validate(nested)]
     pub password: ClientDerivedPassword,
+
+    /// URL to redirect after a successful signup.
+    #[validate(regex(path = *REDIRECT_URL_REGEX))]
+    pub redirect_url: Option<String>,
+}
+
+/// Resend signup email.
+#[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
+pub struct RetrySignup {
+    /// Email.
+    #[validate(email, custom(function = validate_lowercase))]
+    pub email: String,
+
+    /// URL to redirect after a successful signup.
+    #[validate(regex(path = *REDIRECT_URL_REGEX))]
+    pub redirect_url: Option<String>,
 }
 
 /// Password hashed client-side, with PBKDF2-SHA256 parameters.
@@ -222,6 +242,27 @@ fn username_regex() {
 
     for invalid in invalids {
         assert!(!(*USERNAME_REGEX).is_match(invalid));
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn redirect_url_regex() {
+    let valids = ["/test", "/", "/p/a/t/h", "////"];
+
+    let invalids = [
+        "javascript:alert(1)",
+        "https://example.com",
+        "localhost:8000/",
+        "file:///home/metw",
+    ];
+
+    for valid in valids {
+        assert!((*REDIRECT_URL_REGEX).is_match(valid));
+    }
+
+    for invalid in invalids {
+        assert!(!(*REDIRECT_URL_REGEX).is_match(invalid));
     }
 }
 

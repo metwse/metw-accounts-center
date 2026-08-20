@@ -99,6 +99,7 @@ impl AuthenticationHandler {
         let template = emails::Template::ConfirmSignup {
             username,
             token: complete_signup_jwt,
+            redirect_url: signup_dto.redirect_url,
         };
 
         self.0.email_client.send(email, account_id, template).await;
