@@ -137,7 +137,7 @@
     account_id: <a class="struct" href="../util/id/struct.AccountId.html" title="struct service::util::id::AccountId">AccountId</a>,
 ) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/nightly/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="type.RepoResult.html" title="type service::repo::RepoResult">RepoResult</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../dto/repo/struct.OwnedLoginCredentials.html" title="struct service::dto::repo::OwnedLoginCredentials">OwnedLoginCredentials</a>&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
     Self: 'async_trait,
-    'life0: 'async_trait,</div></h4></section></summary><div class="docblock"><p>Get password and server-side password hashing algorithm by id.</p>
+    'life0: 'async_trait,</div></h4></section></summary><div class="docblock"><p>Get password and server-side password hashing algorithm by account ID.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="tymethod.get_login_credentials_by_email" class="method"><a class="src rightside" href="../../src/service/repo/mod.rs.html#66-69">Source</a><h4 class="code-header">fn <a href="#tymethod.get_login_credentials_by_email" class="fn">get_login_credentials_by_email</a>&lt;'life0, 'life1, 'async_trait&gt;(
     &amp;'life0 self,
     email: &amp;'life1 <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>,
@@ -171,7 +171,7 @@
     account_id: <a class="struct" href="../util/id/struct.AccountId.html" title="struct service::util::id::AccountId">AccountId</a>,
 ) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/nightly/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="type.RepoResult.html" title="type service::repo::RepoResult">RepoResult</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="../entity/enum.ClientPasswordKdf.html" title="enum service::entity::ClientPasswordKdf">ClientPasswordKdf</a>&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
     Self: 'async_trait,
-    'life0: 'async_trait,</div></h4></section></summary><div class="docblock"><p>Get client-side password derivation algorithm by id.</p>
+    'life0: 'async_trait,</div></h4></section></summary><div class="docblock"><p>Get client-side password derivation algorithm by account ID.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="tymethod.get_primary_username" class="method"><a class="src rightside" href="../../src/service/repo/mod.rs.html#99">Source</a><h4 class="code-header">fn <a href="#tymethod.get_primary_username" class="fn">get_primary_username</a>&lt;'life0, 'async_trait&gt;(
     &amp;'life0 self,
     account_id: <a class="struct" href="../util/id/struct.AccountId.html" title="struct service::util::id::AccountId">AccountId</a>,
@@ -213,11 +213,11 @@ or deleted accounts do not.</p>
     'life0: 'async_trait,
     'life1: 'async_trait,
     'life2: 'async_trait,</div></h4></section></summary><div class="docblock"><p>Set the email primary for the account.</p>
-<p>Although <code>email</code>s are unique, the <code>id</code> parameter is also required to
-prevent race conditions. It is highly unlikely that the owner of an
-email would change at the exact moment their email is being set as
-the primary email, but it is still a safety hazard that must still be
-prevented.</p>
+<p>Although <code>email</code>s are unique, the <code>account_id</code> parameter is also
+required to prevent race conditions. It is highly unlikely that the
+owner of an email would change at the exact moment their email is being
+set as the primary email, but it is still a safety hazard that must
+still be prevented.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="tymethod.remove_email_if_not_primary" class="method"><a class="src rightside" href="../../src/service/repo/mod.rs.html#136-140">Source</a><h4 class="code-header">fn <a href="#tymethod.remove_email_if_not_primary" class="fn">remove_email_if_not_primary</a>&lt;'life0, 'life1, 'async_trait&gt;(
     &amp;'life0 self,
     account_id: <a class="struct" href="../util/id/struct.AccountId.html" title="struct service::util::id::AccountId">AccountId</a>,

@@ -24,14 +24,14 @@
 <a href=#24 id=24 data-nosnippet>24</a>)]
 <a href=#25 id=25 data-nosnippet>25</a><span class="kw">async fn </span>retry_signup(
 <a href=#26 id=26 data-nosnippet>26</a>    State(state): State&lt;AppState&gt;,
-<a href=#27 id=27 data-nosnippet>27</a>    Extension(id): Extension&lt;AccountId&gt;,
+<a href=#27 id=27 data-nosnippet>27</a>    Extension(account_id): Extension&lt;AccountId&gt;,
 <a href=#28 id=28 data-nosnippet>28</a>    Extension(real_ip): Extension&lt;IpAddr&gt;,
 <a href=#29 id=29 data-nosnippet>29</a>    AppQuery(captcha): AppQuery&lt;dto::request::Captcha&gt;,
 <a href=#30 id=30 data-nosnippet>30</a>    AppJson(retry_signup_dto): AppJson&lt;dto::request::RetrySignup&gt;,
 <a href=#31 id=31 data-nosnippet>31</a>) -&gt; AppResult&lt;()&gt; {
 <a href=#32 id=32 data-nosnippet>32</a>    <span class="prelude-val">Ok</span>(AppJson(
 <a href=#33 id=33 data-nosnippet>33</a>        EmailVerificationSessionHandler(state)
-<a href=#34 id=34 data-nosnippet>34</a>            .retry_signup(id, retry_signup_dto, real_ip, captcha)
+<a href=#34 id=34 data-nosnippet>34</a>            .retry_signup(account_id, retry_signup_dto, real_ip, captcha)
 <a href=#35 id=35 data-nosnippet>35</a>            .<span class="kw">await</span><span class="question-mark">?</span>,
 <a href=#36 id=36 data-nosnippet>36</a>    ))
 <a href=#37 id=37 data-nosnippet>37</a>}

@@ -56,7 +56,7 @@
 <a href=#56 id=56 data-nosnippet>56</a>    <span class="doccomment">/// Begin a new transactional unit.
 <a href=#57 id=57 data-nosnippet>57</a>    </span><span class="kw">async fn </span>begin_transaction(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; RepoResult&lt;Box&lt;<span class="kw">dyn </span>AccountRepoTransaction&gt;&gt;;
 <a href=#58 id=58 data-nosnippet>58</a>
-<a href=#59 id=59 data-nosnippet>59</a>    <span class="doccomment">/// Get password and server-side password hashing algorithm by id.
+<a href=#59 id=59 data-nosnippet>59</a>    <span class="doccomment">/// Get password and server-side password hashing algorithm by account ID.
 <a href=#60 id=60 data-nosnippet>60</a>    </span><span class="kw">async fn </span>get_login_credentials_by_account_id(
 <a href=#61 id=61 data-nosnippet>61</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#62 id=62 data-nosnippet>62</a>        account_id: AccountId,
@@ -86,7 +86,7 @@
 <a href=#86 id=86 data-nosnippet>86</a>        username: <span class="kw-2">&amp;</span>str,
 <a href=#87 id=87 data-nosnippet>87</a>    ) -&gt; RepoResult&lt;<span class="prelude-ty">Option</span>&lt;entity::ClientPasswordKdf&gt;&gt;;
 <a href=#88 id=88 data-nosnippet>88</a>
-<a href=#89 id=89 data-nosnippet>89</a>    <span class="doccomment">/// Get client-side password derivation algorithm by id.
+<a href=#89 id=89 data-nosnippet>89</a>    <span class="doccomment">/// Get client-side password derivation algorithm by account ID.
 <a href=#90 id=90 data-nosnippet>90</a>    </span><span class="kw">async fn </span>get_client_password_kdf_by_account_id(
 <a href=#91 id=91 data-nosnippet>91</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#92 id=92 data-nosnippet>92</a>        account_id: AccountId,
@@ -120,11 +120,11 @@
 <a href=#120 id=120 data-nosnippet>120</a>
 <a href=#121 id=121 data-nosnippet>121</a>    <span class="doccomment">/// Set the email primary for the account.
 <a href=#122 id=122 data-nosnippet>122</a>    ///
-<a href=#123 id=123 data-nosnippet>123</a>    /// Although `email`s are unique, the `id` parameter is also required to
-<a href=#124 id=124 data-nosnippet>124</a>    /// prevent race conditions. It is highly unlikely that the owner of an
-<a href=#125 id=125 data-nosnippet>125</a>    /// email would change at the exact moment their email is being set as
-<a href=#126 id=126 data-nosnippet>126</a>    /// the primary email, but it is still a safety hazard that must still be
-<a href=#127 id=127 data-nosnippet>127</a>    /// prevented.
+<a href=#123 id=123 data-nosnippet>123</a>    /// Although `email`s are unique, the `account_id` parameter is also
+<a href=#124 id=124 data-nosnippet>124</a>    /// required to prevent race conditions. It is highly unlikely that the
+<a href=#125 id=125 data-nosnippet>125</a>    /// owner of an email would change at the exact moment their email is being
+<a href=#126 id=126 data-nosnippet>126</a>    /// set as the primary email, but it is still a safety hazard that must
+<a href=#127 id=127 data-nosnippet>127</a>    /// still be prevented.
 <a href=#128 id=128 data-nosnippet>128</a>    </span><span class="kw">async fn </span>set_primary_email_if_current_is(
 <a href=#129 id=129 data-nosnippet>129</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#130 id=130 data-nosnippet>130</a>        account_id: AccountId,
