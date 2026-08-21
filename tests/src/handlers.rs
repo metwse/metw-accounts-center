@@ -50,7 +50,7 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
         .await?;
 
     AuthenticationHandler(ctx.state.clone())
-        .get_kdf(dto::request::AccountIdentifier::Id(login_account_id))
+        .get_kdf(dto::request::AccountIdentifier::AccountId(login_account_id))
         .await?;
 
     assert!(account_id == login_account_id);
@@ -149,16 +149,16 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
     assert!(me.email.unwrap() == email);
 
     // Try logging in with username and password.
-    let (session_jwt_from_email, session_jwt_from_username, session_jwt_from_id) = tokio::try_join!(
+    let (session_jwt_from_email, session_jwt_from_username, session_jwt_from_account_id) = tokio::try_join!(
         ctx.login_with_email(email, "passwd"),
         ctx.login_with_username(username, "passwd"),
-        ctx.login_with_id(account_id, "passwd"),
+        ctx.login_with_account_id(account_id, "passwd"),
     )?;
 
     for jwt in [
         session_jwt_from_email.clone(),
         session_jwt_from_username.clone(),
-        session_jwt_from_id.clone(),
+        session_jwt_from_account_id.clone(),
     ] {
         assert!(
             AuthenticationHandler(ctx.state.clone())
@@ -194,13 +194,13 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
         HandlerError::Service(ServiceError::AccountNotFound)
     );
     assert_matches!(
-        ctx.login_with_id(account_id, "invalid_passwd")
+        ctx.login_with_account_id(account_id, "invalid_passwd")
             .await
             .unwrap_err(),
         HandlerError::Service(ServiceError::InvalidCredentials)
     );
     assert_matches!(
-        ctx.login_with_id(AccountId::unique(), "passwd")
+        ctx.login_with_account_id(AccountId::unique(), "passwd")
             .await
             .unwrap_err(),
         HandlerError::Service(ServiceError::AccountNotFound)

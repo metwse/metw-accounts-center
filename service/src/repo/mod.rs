@@ -37,9 +37,9 @@ pub type RepoResult<T> = Result<T, RepoError>;
 ///
 /// | ID | Constraint | Field |
 /// |--|--|--|
-/// | `I-AR-1` | unique | `accounts.id` |
-/// | `I-AR-2` | unique | `accounts.id, username, username.is_primary == true` |
-/// | `I-AR-3` | unique | `accounts.id, email, email.is_primary == true` |
+/// | `I-AR-1` | unique | `accounts.account_id` |
+/// | `I-AR-2` | unique | `accounts.account_id, username, username.is_primary == true` |
+/// | `I-AR-3` | unique | `accounts.account_id, email, email.is_primary == true` |
 /// | `I-AR-4` | check | `username.is_primary == true NAND username.is_expires IS NOT NULL` |
 /// | `I-AR-5` | check | `username == lower(username)` |
 /// | `I-AR-6` | check | `email == lower(email)` |
@@ -48,18 +48,18 @@ pub type RepoResult<T> = Result<T, RepoError>;
 ///
 /// | ID | Relation | From | To |
 /// |--|--|--|--|
-/// | `R-AR-1`| one-to-many | `account.id` | `email` |
-/// | `R-AR-2`| one-to-many | `account.id` | `username` |
-/// | `R-AR-3`| one-to-exactly one | `account.id` | `account_flags.id` |
+/// | `R-AR-1`| one-to-many | `account.account_id` | `email` |
+/// | `R-AR-2`| one-to-many | `account.account_id` | `username` |
+/// | `R-AR-3`| one-to-exactly one | `account.account_id` | `account_flags.account_id` |
 #[async_trait]
 pub trait AccountRepo: Send + Sync {
     /// Begin a new transactional unit.
     async fn begin_transaction(&self) -> RepoResult<Box<dyn AccountRepoTransaction>>;
 
     /// Get password and server-side password hashing algorithm by id.
-    async fn get_login_credentials_by_id(
+    async fn get_login_credentials_by_account_id(
         &self,
-        id: AccountId,
+        account_id: AccountId,
     ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>>;
 
     /// Get password and server-side password hashing algorithm by email.
@@ -87,33 +87,36 @@ pub trait AccountRepo: Send + Sync {
     ) -> RepoResult<Option<entity::ClientPasswordKdf>>;
 
     /// Get client-side password derivation algorithm by id.
-    async fn get_client_password_kdf_by_id(
+    async fn get_client_password_kdf_by_account_id(
         &self,
-        id: AccountId,
+        account_id: AccountId,
     ) -> RepoResult<Option<entity::ClientPasswordKdf>>;
 
     /// Get primary username if, exists.
     ///
     /// Usually all the accounts have primary usernames, but pending deletion
     /// might drop usernames of an account.
-    async fn get_primary_username(&self, id: AccountId) -> RepoResult<Option<String>>;
+    async fn get_primary_username(&self, account_id: AccountId) -> RepoResult<Option<String>>;
 
     /// Get usernames by account id.
     ///
     /// After username change, previous usernames for will continue to belong
     /// the account for a while; but they will be garbage collected.
-    async fn get_nonexpiring_username_aliases(&self, id: AccountId) -> RepoResult<Vec<String>>;
+    async fn get_nonexpiring_username_aliases(
+        &self,
+        account_id: AccountId,
+    ) -> RepoResult<Vec<String>>;
 
     /// Get primary email if, exists.
     ///
     /// All regular accounts shall have primary email, but some system accounts
     /// or deleted accounts do not.
-    async fn get_primary_email(&self, id: AccountId) -> RepoResult<Option<String>>;
+    async fn get_primary_email(&self, account_id: AccountId) -> RepoResult<Option<String>>;
 
     /// Get secondary emails by account id.
     ///
     /// Returns an empty list if none have been added.
-    async fn get_secondary_emails(&self, id: AccountId) -> RepoResult<Vec<String>>;
+    async fn get_secondary_emails(&self, account_id: AccountId) -> RepoResult<Vec<String>>;
 
     /// Set the email primary for the account.
     ///
@@ -124,13 +127,17 @@ pub trait AccountRepo: Send + Sync {
     /// prevented.
     async fn set_primary_email_if_current_is(
         &self,
-        id: AccountId,
+        account_id: AccountId,
         current_primary_email: &str,
         new_primary_email: &str,
     ) -> RepoResult<bool>;
 
     /// Remove the email if it is not primary email of the account.
-    async fn remove_email_if_not_primary(&self, id: AccountId, email: &str) -> RepoResult<bool>;
+    async fn remove_email_if_not_primary(
+        &self,
+        account_id: AccountId,
+        email: &str,
+    ) -> RepoResult<bool>;
 
     /// Returns true if the username has been taken.
     async fn is_username_taken(&self, username: &str) -> RepoResult<bool>;
@@ -139,7 +146,7 @@ pub trait AccountRepo: Send + Sync {
     async fn is_email_taken(&self, email: &str) -> RepoResult<bool>;
 
     /// Returns true if the email has been taken by the given account.
-    async fn is_email_taken_by(&self, id: AccountId, email: &str) -> RepoResult<bool>;
+    async fn is_email_taken_by(&self, account_id: AccountId, email: &str) -> RepoResult<bool>;
 }
 
 /// Transactional repository access wrapper.
@@ -152,15 +159,20 @@ pub trait AccountRepoTransaction: Send + Sync {
     async fn insert_account(&mut self, account: &entity::Account) -> RepoResult<()>;
 
     /// Load default flags to user.
-    async fn insert_default_flags(&mut self, id: AccountId) -> RepoResult<()>;
+    async fn insert_default_flags(&mut self, account_id: AccountId) -> RepoResult<()>;
 
     /// Add a secondary email to the account.
-    async fn add_email(&mut self, id: AccountId, email: &str, is_primary: bool) -> RepoResult<()>;
+    async fn add_email(
+        &mut self,
+        account_id: AccountId,
+        email: &str,
+        is_primary: bool,
+    ) -> RepoResult<()>;
 
     /// Add username alias to the account.
     async fn add_username(
         &mut self,
-        id: AccountId,
+        account_id: AccountId,
         username: &str,
         is_primary: bool,
     ) -> RepoResult<()>;
@@ -168,14 +180,14 @@ pub trait AccountRepoTransaction: Send + Sync {
     /// Set the is email verified flag of the account.
     async fn set_is_email_verified_flag(
         &mut self,
-        id: AccountId,
+        account_id: AccountId,
         is_email_verified: bool,
     ) -> RepoResult<()>;
 
     /// Change account password.
     async fn change_password(
         &mut self,
-        id: AccountId,
+        account_id: AccountId,
         password_hash: &str,
         client_password_kdf: &entity::ClientPasswordKdf,
         server_password_hash_algorithm: &entity::ServerPasswordHashAlgorithm,

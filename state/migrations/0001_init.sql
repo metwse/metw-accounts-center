@@ -3,7 +3,7 @@
 -- This table is used for storing cryptographic primitives.
 CREATE TABLE accounts
 (
-    id bigint NOT NULL,
+    account_id bigint NOT NULL,
 
     client_password_kdf jsonb NOT NULL,
     server_password_hash_algorithm jsonb NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE accounts
 
     -- REF: I-AR-1
     CONSTRAINT accounts_id_pkey
-        PRIMARY KEY (id)
+        PRIMARY KEY (account_id)
 );
 
 -- 2 "account_flags" table
@@ -23,15 +23,15 @@ CREATE TABLE accounts
 -- Boolean flags for accounts.
 CREATE TABLE account_flags
 (
-    id bigint NOT NULL,
+    account_id bigint NOT NULL,
     is_email_verified bool NOT NULL,
 
     CONSTRAINT account_flags_id_pkey
-        PRIMARY KEY (id),
+        PRIMARY KEY (account_id),
 
     -- REF: R-AR-3
     CONSTRAINT account_flags_id_fk
-        FOREIGN KEY (id) REFERENCES accounts (id)
+        FOREIGN KEY (account_id) REFERENCES accounts (account_id)
         ON DELETE CASCADE
 );
 
@@ -63,7 +63,7 @@ CREATE TABLE usernames (
 
     -- REF: R-AR-2
     CONSTRAINT usernames_account_id_fk
-        FOREIGN KEY (account_id) REFERENCES accounts (id)
+        FOREIGN KEY (account_id) REFERENCES accounts (account_id)
         ON DELETE CASCADE
 );
 
@@ -98,7 +98,7 @@ CREATE TABLE emails (
 
     -- REF: R-AR-1
     CONSTRAINT emails_account_id_fk
-        FOREIGN KEY (account_id) REFERENCES accounts (id)
+        FOREIGN KEY (account_id) REFERENCES accounts (account_id)
         ON DELETE CASCADE
 );
 

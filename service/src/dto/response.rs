@@ -5,8 +5,8 @@ use utoipa::ToSchema;
 /// Account entity returned to user after authentication.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct Account {
-    /// Unique user id.
-    pub id: AccountId,
+    /// Unique account id.
+    pub account_id: AccountId,
 
     /// User's primary username, if exists.
     pub username: Option<String>,

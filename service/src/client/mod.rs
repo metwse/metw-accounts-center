@@ -9,7 +9,7 @@ pub mod mock;
 #[async_trait]
 pub trait EmailClient: Send + Sync {
     /// Send emails.
-    async fn send(&self, email: String, id: AccountId, template: emails::Template);
+    async fn send(&self, email: String, account_id: AccountId, template: emails::Template);
 }
 
 /// Validate CAPTCHAs.

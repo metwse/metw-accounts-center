@@ -27,7 +27,7 @@ impl AwsEmailClientImpl {
 
 #[async_trait]
 impl EmailClient for AwsEmailClientImpl {
-    async fn send(&self, email: String, id: AccountId, template: emails::Template) {
+    async fn send(&self, email: String, _account_id: AccountId, template: emails::Template) {
         let dest = sesv2::types::Destination::builder()
             .to_addresses(email)
             .build();

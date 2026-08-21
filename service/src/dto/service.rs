@@ -9,6 +9,6 @@ use crate::id::AccountId;
 /// [`EmailVerificationSession`]: crate::token::TokenScope::EmailVerificationSession
 #[derive(Debug)]
 pub struct Login {
-    pub id: AccountId,
+    pub account_id: AccountId,
     pub is_email_verified: bool,
 }

@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE accounts SET\n                    password_hash = $2,\n                    client_password_kdf = $3,\n                    server_password_hash_algorithm = $4\n                WHERE account_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Jsonb",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9ce7862626aded68fdf04cc502ba410ebcd7150a41c5ddb32d5033686ee9b0cc"
+}

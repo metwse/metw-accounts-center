@@ -34,8 +34,9 @@ impl LettreEmailClientImpl {
 
 #[async_trait]
 impl EmailClient for LettreEmailClientImpl {
-    async fn send(&self, email: String, id: AccountId, template: emails::Template) {
-        let _ = id;
+    /// TODO: Log sent emails
+    async fn send(&self, email: String, account_id: AccountId, template: emails::Template) {
+        let _ = account_id;
 
         let Ok(dest_addr) = email.parse() else {
             error!(?email, "address passed to email client is not valid");

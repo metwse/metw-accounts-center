@@ -20,7 +20,7 @@
 //!
 //! | Function Example | Type | Description |
 //! |--|--|--|
-//! | [`get_keys`] | read | Reads keying materials of users. |
+//! | [`get_primary_email`] | read | Gets primary email of the account. |
 //! | [`set_primary_email_if_current_is`] | compare-and-swap | If the provided primary email is still the current primary email, changes the email. |
 //!
 //! - Any insert, delete, update, or upsert (insert or update if exists)
@@ -52,7 +52,7 @@
 //! [`RepoError`]: service::repo::RepoError
 //!
 //! [`set_primary_email_if_current_is`]: service::repo::AccountRepo::set_primary_email_if_current_is
-//! [`get_keys`]: service::repo::AccountRepo::get_keys
+//! [`get_primary_email`]: service::repo::AccountRepo::get_primary_email
 //! [`insert_account`]: service::repo::AccountRepoTransaction::insert_account
 //! [`insert_default_flags`]: service::repo::AccountRepoTransaction::insert_default_flags
 //! [`get_primary_email`]: service::repo::AccountRepo::get_primary_email

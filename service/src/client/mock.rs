@@ -32,16 +32,16 @@ impl MockEmailClientImpl {
 #[async_trait]
 impl EmailClient for MockEmailClientImpl {
     #[tracing::instrument(skip_all)]
-    async fn send(&self, _email: String, id: AccountId, template: emails::Template) {
+    async fn send(&self, _email: String, account_id: AccountId, template: emails::Template) {
         let mut debug = self.emails.lock().await;
 
         let subject = template.subject();
         let _body_html = template.body_html("http://example.com/token?=");
         let _body_text = template.body_text("http://example.com/token?=");
 
-        debug!(%id, subject, ?template, "email to account");
+        debug!(%account_id, subject, ?template, "email to account");
 
-        debug.entry(id).or_default().push(template);
+        debug.entry(account_id).or_default().push(template);
     }
 }
 

@@ -4,7 +4,7 @@ use std::time::Duration;
 
 #[derive(FromRow)]
 pub struct OwnedLoginCredentials {
-    pub id: AccountId,
+    pub account_id: AccountId,
     pub is_email_verified: bool,
     pub password_hash: Option<String>,
     pub server_password_hash_algorithm: entity::ServerPasswordHashAlgorithm,

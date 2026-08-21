@@ -36,8 +36,8 @@ pub async fn auth_session(
         .auth_session(token.to_string())
         .await
     {
-        Ok(id) => {
-            req.extensions_mut().insert(id);
+        Ok(account_id) => {
+            req.extensions_mut().insert(account_id);
 
             Ok(next.run(req).await)
         }
@@ -60,8 +60,8 @@ pub async fn auth_email_verification_session(
         .auth_email_verification_session(token.to_string())
         .await
     {
-        Ok(id) => {
-            req.extensions_mut().insert(id);
+        Ok(account_id) => {
+            req.extensions_mut().insert(account_id);
 
             Ok(next.run(req).await)
         }

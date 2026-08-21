@@ -46,7 +46,7 @@ pub enum MasterKeyEncryptionAlgorithm {
 #[derive(Debug, Clone)]
 pub struct Account {
     /// Account ID generated using Twitter's snowflake algorithm.
-    pub id: AccountId,
+    pub account_id: AccountId,
 
     /// KDF for login.
     pub client_password_kdf: ClientPasswordKdf,
@@ -76,7 +76,7 @@ pub struct Account {
 #[derive(Debug, FromRow, Clone)]
 pub struct AccountFlags {
     /// Accounts associated with the flags entity.
-    pub id: AccountId,
+    pub account_id: AccountId,
 
     /// Whether or not the account has been verified.
     pub is_email_verified: bool,

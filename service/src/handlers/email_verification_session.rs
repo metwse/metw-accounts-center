@@ -29,7 +29,7 @@ impl EmailVerificationSessionHandler {
     #[tracing::instrument(skip(self))]
     pub async fn retry_signup(
         self,
-        id: AccountId,
+        account_id: AccountId,
         retry_signup_dto: dto::request::RetrySignup,
         ip: IpAddr,
         captcha: dto::request::Captcha,
@@ -45,7 +45,12 @@ impl EmailVerificationSessionHandler {
             return Err(HandlerError::Service(ServiceError::EmailTaken));
         }
 
-        let Some(username) = self.0.account_service.get_primary_username(id).await? else {
+        let Some(username) = self
+            .0
+            .account_service
+            .get_primary_username(account_id)
+            .await?
+        else {
             return Err(HandlerError::UnexpectedError("account with no username"));
         };
 
@@ -55,7 +60,7 @@ impl EmailVerificationSessionHandler {
             .await?;
 
         let complete_signup_jwt = self.0.token_service.sign(&Token {
-            id,
+            id: account_id,
             scope: TokenScope::CompleteSignup {
                 email: email.clone(),
             },
@@ -67,7 +72,7 @@ impl EmailVerificationSessionHandler {
             redirect_url: retry_signup_dto.redirect_url,
         };
 
-        self.0.email_client.send(email, id, template).await;
+        self.0.email_client.send(email, account_id, template).await;
 
         Ok(())
     }

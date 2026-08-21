@@ -32,9 +32,9 @@ impl AccountService {
 
         let mut transaction = self.repo.begin_transaction().await?;
 
-        let id = AccountId::unique();
+        let account_id = AccountId::unique();
         let account = entity::Account {
-            id,
+            account_id,
             client_password_kdf: entity::ClientPasswordKdf::Base64EncodedPbkdf2Sha256 {
                 salt: signup_dto.password.pbkdf2_salt.clone(),
                 iterations: signup_dto.password.pbkdf2_iterations,
@@ -50,15 +50,15 @@ impl AccountService {
 
         transaction.insert_account(&account).await?;
 
-        transaction.insert_default_flags(id).await?;
+        transaction.insert_default_flags(account_id).await?;
 
         transaction
-            .add_username(id, &signup_dto.username, true)
+            .add_username(account_id, &signup_dto.username, true)
             .await?;
 
         transaction.commit().await?;
 
-        Ok(id)
+        Ok(account_id)
     }
 
     /// For use with login.
@@ -85,7 +85,7 @@ impl AccountService {
             _ => false,
         } {
             Ok(dto::service::Login {
-                id: login_credentails.id,
+                account_id: login_credentails.account_id,
                 is_email_verified: login_credentails.is_email_verified,
             })
         } else {
@@ -110,8 +110,10 @@ impl AccountService {
                     .get_login_credentials_by_email(&email.email)
                     .await?
             }
-            dto::request::AccountIdentifier::Id(id) => {
-                self.repo.get_login_credentials_by_id(*id).await?
+            dto::request::AccountIdentifier::AccountId(account_id) => {
+                self.repo
+                    .get_login_credentials_by_account_id(*account_id)
+                    .await?
             }
         }) else {
             return Err(ServiceError::AccountNotFound);
@@ -138,8 +140,10 @@ impl AccountService {
                     .get_client_password_kdf_by_email(&email.email)
                     .await?
             }
-            dto::request::AccountIdentifier::Id(id) => {
-                self.repo.get_client_password_kdf_by_id(*id).await?
+            dto::request::AccountIdentifier::AccountId(account_id) => {
+                self.repo
+                    .get_client_password_kdf_by_account_id(*account_id)
+                    .await?
             }
         }) else {
             return Err(ServiceError::AccountNotFound);
@@ -152,16 +156,16 @@ impl AccountService {
 
     /// Fetch the account details.
     #[tracing::instrument(skip(self))]
-    pub async fn me(&self, id: AccountId) -> ServiceResult<dto::response::Account> {
+    pub async fn me(&self, account_id: AccountId) -> ServiceResult<dto::response::Account> {
         let (username, username_aliases, email, secondary_emails) = tokio::try_join!(
-            self.repo.get_primary_username(id),
-            self.repo.get_nonexpiring_username_aliases(id),
-            self.repo.get_primary_email(id),
-            self.repo.get_secondary_emails(id),
+            self.repo.get_primary_username(account_id),
+            self.repo.get_nonexpiring_username_aliases(account_id),
+            self.repo.get_primary_email(account_id),
+            self.repo.get_secondary_emails(account_id),
         )?;
 
         Ok(dto::response::Account {
-            id,
+            account_id,
 
             username,
             email,
@@ -175,10 +179,14 @@ impl AccountService {
     #[tracing::instrument(skip(self, change_password_dto))]
     pub async fn change_password(
         &self,
-        id: AccountId,
+        account_id: AccountId,
         change_password_dto: &dto::request::ChangePassword,
     ) -> ServiceResult<()> {
-        let Some(login_credentials) = self.repo.get_login_credentials_by_id(id).await? else {
+        let Some(login_credentials) = self
+            .repo
+            .get_login_credentials_by_account_id(account_id)
+            .await?
+        else {
             return Err(ServiceError::AccountNotFound);
         };
 
@@ -195,7 +203,7 @@ impl AccountService {
         let mut transaction = self.repo.begin_transaction().await?;
         transaction
             .change_password(
-                id,
+                account_id,
                 &server_derived,
                 &entity::ClientPasswordKdf::Base64EncodedPbkdf2Sha256 {
                     salt: new_password.pbkdf2_salt.clone(),
@@ -221,13 +229,17 @@ impl AccountService {
     }
 
     /// Remove a secondary email.
-    #[tracing::instrument(skip_all, fields(id))]
+    #[tracing::instrument(skip_all, fields(account_id))]
     pub async fn remove_email_if_not_primary(
         &self,
-        id: AccountId,
+        account_id: AccountId,
         email: &str,
     ) -> ServiceResult<()> {
-        if self.repo.remove_email_if_not_primary(id, email).await? {
+        if self
+            .repo
+            .remove_email_if_not_primary(account_id, email)
+            .await?
+        {
             Ok(())
         } else {
             Err(ServiceError::CannotDeletePrimaryEmailOrEmailNotFound)
@@ -235,29 +247,36 @@ impl AccountService {
     }
 
     /// Returns true if the email has been taken by the given account.
-    #[tracing::instrument(skip_all, fields(id))]
-    pub async fn is_email_taken_by(&self, id: AccountId, email: &str) -> ServiceResult<bool> {
-        Ok(self.repo.is_email_taken_by(id, email).await?)
+    #[tracing::instrument(skip_all, fields(account_id))]
+    pub async fn is_email_taken_by(
+        &self,
+        account_id: AccountId,
+        email: &str,
+    ) -> ServiceResult<bool> {
+        Ok(self.repo.is_email_taken_by(account_id, email).await?)
     }
 
     /// Primary email of the account.
     #[tracing::instrument(skip(self))]
-    pub async fn get_primary_email(&self, id: AccountId) -> ServiceResult<Option<String>> {
-        Ok(self.repo.get_primary_email(id).await?)
+    pub async fn get_primary_email(&self, account_id: AccountId) -> ServiceResult<Option<String>> {
+        Ok(self.repo.get_primary_email(account_id).await?)
     }
 
     /// Primary username of the account.
     #[tracing::instrument(skip(self))]
-    pub async fn get_primary_username(&self, id: AccountId) -> ServiceResult<Option<String>> {
-        Ok(self.repo.get_primary_username(id).await?)
+    pub async fn get_primary_username(
+        &self,
+        account_id: AccountId,
+    ) -> ServiceResult<Option<String>> {
+        Ok(self.repo.get_primary_username(account_id).await?)
     }
 
     /// Add the email as a secondary email to the account.
-    #[tracing::instrument(skip_all, fields(id))]
-    pub async fn auth_add_email(&self, id: AccountId, email: &str) -> ServiceResult<()> {
+    #[tracing::instrument(skip_all, fields(account_id))]
+    pub async fn auth_add_email(&self, account_id: AccountId, email: &str) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
         transaction
-            .add_email(id, email, false)
+            .add_email(account_id, email, false)
             .await
             .map_err(|_| ServiceError::AddEmailFailed)?;
         transaction.commit().await?;
@@ -266,16 +285,16 @@ impl AccountService {
     }
 
     /// Change account's primary email.
-    #[tracing::instrument(skip_all, fields(id))]
+    #[tracing::instrument(skip_all, fields(account_id))]
     pub async fn auth_change_primary_email(
         &self,
-        id: AccountId,
+        account_id: AccountId,
         current_primary_email: &str,
         new_primary_email: &str,
     ) -> ServiceResult<()> {
         if self
             .repo
-            .set_primary_email_if_current_is(id, current_primary_email, new_primary_email)
+            .set_primary_email_if_current_is(account_id, current_primary_email, new_primary_email)
             .await?
         {
             Ok(())
@@ -285,14 +304,20 @@ impl AccountService {
     }
 
     /// Complete signup by adding the email and activating the account.
-    #[tracing::instrument(skip_all, fields(id))]
-    pub async fn auth_complete_signup(&self, id: AccountId, email: &str) -> ServiceResult<()> {
+    #[tracing::instrument(skip_all, fields(account_id))]
+    pub async fn auth_complete_signup(
+        &self,
+        account_id: AccountId,
+        email: &str,
+    ) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
         transaction
-            .add_email(id, email, true)
+            .add_email(account_id, email, true)
             .await
             .map_err(|_| ServiceError::SignupCompleteFailed)?;
-        transaction.set_is_email_verified_flag(id, true).await?;
+        transaction
+            .set_is_email_verified_flag(account_id, true)
+            .await?;
         transaction.commit().await?;
 
         Ok(())

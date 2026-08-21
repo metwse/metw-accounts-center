@@ -72,7 +72,7 @@ impl TestState {
 
     /// Creates a random account.
     ///
-    /// Returns `(id, username, email)`
+    /// Returns `(account_id, username, email)`
     pub async fn signup(
         &self,
         client_password_hash: &'static str,
@@ -178,14 +178,14 @@ impl TestState {
     }
 
     /// Login with ID.
-    pub async fn login_with_id(
+    pub async fn login_with_account_id(
         &self,
-        id: AccountId,
+        account_id: AccountId,
         client_password_hash: &'static str,
     ) -> HandlerResult<String> {
         AuthenticationHandler(self.state.clone())
             .login(dto::request::Login {
-                account_identifier: dto::request::AccountIdentifier::Id(id),
+                account_identifier: dto::request::AccountIdentifier::AccountId(account_id),
                 client_password_hash: client_password_hash.to_string(),
             })
             .await

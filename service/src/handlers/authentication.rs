@@ -120,7 +120,7 @@ impl AuthenticationHandler {
 
         let login = self.0.account_service.login(&login_dto).await?;
 
-        tracing::trace!(%login.id);
+        tracing::trace!(%login.account_id);
 
         let token_scope = if login.is_email_verified {
             TokenScope::Session
@@ -130,7 +130,7 @@ impl AuthenticationHandler {
 
         Ok(dto::response::Token {
             token: self.0.token_service.sign(&Token {
-                id: login.id,
+                id: login.account_id,
                 scope: token_scope,
             }),
         })

@@ -29,19 +29,20 @@ impl AccountRepo for AccountRepoImpl {
         ))
     }
 
-    async fn get_login_credentials_by_id(
+    async fn get_login_credentials_by_account_id(
         &self,
-        id: AccountId,
+        account_id: AccountId,
     ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
+        // TODO: Write this query using JOIN
         let Some(login) = sqlx::query!(
             r#"SELECT password_hash,
                     (SELECT is_email_verified FROM account_flags
-                        WHERE account_flags.id = $1) AS "is_email_verified!",
+                        WHERE account_flags.account_id = $1) AS "is_email_verified!",
                     server_password_hash_algorithm AS
                         "server_password_hash_algorithm: ServerPasswordHashAlgorithmJson"
                 FROM accounts
-                WHERE id = $1"#,
-            id as _
+                WHERE account_id = $1"#,
+            account_id as _
         )
         .fetch_optional(&self.pool)
         .await?
@@ -50,7 +51,7 @@ impl AccountRepo for AccountRepoImpl {
         };
 
         let login = dto::repo::OwnedLoginCredentials {
-            id,
+            account_id,
             is_email_verified: login.is_email_verified,
             password_hash: login.password_hash,
             server_password_hash_algorithm: login.server_password_hash_algorithm.0,
@@ -64,11 +65,11 @@ impl AccountRepo for AccountRepoImpl {
         email: &str,
     ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
         let Some(login) = sqlx::query!(
-            r#"SELECT id, password_hash,
+            r#"SELECT account_id, password_hash,
                     server_password_hash_algorithm AS
                         "server_password_hash_algorithm: ServerPasswordHashAlgorithmJson"
                 FROM accounts
-                WHERE id = (SELECT account_id FROM emails WHERE email = $1)"#,
+                WHERE account_id = (SELECT account_id FROM emails WHERE email = $1)"#,
             email
         )
         .fetch_optional(&self.pool)
@@ -78,7 +79,7 @@ impl AccountRepo for AccountRepoImpl {
         };
 
         let login = dto::repo::OwnedLoginCredentials {
-            id: login.id.into(),
+            account_id: login.account_id.into(),
             is_email_verified: true,
             password_hash: login.password_hash,
             server_password_hash_algorithm: login.server_password_hash_algorithm.0,
@@ -91,14 +92,15 @@ impl AccountRepo for AccountRepoImpl {
         &self,
         username: &str,
     ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
+        // TODO: Write this query using JOIN
         let Some(login) = sqlx::query!(
-            r#"SELECT id, password_hash,
+            r#"SELECT account_id, password_hash,
                     (SELECT is_email_verified FROM account_flags
-                        WHERE account_flags.id = accounts.id) AS "is_email_verified!",
+                        WHERE account_flags.account_id = accounts.account_id) AS "is_email_verified!",
                     server_password_hash_algorithm AS
                         "server_password_hash_algorithm: ServerPasswordHashAlgorithmJson"
                 FROM accounts
-                WHERE id = (SELECT account_id FROM usernames WHERE username = $1 AND expires_at IS NULL)"#,
+                WHERE account_id = (SELECT account_id FROM usernames WHERE username = $1 AND expires_at IS NULL)"#,
             username
         )
         .fetch_optional(&self.pool)
@@ -108,7 +110,7 @@ impl AccountRepo for AccountRepoImpl {
         };
 
         let login = dto::repo::OwnedLoginCredentials {
-            id: login.id.into(),
+            account_id: login.account_id.into(),
             is_email_verified: login.is_email_verified,
             password_hash: login.password_hash,
             server_password_hash_algorithm: login.server_password_hash_algorithm.0,
@@ -125,7 +127,7 @@ impl AccountRepo for AccountRepoImpl {
             r#"SELECT client_password_kdf AS
                         "client_password_kdf: ClientPasswordKdfJson"
                 FROM accounts
-                WHERE id = (SELECT account_id FROM emails WHERE email = $1)"#,
+                WHERE account_id = (SELECT account_id FROM emails WHERE email = $1)"#,
             email
         )
         .fetch_optional(&self.pool)
@@ -145,7 +147,7 @@ impl AccountRepo for AccountRepoImpl {
             r#"SELECT client_password_kdf AS
                         "client_password_kdf: ClientPasswordKdfJson"
                 FROM accounts
-                WHERE id = (SELECT account_id FROM usernames WHERE username = $1 AND expires_at IS NULL)"#,
+                WHERE account_id = (SELECT account_id FROM usernames WHERE username = $1 AND expires_at IS NULL)"#,
             username
         )
         .fetch_optional(&self.pool)
@@ -157,16 +159,16 @@ impl AccountRepo for AccountRepoImpl {
         Ok(Some(client_password_kdf_json.0))
     }
 
-    async fn get_client_password_kdf_by_id(
+    async fn get_client_password_kdf_by_account_id(
         &self,
-        id: AccountId,
+        account_id: AccountId,
     ) -> RepoResult<Option<entity::ClientPasswordKdf>> {
         let Some(client_password_kdf_json) = sqlx::query_scalar!(
             r#"SELECT client_password_kdf AS
                         "client_password_kdf: ClientPasswordKdfJson"
                 FROM accounts
-                WHERE id = $1"#,
-            id as _
+                WHERE account_id = $1"#,
+            account_id as _
         )
         .fetch_optional(&self.pool)
         .await?
@@ -177,11 +179,11 @@ impl AccountRepo for AccountRepoImpl {
         Ok(Some(client_password_kdf_json.0))
     }
 
-    async fn get_primary_username(&self, id: AccountId) -> RepoResult<Option<String>> {
+    async fn get_primary_username(&self, account_id: AccountId) -> RepoResult<Option<String>> {
         let username = sqlx::query_scalar!(
             "SELECT username FROM usernames
                 WHERE account_id = $1 AND is_primary = true",
-            id as _
+            account_id as _
         )
         .fetch_optional(&self.pool)
         .await;
@@ -189,11 +191,14 @@ impl AccountRepo for AccountRepoImpl {
         Ok(username?)
     }
 
-    async fn get_nonexpiring_username_aliases(&self, id: AccountId) -> RepoResult<Vec<String>> {
+    async fn get_nonexpiring_username_aliases(
+        &self,
+        account_id: AccountId,
+    ) -> RepoResult<Vec<String>> {
         let usernames = sqlx::query_scalar!(
             "SELECT username FROM usernames
                 WHERE account_id = $1 AND is_primary = false AND expires_at IS NULL",
-            id as _
+            account_id as _
         )
         .fetch_all(&self.pool)
         .await;
@@ -201,10 +206,10 @@ impl AccountRepo for AccountRepoImpl {
         Ok(usernames?)
     }
 
-    async fn get_primary_email(&self, id: AccountId) -> RepoResult<Option<String>> {
+    async fn get_primary_email(&self, account_id: AccountId) -> RepoResult<Option<String>> {
         let email = sqlx::query_scalar!(
             "SELECT email FROM emails WHERE account_id = $1 AND is_primary = true",
-            id as _
+            account_id as _
         )
         .fetch_optional(&self.pool)
         .await;
@@ -212,10 +217,10 @@ impl AccountRepo for AccountRepoImpl {
         Ok(email?)
     }
 
-    async fn get_secondary_emails(&self, id: AccountId) -> RepoResult<Vec<String>> {
+    async fn get_secondary_emails(&self, account_id: AccountId) -> RepoResult<Vec<String>> {
         let emails = sqlx::query_scalar!(
             "SELECT email FROM emails WHERE account_id = $1 AND is_primary = false",
-            id as _
+            account_id as _
         )
         .fetch_all(&self.pool)
         .await;
@@ -225,7 +230,7 @@ impl AccountRepo for AccountRepoImpl {
 
     async fn set_primary_email_if_current_is(
         &self,
-        id: AccountId,
+        account_id: AccountId,
         current_primary_email: &str,
         new_primary_email: &str,
     ) -> RepoResult<bool> {
@@ -236,7 +241,7 @@ impl AccountRepo for AccountRepoImpl {
                 WHERE account_id = $1 AND is_primary = true AND email = $2 AND
                       EXISTS(SELECT * FROM emails WHERE
                              account_id = $1 AND is_primary = false AND email = $3)",
-            id as _,
+            account_id as _,
             current_primary_email,
             new_primary_email
         )
@@ -250,7 +255,7 @@ impl AccountRepo for AccountRepoImpl {
         let result2 = sqlx::query!(
             "UPDATE emails SET is_primary = true
                 WHERE account_id = $1 AND is_primary = false AND email = $2",
-            id as _,
+            account_id as _,
             new_primary_email
         )
         .execute(&mut *tx)
@@ -265,11 +270,15 @@ impl AccountRepo for AccountRepoImpl {
         Ok(true)
     }
 
-    async fn remove_email_if_not_primary(&self, id: AccountId, email: &str) -> RepoResult<bool> {
+    async fn remove_email_if_not_primary(
+        &self,
+        account_id: AccountId,
+        email: &str,
+    ) -> RepoResult<bool> {
         let result = sqlx::query!(
             "DELETE FROM emails
                 WHERE account_id = $1 AND is_primary = false AND email = $2",
-            id as _,
+            account_id as _,
             email
         )
         .execute(&self.pool)
@@ -302,10 +311,10 @@ impl AccountRepo for AccountRepoImpl {
         Ok(is_email_taken)
     }
 
-    async fn is_email_taken_by(&self, id: AccountId, email: &str) -> RepoResult<bool> {
+    async fn is_email_taken_by(&self, account_id: AccountId, email: &str) -> RepoResult<bool> {
         let is_email_taken = sqlx::query_scalar!(
             "SELECT EXISTS(SELECT * FROM emails WHERE account_id = $1 AND email = $2)",
-            id as _,
+            account_id as _,
             email
         )
         .fetch_one(&self.pool)
@@ -339,11 +348,11 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
     async fn insert_account(&mut self, account: &entity::Account) -> RepoResult<()> {
         sqlx::query!(
             "INSERT INTO accounts (
-                    id,
+                    account_id,
                     client_password_kdf, server_password_hash_algorithm, password_hash,
                     master_key_kek_kdf, master_key_encryption_algorithm, encrypted_master_key
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-            account.id as _,
+            account.account_id as _,
             Json(&account.client_password_kdf) as _,
             Json(&account.server_password_hash_algorithm) as _,
             account.password_hash,
@@ -357,10 +366,10 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         Ok(())
     }
 
-    async fn insert_default_flags(&mut self, id: AccountId) -> RepoResult<()> {
+    async fn insert_default_flags(&mut self, account_id: AccountId) -> RepoResult<()> {
         sqlx::query!(
-            "INSERT INTO account_flags (id, is_email_verified) VALUES ($1, false)",
-            id as _
+            "INSERT INTO account_flags (account_id, is_email_verified) VALUES ($1, false)",
+            account_id as _
         )
         .execute(&mut *self.tx)
         .await?;
@@ -368,11 +377,16 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         Ok(())
     }
 
-    async fn add_email(&mut self, id: AccountId, email: &str, is_primary: bool) -> RepoResult<()> {
+    async fn add_email(
+        &mut self,
+        account_id: AccountId,
+        email: &str,
+        is_primary: bool,
+    ) -> RepoResult<()> {
         sqlx::query!(
             "INSERT INTO emails (account_id, email, is_primary)
                 VALUES ($1, $2, $3)",
-            id as _,
+            account_id as _,
             email,
             is_primary
         )
@@ -384,14 +398,14 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
 
     async fn add_username(
         &mut self,
-        id: AccountId,
+        account_id: AccountId,
         username: &str,
         is_primary: bool,
     ) -> RepoResult<()> {
         sqlx::query!(
             "INSERT INTO usernames (account_id, username, is_primary)
                 VALUES ($1, $2, $3)",
-            id as _,
+            account_id as _,
             username,
             is_primary
         )
@@ -403,13 +417,13 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
 
     async fn set_is_email_verified_flag(
         &mut self,
-        id: AccountId,
+        account_id: AccountId,
         is_email_verified: bool,
     ) -> RepoResult<()> {
         sqlx::query!(
-            "UPDATE account_flags SET is_email_verified = $1 WHERE id = $2",
+            "UPDATE account_flags SET is_email_verified = $1 WHERE account_id = $2",
             is_email_verified,
-            id as _
+            account_id as _
         )
         .execute(&mut *self.tx)
         .await?;
@@ -419,7 +433,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
 
     async fn change_password(
         &mut self,
-        id: AccountId,
+        account_id: AccountId,
         password_hash: &str,
         client_password_kdf: &entity::ClientPasswordKdf,
         server_password_hash_algorithm: &entity::ServerPasswordHashAlgorithm,
@@ -432,8 +446,8 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
                     password_hash = $2,
                     client_password_kdf = $3,
                     server_password_hash_algorithm = $4
-                WHERE id = $1"#,
-            id as _,
+                WHERE account_id = $1"#,
+            account_id as _,
             password_hash,
             client_password_kdf_json as _,
             server_password_hash_algorithm_json as _

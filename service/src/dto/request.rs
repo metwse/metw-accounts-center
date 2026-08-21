@@ -85,14 +85,14 @@ pub struct Login {
 pub enum AccountIdentifier {
     Email(Email),
     Username(Username),
-    Id(AccountId),
+    AccountId(AccountId),
 }
 
 /// Identify accounts only by public identifiers.
 #[derive(Debug, Clone)]
 pub enum PublicAccountIdentifier {
     Username(Username),
-    Id(AccountId),
+    AccountId(AccountId),
 }
 
 /// Change the account password.
@@ -140,7 +140,7 @@ impl Validate for AccountIdentifier {
         match self {
             Self::Email(email) => email.validate(),
             Self::Username(username) => username.validate(),
-            Self::Id(_) => Ok(()),
+            Self::AccountId(_) => Ok(()),
         }
     }
 }
@@ -159,8 +159,8 @@ impl ToSchema for AccountIdentifier {
 
 impl AccountIdentifier {
     fn parse(s: String) -> Self {
-        if let Ok(id) = AccountId::from_str(&s) {
-            AccountIdentifier::Id(id)
+        if let Ok(account_id) = AccountId::from_str(&s) {
+            AccountIdentifier::AccountId(account_id)
         } else if s.contains('@') {
             AccountIdentifier::Email(Email { email: s })
         } else {
@@ -184,7 +184,7 @@ impl Validate for PublicAccountIdentifier {
     fn validate(&self) -> Result<(), validator::ValidationErrors> {
         match self {
             Self::Username(username) => username.validate(),
-            Self::Id(_) => Ok(()),
+            Self::AccountId(_) => Ok(()),
         }
     }
 }
@@ -203,8 +203,8 @@ impl ToSchema for PublicAccountIdentifier {
 
 impl PublicAccountIdentifier {
     fn parse(s: String) -> Self {
-        if let Ok(id) = AccountId::from_str(&s) {
-            PublicAccountIdentifier::Id(id)
+        if let Ok(account_id) = AccountId::from_str(&s) {
+            PublicAccountIdentifier::AccountId(account_id)
         } else {
             PublicAccountIdentifier::Username(Username { username: s })
         }

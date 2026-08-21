@@ -20,8 +20,8 @@ pub struct SessionHandler(pub AppState);
 impl SessionHandler {
     /// Returns account details.
     #[tracing::instrument(skip(self))]
-    pub async fn me(self, id: AccountId) -> HandlerResult<dto::response::Account> {
-        Ok(self.0.account_service.me(id).await?)
+    pub async fn me(self, account_id: AccountId) -> HandlerResult<dto::response::Account> {
+        Ok(self.0.account_service.me(account_id).await?)
     }
 
     /// Sends [`ConfirmNewEmail`] to add requested email.
@@ -30,7 +30,7 @@ impl SessionHandler {
     #[tracing::instrument(skip(self))]
     pub async fn add_email(
         self,
-        id: AccountId,
+        account_id: AccountId,
         email_dto: dto::request::Email,
         ip: IpAddr,
         captcha: dto::request::Captcha,
@@ -44,7 +44,7 @@ impl SessionHandler {
 
         let (is_email_taken_res, username_res) = tokio::join!(
             self.0.account_service.is_email_taken(&new_email),
-            self.0.account_service.get_primary_username(id)
+            self.0.account_service.get_primary_username(account_id)
         );
 
         if is_email_taken_res? {
@@ -61,7 +61,7 @@ impl SessionHandler {
             .await?;
 
         let add_email_jwt = self.0.token_service.sign(&Token {
-            id,
+            id: account_id,
             scope: TokenScope::AddEmail {
                 email: new_email.clone(),
             },
@@ -73,7 +73,10 @@ impl SessionHandler {
             token: add_email_jwt,
         };
 
-        self.0.email_client.send(new_email, id, template).await;
+        self.0
+            .email_client
+            .send(new_email, account_id, template)
+            .await;
 
         Ok(())
     }
@@ -82,7 +85,7 @@ impl SessionHandler {
     #[tracing::instrument(skip(self))]
     pub async fn delete_email(
         self,
-        id: AccountId,
+        account_id: AccountId,
         email_dto: dto::request::Email,
     ) -> HandlerResult<()> {
         email_dto.validate()?;
@@ -91,7 +94,7 @@ impl SessionHandler {
 
         self.0
             .account_service
-            .remove_email_if_not_primary(id, &email)
+            .remove_email_if_not_primary(account_id, &email)
             .await?;
 
         Ok(())
@@ -103,7 +106,7 @@ impl SessionHandler {
     #[tracing::instrument(skip(self))]
     pub async fn set_primary_email(
         self,
-        id: AccountId,
+        account_id: AccountId,
         email_dto: dto::request::Email,
         captcha: dto::request::Captcha,
     ) -> HandlerResult<()> {
@@ -115,8 +118,8 @@ impl SessionHandler {
         let new_primary_email = email_dto.email;
 
         let (current_primary_email_res, username_res) = tokio::join!(
-            self.0.account_service.get_primary_email(id),
-            self.0.account_service.get_primary_username(id)
+            self.0.account_service.get_primary_email(account_id),
+            self.0.account_service.get_primary_username(account_id)
         );
 
         let Some(current_primary_email) = current_primary_email_res? else {
@@ -136,14 +139,14 @@ impl SessionHandler {
         if !self
             .0
             .account_service
-            .is_email_taken_by(id, &new_primary_email)
+            .is_email_taken_by(account_id, &new_primary_email)
             .await?
         {
             return Err(HandlerError::Service(ServiceError::EmailNotFound));
         };
 
         let change_primary_email_jwt = self.0.token_service.sign(&Token {
-            id,
+            id: account_id,
             scope: TokenScope::ChangePrimaryEmail {
                 current_primary_email: current_primary_email.clone(),
                 new_primary_email: new_primary_email.clone(),
@@ -159,7 +162,7 @@ impl SessionHandler {
 
         self.0
             .email_client
-            .send(current_primary_email, id, template)
+            .send(current_primary_email, account_id, template)
             .await;
 
         Ok(())
@@ -169,14 +172,14 @@ impl SessionHandler {
     #[tracing::instrument(skip_all)]
     pub async fn change_password(
         &self,
-        id: AccountId,
+        account_id: AccountId,
         change_password_dto: dto::request::ChangePassword,
     ) -> HandlerResult<()> {
         change_password_dto.validate()?;
 
         self.0
             .account_service
-            .change_password(id, &change_password_dto)
+            .change_password(account_id, &change_password_dto)
             .await?;
 
         Ok(())

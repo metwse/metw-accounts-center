@@ -102,8 +102,20 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
         ))
         .await?;
 
-    assert!(account_service.login(&login_with_email_dto).await?.id == account_id);
-    assert!(account_service.login(&login_with_username_dto).await?.id == account_id);
+    assert!(
+        account_service
+            .login(&login_with_email_dto)
+            .await?
+            .account_id
+            == account_id
+    );
+    assert!(
+        account_service
+            .login(&login_with_username_dto)
+            .await?
+            .account_id
+            == account_id
+    );
     assert_matches!(
         account_service.login(&login_with_incorrect_password).await,
         Err(ServiceError::InvalidCredentials)
@@ -128,7 +140,7 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
 
     let me = account_service.me(account_id).await?;
 
-    assert!(me.id == account_id);
+    assert!(me.account_id == account_id);
     assert!(me.username.unwrap() == username);
     assert!(me.email.unwrap() == email);
     assert!(me.secondary_emails.is_empty());
@@ -183,7 +195,7 @@ pub async fn email_change(
             client_password_hash: "passwd".to_string(),
         })
         .await?
-        .id;
+        .account_id;
 
     let current_primary_email = account_service
         .get_primary_email(account_id)
