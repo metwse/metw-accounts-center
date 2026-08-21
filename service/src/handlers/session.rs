@@ -61,7 +61,7 @@ impl SessionHandler {
             .await?;
 
         let add_email_jwt = self.0.token_service.sign(&Token {
-            id: account_id,
+            sub: account_id,
             scope: TokenScope::AddEmail {
                 email: new_email.clone(),
             },
@@ -146,7 +146,7 @@ impl SessionHandler {
         };
 
         let change_primary_email_jwt = self.0.token_service.sign(&Token {
-            id: account_id,
+            sub: account_id,
             scope: TokenScope::ChangePrimaryEmail {
                 current_primary_email: current_primary_email.clone(),
                 new_primary_email: new_primary_email.clone(),

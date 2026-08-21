@@ -21,7 +21,7 @@ impl AuthenticationHandler {
         let token = self.0.token_service.verify(&base64_encoded_token).await?;
 
         if let TokenScope::Session = token.scope {
-            Ok(token.id)
+            Ok(token.sub)
         } else {
             Err(HandlerError::Unauthorized)
         }
@@ -38,7 +38,7 @@ impl AuthenticationHandler {
         let token = self.0.token_service.verify(&base64_encoded_token).await?;
 
         if let TokenScope::EmailVerificationSession = token.scope {
-            Ok(token.id)
+            Ok(token.sub)
         } else {
             Err(HandlerError::Unauthorized)
         }
@@ -85,14 +85,14 @@ impl AuthenticationHandler {
         };
 
         let complete_signup_jwt = self.0.token_service.sign(&Token {
-            id: account_id,
+            sub: account_id,
             scope: TokenScope::CompleteSignup {
                 email: email.clone(),
             },
         });
 
         let email_verification_session_jwt = self.0.token_service.sign(&Token {
-            id: account_id,
+            sub: account_id,
             scope: TokenScope::EmailVerificationSession,
         });
 
@@ -130,7 +130,7 @@ impl AuthenticationHandler {
 
         Ok(dto::response::Token {
             token: self.0.token_service.sign(&Token {
-                id: login.account_id,
+                sub: login.account_id,
                 scope: token_scope,
             }),
         })

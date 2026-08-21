@@ -107,7 +107,7 @@ impl TestState {
             .verify(&email_verification_jwt.token)
             .await
             .unwrap()
-            .id;
+            .sub;
 
         (account_id, username, email)
     }

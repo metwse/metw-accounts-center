@@ -16,7 +16,7 @@ async fn mock_token_repo_cleanup_task() -> RepoResult<()> {
     let repo = MockTokenRepoImpl::boxed_new();
 
     let token = DecodedToken {
-        id: AccountId::unique(),
+        sub: AccountId::unique(),
         scope: TokenScope::Session,
         expires_at: checked_now(),
         issued_at: checked_now(),
@@ -48,7 +48,7 @@ async fn mock_token_repo_cleanup_task() -> RepoResult<()> {
     tokio::time::resume();
     tokio::time::sleep(Duration::from_millis(10)).await;
 
-    repo.revoke_account_tokens(token.id).await?;
+    repo.revoke_account_tokens(token.sub).await?;
 
     tokio::time::sleep(Duration::from_millis(10)).await;
     tokio::time::pause();

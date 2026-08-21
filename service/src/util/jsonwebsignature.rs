@@ -23,7 +23,7 @@ pub struct JsonWebSignature {
 #[derive(Deserialize, Serialize)]
 struct PrivateClaims {
     scope: TokenScope,
-    id: AccountId,
+    sub: AccountId,
 }
 
 impl JsonWebSignature {
@@ -50,7 +50,7 @@ impl JsonWebSignature {
             },
             private: PrivateClaims {
                 scope: token.scope.clone(),
-                id: token.id,
+                sub: token.sub,
             },
         };
         let header = jws::Header::<biscuit::Empty> {
@@ -106,7 +106,7 @@ impl JsonWebSignature {
         let issued_at = *payload.registered.issued_at.unwrap();
 
         Some(DecodedToken {
-            id: payload.private.id,
+            sub: payload.private.sub,
             scope: payload.private.scope.clone(),
             fingerprint: signature,
             expires_at,
@@ -146,7 +146,7 @@ fn expired_jwts() {
     let jws = JsonWebSignature::new("supersecret1234".into());
 
     let base64_encoded_token = jws.encode(&Token {
-        id: AccountId::unique(),
+        sub: AccountId::unique(),
         scope: TokenScope::Session,
     });
 

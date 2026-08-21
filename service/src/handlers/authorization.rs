@@ -16,7 +16,7 @@ impl AuthorizationHandler {
 
         let decoded_token = self.0.token_service.decode(&base64_encoded_token).await?;
 
-        trace!(account_id = %decoded_token.id, variant = decoded_token.scope.scope_name());
+        trace!(account_id = %decoded_token.sub, variant = decoded_token.scope.scope_name());
 
         match &decoded_token.scope {
             TokenScope::Session | TokenScope::EmailVerificationSession => {
@@ -40,7 +40,7 @@ impl AuthorizationHandler {
 
                 self.0
                     .account_service
-                    .auth_add_email(decoded_token.id, email)
+                    .auth_add_email(decoded_token.sub, email)
                     .await?;
 
                 Ok(())
@@ -58,7 +58,7 @@ impl AuthorizationHandler {
                 self.0
                     .account_service
                     .auth_change_primary_email(
-                        decoded_token.id,
+                        decoded_token.sub,
                         current_primary_email,
                         new_primary_email,
                     )
@@ -84,7 +84,7 @@ impl AuthorizationHandler {
 
                 self.0
                     .account_service
-                    .auth_complete_signup(decoded_token.id, email)
+                    .auth_complete_signup(decoded_token.sub, email)
                     .await?;
 
                 Ok(())

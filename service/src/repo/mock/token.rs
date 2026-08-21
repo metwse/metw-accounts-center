@@ -74,7 +74,7 @@ impl TokenRepo for MockTokenRepoImpl {
 
         let mut state = self.scope_revocations.lock().await;
 
-        let key = (token.id, token.scope.scope_name());
+        let key = (token.sub, token.scope.scope_name());
 
         let is_revoked = if let Some(&cutoff_time) = state.get(&key) {
             token.issued_at <= cutoff_time
@@ -103,7 +103,7 @@ impl TokenRepo for MockTokenRepoImpl {
 
         let mut state = self.account_revocations.lock().await;
 
-        let key = token.id;
+        let key = token.sub;
 
         let is_revoked = if let Some(&time) = state.get(&key) {
             token.issued_at <= time
@@ -210,7 +210,7 @@ impl MockTokenRepoImpl {
             .scope_revocations
             .lock()
             .await
-            .get(&(token.id, token.scope.scope_name()))
+            .get(&(token.sub, token.scope.scope_name()))
         {
             token.issued_at <= time
         } else {
@@ -219,7 +219,7 @@ impl MockTokenRepoImpl {
     }
 
     async fn check_account_revocation(&self, token: &DecodedToken) -> bool {
-        if let Some(&time) = self.account_revocations.lock().await.get(&token.id) {
+        if let Some(&time) = self.account_revocations.lock().await.get(&token.sub) {
             token.issued_at <= time
         } else {
             false

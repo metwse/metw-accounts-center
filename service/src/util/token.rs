@@ -6,8 +6,8 @@ use std::time::Duration;
 /// Authentication token with authorization scopes.
 #[derive(Debug)]
 pub struct Token {
-    /// Account id.
-    pub id: AccountId,
+    /// Account ID.
+    pub sub: AccountId,
 
     /// Token's permissions.
     pub scope: TokenScope,
@@ -16,8 +16,8 @@ pub struct Token {
 /// Authentication token with authorization scopes.
 #[derive(Debug, Clone)]
 pub struct DecodedToken {
-    /// Account id.
-    pub id: AccountId,
+    /// Account ID.
+    pub sub: AccountId,
 
     /// Token's permissions.
     pub scope: TokenScope,
@@ -128,7 +128,7 @@ impl DecodedToken {
 impl From<DecodedToken> for Token {
     fn from(value: DecodedToken) -> Self {
         Self {
-            id: value.id,
+            sub: value.sub,
             scope: value.scope,
         }
     }

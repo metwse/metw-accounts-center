@@ -67,7 +67,7 @@ impl TokenRepo for TokenRepoImpl {
         }
 
         let previous_token_cutoff_time = self
-            .revoke_account_tokens_with_scope(token.id, &token.scope)
+            .revoke_account_tokens_with_scope(token.sub, &token.scope)
             .await?;
 
         if let Some(previous_token_cutoff_time) = previous_token_cutoff_time {
@@ -87,7 +87,7 @@ impl TokenRepo for TokenRepoImpl {
             return Ok(true);
         }
 
-        let previous_token_cutoff_time = self.revoke_account_tokens(token.id).await?;
+        let previous_token_cutoff_time = self.revoke_account_tokens(token.sub).await?;
 
         if let Some(previous_token_cutoff_time) = previous_token_cutoff_time {
             Ok(token.issued_at <= previous_token_cutoff_time)
@@ -184,7 +184,7 @@ impl TokenRepoImpl {
         let token_cutoff_time = self
             .con
             .clone()
-            .get::<'_, String, Option<i64>>(to_scope_key(token.id, &token.scope))
+            .get::<'_, String, Option<i64>>(to_scope_key(token.sub, &token.scope))
             .await?;
 
         if let Some(token_cutoff_time) = token_cutoff_time {
@@ -198,7 +198,7 @@ impl TokenRepoImpl {
         let token_cutoff_time = self
             .con
             .clone()
-            .get::<'_, String, Option<i64>>(to_account_key(token.id))
+            .get::<'_, String, Option<i64>>(to_account_key(token.sub))
             .await?;
 
         if let Some(token_cutoff_time) = token_cutoff_time {

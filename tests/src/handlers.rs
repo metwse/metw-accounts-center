@@ -415,7 +415,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
             )
             .await?;
 
-        assert!(add_email_token.id == acccount_id);
+        assert!(add_email_token.sub == acccount_id);
         assert_matches!(add_email_token.scope, TokenScope::AddEmail { .. });
         assert!(email == new_email);
     }

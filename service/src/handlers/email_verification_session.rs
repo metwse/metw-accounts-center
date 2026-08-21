@@ -60,7 +60,7 @@ impl EmailVerificationSessionHandler {
             .await?;
 
         let complete_signup_jwt = self.0.token_service.sign(&Token {
-            id: account_id,
+            sub: account_id,
             scope: TokenScope::CompleteSignup {
                 email: email.clone(),
             },

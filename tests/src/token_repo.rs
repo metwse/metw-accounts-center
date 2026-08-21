@@ -10,7 +10,7 @@ use std::time::Duration;
 /// Check-and-revoke.
 pub async fn check_and_revoke(repo: &dyn TokenRepo) -> RepoResult<()> {
     let mut token = DecodedToken {
-        id: AccountId::unique(),
+        sub: AccountId::unique(),
         scope: TokenScope::Session,
         fingerprint: random_username().into(),
         expires_at: checked_now() + Duration::from_secs(1),
@@ -67,7 +67,7 @@ pub async fn check_and_revoke(repo: &dyn TokenRepo) -> RepoResult<()> {
     token.scope = TokenScope::Session;
 
     // --- Revoke account ---
-    token.id = AccountId::unique();
+    token.sub = AccountId::unique();
     token.fingerprint = random_username().into();
 
     assert!(!repo.is_revoked(&token).await?);
@@ -93,7 +93,7 @@ pub async fn check_and_revoke(repo: &dyn TokenRepo) -> RepoResult<()> {
             .await?
     );
 
-    token.id = AccountId::unique();
+    token.sub = AccountId::unique();
 
     // Fingerprint was vaild until this point.
     assert!(!repo.check_and_revoke_token(&token).await?);
@@ -108,7 +108,7 @@ pub async fn token_revocation_data_race(repo: &dyn TokenRepo) -> RepoResult<()> 
     let mut token_revocation_futures = Vec::with_capacity(16);
 
     let token = DecodedToken {
-        id: AccountId::unique(),
+        sub: AccountId::unique(),
         scope: TokenScope::Session,
         fingerprint: random_username().into(),
         expires_at: checked_now(),
@@ -139,7 +139,7 @@ pub async fn token_revocation_data_race(repo: &dyn TokenRepo) -> RepoResult<()> 
 /// Revoke tokens for an account.
 pub async fn account_token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
     let mut token = DecodedToken {
-        id: AccountId::unique(),
+        sub: AccountId::unique(),
         scope: TokenScope::Session,
         fingerprint: random_username().into(),
         expires_at: checked_now() + Duration::from_secs(2),
@@ -148,7 +148,7 @@ pub async fn account_token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
 
     assert!(!repo.is_revoked(&token).await?);
 
-    repo.revoke_account_tokens_with_scope(token.id, &token.scope)
+    repo.revoke_account_tokens_with_scope(token.sub, &token.scope)
         .await?;
 
     assert!(repo.is_revoked(&token).await?);
@@ -162,7 +162,7 @@ pub async fn account_token_revocation(repo: &dyn TokenRepo) -> RepoResult<()> {
     token.scope = TokenScope::EmailVerificationSession;
     assert!(!repo.is_revoked(&token).await?);
 
-    repo.revoke_account_tokens(token.id).await?;
+    repo.revoke_account_tokens(token.sub).await?;
 
     assert!(repo.is_revoked(&token).await?);
 
