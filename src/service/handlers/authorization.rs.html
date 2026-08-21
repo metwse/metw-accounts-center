@@ -16,7 +16,7 @@
 <a href=#16 id=16 data-nosnippet>16</a>
 <a href=#17 id=17 data-nosnippet>17</a>        <span class="kw">let </span>decoded_token = <span class="self">self</span>.<span class="number">0</span>.token_service.decode(<span class="kw-2">&amp;</span>base64_encoded_token).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#18 id=18 data-nosnippet>18</a>
-<a href=#19 id=19 data-nosnippet>19</a>        <span class="macro">trace!</span>(account_id = %decoded_token.id, variant = decoded_token.scope.scope_name());
+<a href=#19 id=19 data-nosnippet>19</a>        <span class="macro">trace!</span>(account_id = %decoded_token.sub, variant = decoded_token.scope.scope_name());
 <a href=#20 id=20 data-nosnippet>20</a>
 <a href=#21 id=21 data-nosnippet>21</a>        <span class="kw">match </span><span class="kw-2">&amp;</span>decoded_token.scope {
 <a href=#22 id=22 data-nosnippet>22</a>            TokenScope::Session | TokenScope::EmailVerificationSession =&gt; {
@@ -40,7 +40,7 @@
 <a href=#40 id=40 data-nosnippet>40</a>
 <a href=#41 id=41 data-nosnippet>41</a>                <span class="self">self</span>.<span class="number">0
 <a href=#42 id=42 data-nosnippet>42</a>                    </span>.account_service
-<a href=#43 id=43 data-nosnippet>43</a>                    .auth_add_email(decoded_token.id, email)
+<a href=#43 id=43 data-nosnippet>43</a>                    .auth_add_email(decoded_token.sub, email)
 <a href=#44 id=44 data-nosnippet>44</a>                    .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#45 id=45 data-nosnippet>45</a>
 <a href=#46 id=46 data-nosnippet>46</a>                <span class="prelude-val">Ok</span>(())
@@ -58,7 +58,7 @@
 <a href=#58 id=58 data-nosnippet>58</a>                <span class="self">self</span>.<span class="number">0
 <a href=#59 id=59 data-nosnippet>59</a>                    </span>.account_service
 <a href=#60 id=60 data-nosnippet>60</a>                    .auth_change_primary_email(
-<a href=#61 id=61 data-nosnippet>61</a>                        decoded_token.id,
+<a href=#61 id=61 data-nosnippet>61</a>                        decoded_token.sub,
 <a href=#62 id=62 data-nosnippet>62</a>                        current_primary_email,
 <a href=#63 id=63 data-nosnippet>63</a>                        new_primary_email,
 <a href=#64 id=64 data-nosnippet>64</a>                    )
@@ -84,7 +84,7 @@
 <a href=#84 id=84 data-nosnippet>84</a>
 <a href=#85 id=85 data-nosnippet>85</a>                <span class="self">self</span>.<span class="number">0
 <a href=#86 id=86 data-nosnippet>86</a>                    </span>.account_service
-<a href=#87 id=87 data-nosnippet>87</a>                    .auth_complete_signup(decoded_token.id, email)
+<a href=#87 id=87 data-nosnippet>87</a>                    .auth_complete_signup(decoded_token.sub, email)
 <a href=#88 id=88 data-nosnippet>88</a>                    .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#89 id=89 data-nosnippet>89</a>
 <a href=#90 id=90 data-nosnippet>90</a>                <span class="prelude-val">Ok</span>(())

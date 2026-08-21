@@ -74,7 +74,7 @@
 <a href=#74 id=74 data-nosnippet>74</a>
 <a href=#75 id=75 data-nosnippet>75</a>        <span class="kw">let </span><span class="kw-2">mut </span>state = <span class="self">self</span>.scope_revocations.lock().<span class="kw">await</span>;
 <a href=#76 id=76 data-nosnippet>76</a>
-<a href=#77 id=77 data-nosnippet>77</a>        <span class="kw">let </span>key = (token.id, token.scope.scope_name());
+<a href=#77 id=77 data-nosnippet>77</a>        <span class="kw">let </span>key = (token.sub, token.scope.scope_name());
 <a href=#78 id=78 data-nosnippet>78</a>
 <a href=#79 id=79 data-nosnippet>79</a>        <span class="kw">let </span>is_revoked = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>cutoff_time) = state.get(<span class="kw-2">&amp;</span>key) {
 <a href=#80 id=80 data-nosnippet>80</a>            token.issued_at &lt;= cutoff_time
@@ -103,7 +103,7 @@
 <a href=#103 id=103 data-nosnippet>103</a>
 <a href=#104 id=104 data-nosnippet>104</a>        <span class="kw">let </span><span class="kw-2">mut </span>state = <span class="self">self</span>.account_revocations.lock().<span class="kw">await</span>;
 <a href=#105 id=105 data-nosnippet>105</a>
-<a href=#106 id=106 data-nosnippet>106</a>        <span class="kw">let </span>key = token.id;
+<a href=#106 id=106 data-nosnippet>106</a>        <span class="kw">let </span>key = token.sub;
 <a href=#107 id=107 data-nosnippet>107</a>
 <a href=#108 id=108 data-nosnippet>108</a>        <span class="kw">let </span>is_revoked = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>time) = state.get(<span class="kw-2">&amp;</span>key) {
 <a href=#109 id=109 data-nosnippet>109</a>            token.issued_at &lt;= time
@@ -210,7 +210,7 @@
 <a href=#210 id=210 data-nosnippet>210</a>            </span>.scope_revocations
 <a href=#211 id=211 data-nosnippet>211</a>            .lock()
 <a href=#212 id=212 data-nosnippet>212</a>            .<span class="kw">await
-<a href=#213 id=213 data-nosnippet>213</a>            </span>.get(<span class="kw-2">&amp;</span>(token.id, token.scope.scope_name()))
+<a href=#213 id=213 data-nosnippet>213</a>            </span>.get(<span class="kw-2">&amp;</span>(token.sub, token.scope.scope_name()))
 <a href=#214 id=214 data-nosnippet>214</a>        {
 <a href=#215 id=215 data-nosnippet>215</a>            token.issued_at &lt;= time
 <a href=#216 id=216 data-nosnippet>216</a>        } <span class="kw">else </span>{
@@ -219,7 +219,7 @@
 <a href=#219 id=219 data-nosnippet>219</a>    }
 <a href=#220 id=220 data-nosnippet>220</a>
 <a href=#221 id=221 data-nosnippet>221</a>    <span class="kw">async fn </span>check_account_revocation(<span class="kw-2">&amp;</span><span class="self">self</span>, token: <span class="kw-2">&amp;</span>DecodedToken) -&gt; bool {
-<a href=#222 id=222 data-nosnippet>222</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>time) = <span class="self">self</span>.account_revocations.lock().<span class="kw">await</span>.get(<span class="kw-2">&amp;</span>token.id) {
+<a href=#222 id=222 data-nosnippet>222</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>time) = <span class="self">self</span>.account_revocations.lock().<span class="kw">await</span>.get(<span class="kw-2">&amp;</span>token.sub) {
 <a href=#223 id=223 data-nosnippet>223</a>            token.issued_at &lt;= time
 <a href=#224 id=224 data-nosnippet>224</a>        } <span class="kw">else </span>{
 <a href=#225 id=225 data-nosnippet>225</a>            <span class="bool-val">false

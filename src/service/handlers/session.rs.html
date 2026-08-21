@@ -61,7 +61,7 @@
 <a href=#61 id=61 data-nosnippet>61</a>            .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#62 id=62 data-nosnippet>62</a>
 <a href=#63 id=63 data-nosnippet>63</a>        <span class="kw">let </span>add_email_jwt = <span class="self">self</span>.<span class="number">0</span>.token_service.sign(<span class="kw-2">&amp;</span>Token {
-<a href=#64 id=64 data-nosnippet>64</a>            id: account_id,
+<a href=#64 id=64 data-nosnippet>64</a>            sub: account_id,
 <a href=#65 id=65 data-nosnippet>65</a>            scope: TokenScope::AddEmail {
 <a href=#66 id=66 data-nosnippet>66</a>                email: new_email.clone(),
 <a href=#67 id=67 data-nosnippet>67</a>            },
@@ -146,7 +146,7 @@
 <a href=#146 id=146 data-nosnippet>146</a>        };
 <a href=#147 id=147 data-nosnippet>147</a>
 <a href=#148 id=148 data-nosnippet>148</a>        <span class="kw">let </span>change_primary_email_jwt = <span class="self">self</span>.<span class="number">0</span>.token_service.sign(<span class="kw-2">&amp;</span>Token {
-<a href=#149 id=149 data-nosnippet>149</a>            id: account_id,
+<a href=#149 id=149 data-nosnippet>149</a>            sub: account_id,
 <a href=#150 id=150 data-nosnippet>150</a>            scope: TokenScope::ChangePrimaryEmail {
 <a href=#151 id=151 data-nosnippet>151</a>                current_primary_email: current_primary_email.clone(),
 <a href=#152 id=152 data-nosnippet>152</a>                new_primary_email: new_primary_email.clone(),
