@@ -27,9 +27,9 @@ use utoipa::OpenApi;
 )]
 async fn me(
     State(state): State<AppState>,
-    Extension(id): Extension<AccountId>,
+    Extension(account_id): Extension<AccountId>,
 ) -> AppResult<dto::response::Account> {
-    Ok(AppJson(SessionHandler(state).me(id).await?))
+    Ok(AppJson(SessionHandler(state).me(account_id).await?))
 }
 
 #[utoipa::path(
@@ -43,14 +43,14 @@ async fn me(
 )]
 async fn add_email(
     State(state): State<AppState>,
-    Extension(id): Extension<AccountId>,
+    Extension(account_id): Extension<AccountId>,
     Extension(real_ip): Extension<IpAddr>,
     AppQuery(captcha): AppQuery<dto::request::Captcha>,
     AppJson(email_dto): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
     Ok(AppJson(
         SessionHandler(state)
-            .add_email(id, email_dto, real_ip, captcha)
+            .add_email(account_id, email_dto, real_ip, captcha)
             .await?,
     ))
 }
@@ -65,11 +65,13 @@ async fn add_email(
 )]
 async fn delete_email(
     State(state): State<AppState>,
-    Extension(id): Extension<AccountId>,
+    Extension(account_id): Extension<AccountId>,
     AppJson(email_dto): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
     Ok(AppJson(
-        SessionHandler(state).delete_email(id, email_dto).await?,
+        SessionHandler(state)
+            .delete_email(account_id, email_dto)
+            .await?,
     ))
 }
 
@@ -84,13 +86,13 @@ async fn delete_email(
 )]
 async fn set_primary_email(
     State(state): State<AppState>,
-    Extension(id): Extension<AccountId>,
+    Extension(account_id): Extension<AccountId>,
     AppQuery(captcha): AppQuery<dto::request::Captcha>,
     AppJson(email_dto): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
     Ok(AppJson(
         SessionHandler(state)
-            .set_primary_email(id, email_dto, captcha)
+            .set_primary_email(account_id, email_dto, captcha)
             .await?,
     ))
 }
@@ -101,12 +103,12 @@ async fn set_primary_email(
 )]
 async fn change_password(
     State(state): State<AppState>,
-    Extension(id): Extension<AccountId>,
+    Extension(account_id): Extension<AccountId>,
     AppJson(change_password_dto): AppJson<dto::request::ChangePassword>,
 ) -> AppResult<()> {
     Ok(AppJson(
         SessionHandler(state)
-            .change_password(id, change_password_dto)
+            .change_password(account_id, change_password_dto)
             .await?,
     ))
 }

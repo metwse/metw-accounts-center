@@ -14,7 +14,7 @@ CREATE TABLE accounts
     encrypted_master_key bytea,
 
     -- REF: I-AR-1
-    CONSTRAINT accounts_id_pkey
+    CONSTRAINT accounts_account_id_pkey
         PRIMARY KEY (account_id)
 );
 
@@ -26,11 +26,11 @@ CREATE TABLE account_flags
     account_id bigint NOT NULL,
     is_email_verified bool NOT NULL,
 
-    CONSTRAINT account_flags_id_pkey
+    CONSTRAINT account_flags_account_id_pkey
         PRIMARY KEY (account_id),
 
     -- REF: R-AR-3
-    CONSTRAINT account_flags_id_fk
+    CONSTRAINT account_flags_account_id_fk
         FOREIGN KEY (account_id) REFERENCES accounts (account_id)
         ON DELETE CASCADE
 );

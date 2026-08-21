@@ -13,7 +13,7 @@ use validator::Validate;
 /// Account handlers that does not require escalated privileges.
 ///
 /// This handlers *should be* protected using tokens with
-/// [`TokenScope::Session`], `id` parameters in methods of this struct
+/// [`TokenScope::Session`], `account_id` parameters in methods of this struct
 /// extracted from that token.
 pub struct SessionHandler(pub AppState);
 

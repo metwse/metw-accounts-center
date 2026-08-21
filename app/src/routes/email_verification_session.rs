@@ -24,14 +24,14 @@ use utoipa::OpenApi;
 )]
 async fn retry_signup(
     State(state): State<AppState>,
-    Extension(id): Extension<AccountId>,
+    Extension(account_id): Extension<AccountId>,
     Extension(real_ip): Extension<IpAddr>,
     AppQuery(captcha): AppQuery<dto::request::Captcha>,
     AppJson(retry_signup_dto): AppJson<dto::request::RetrySignup>,
 ) -> AppResult<()> {
     Ok(AppJson(
         EmailVerificationSessionHandler(state)
-            .retry_signup(id, retry_signup_dto, real_ip, captcha)
+            .retry_signup(account_id, retry_signup_dto, real_ip, captcha)
             .await?,
     ))
 }

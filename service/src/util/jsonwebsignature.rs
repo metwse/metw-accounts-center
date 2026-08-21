@@ -23,7 +23,6 @@ pub struct JsonWebSignature {
 #[derive(Deserialize, Serialize)]
 struct PrivateClaims {
     scope: TokenScope,
-    sub: AccountId,
 }
 
 impl JsonWebSignature {
@@ -46,11 +45,11 @@ impl JsonWebSignature {
                 expiry: Some((now + token.scope.lifetime()).into()),
                 not_before: Some(now.into()),
                 issued_at: Some(now.into()),
+                subject: Some(token.sub.to_string()),
                 ..Default::default()
             },
             private: PrivateClaims {
                 scope: token.scope.clone(),
-                sub: token.sub,
             },
         };
         let header = jws::Header::<biscuit::Empty> {
@@ -91,6 +90,7 @@ impl JsonWebSignature {
                     issued_at: biscuit::Presence::Required,
                     not_before: biscuit::Presence::Required,
                     expiry: biscuit::Presence::Required,
+                    subject: biscuit::Presence::Required,
                     ..Default::default()
                 },
                 temporal_options: biscuit::TemporalOptions {
@@ -104,9 +104,15 @@ impl JsonWebSignature {
         let payload = token.payload().unwrap();
         let expires_at = *payload.registered.expiry.unwrap();
         let issued_at = *payload.registered.issued_at.unwrap();
+        let sub = payload
+            .registered
+            .subject
+            .as_deref()?
+            .parse::<AccountId>()
+            .ok()?;
 
         Some(DecodedToken {
-            sub: payload.private.sub,
+            sub,
             scope: payload.private.scope.clone(),
             fingerprint: signature,
             expires_at,

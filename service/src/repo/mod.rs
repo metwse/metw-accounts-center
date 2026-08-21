@@ -56,7 +56,7 @@ pub trait AccountRepo: Send + Sync {
     /// Begin a new transactional unit.
     async fn begin_transaction(&self) -> RepoResult<Box<dyn AccountRepoTransaction>>;
 
-    /// Get password and server-side password hashing algorithm by id.
+    /// Get password and server-side password hashing algorithm by account ID.
     async fn get_login_credentials_by_account_id(
         &self,
         account_id: AccountId,
@@ -86,7 +86,7 @@ pub trait AccountRepo: Send + Sync {
         username: &str,
     ) -> RepoResult<Option<entity::ClientPasswordKdf>>;
 
-    /// Get client-side password derivation algorithm by id.
+    /// Get client-side password derivation algorithm by account ID.
     async fn get_client_password_kdf_by_account_id(
         &self,
         account_id: AccountId,
@@ -120,11 +120,11 @@ pub trait AccountRepo: Send + Sync {
 
     /// Set the email primary for the account.
     ///
-    /// Although `email`s are unique, the `id` parameter is also required to
-    /// prevent race conditions. It is highly unlikely that the owner of an
-    /// email would change at the exact moment their email is being set as
-    /// the primary email, but it is still a safety hazard that must still be
-    /// prevented.
+    /// Although `email`s are unique, the `account_id` parameter is also
+    /// required to prevent race conditions. It is highly unlikely that the
+    /// owner of an email would change at the exact moment their email is being
+    /// set as the primary email, but it is still a safety hazard that must
+    /// still be prevented.
     async fn set_primary_email_if_current_is(
         &self,
         account_id: AccountId,
