@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["snowflake"],"static":["EPOCH"],"struct":["AccountId"]};
+window.SIDEBAR_ITEMS = {"struct":["AccountId"]};
