@@ -3,9 +3,10 @@ use lettre::{
     AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor,
     message::{Mailbox, MultiPart},
 };
+use metw_id::snowflake;
 use service::{
     client::EmailClient,
-    id::{AccountId, snowflake},
+    id::AccountId,
     util::emails,
 };
 use tracing::{error, trace};
@@ -48,7 +49,7 @@ impl EmailClient for LettreEmailClientImpl {
 
         let Ok(msg) = Message::builder()
             .from(self.from_address.clone())
-            .message_id(Some(format!("<{}-{}>", snowflake(), self.from_address)))
+            .message_id(Some(format!("<{}-{}>", snowflake::next(), self.from_address)))
             .to(dest)
             .subject(template.subject())
             .multipart(MultiPart::alternative_plain_html(

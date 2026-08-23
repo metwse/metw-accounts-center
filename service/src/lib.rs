@@ -32,8 +32,8 @@
 //!
 //! [`util`] is used for miscellaneous utilities that do not fit into
 //! categories above. Check out documentations of the `util` for details.
-//! Conceptually, the [`token`] and [`id`] modules are re-exported at the crate
-//! root as they are too common.
+//! Conceptually, the [`checked_now`], [`token`] and [`id`] modules are
+//! re-exported at the crate root as they are too common.
 //!
 //! [SoC]: https://en.wikipedia.org/wiki/Separation_of_concerns
 
@@ -94,7 +94,7 @@ pub use util::{id, token};
 
 pub use state::AppState;
 
-pub use util::checked_now::checked_now;
+pub use metw_id::checked_now;
 
 /// Test utilities.
 #[cfg(any(feature = "testutil", test))]

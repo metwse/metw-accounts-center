@@ -83,7 +83,7 @@ pub struct AccountFlags {
 }
 
 /// Usernames or username aliases assigned to an account.
-#[derive(Debug, FromRow, Default)]
+#[derive(Debug, FromRow)]
 pub struct Username {
     /// Username.
     pub username: String,
@@ -102,7 +102,7 @@ pub struct Username {
 }
 
 /// Verified email of an account.
-#[derive(Debug, FromRow, Default)]
+#[derive(Debug, FromRow)]
 pub struct Email {
     /// Email.
     pub email: String,

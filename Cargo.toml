@@ -3,6 +3,12 @@ resolver = "3"
 members = ["_docs", "app", "service", "state", "tests"]
 
 [workspace.dependencies]
+metw-id = {
+    git = "https://github.com/metwse/metw-rs",
+    package = "metw-id",
+    rev = "820c1d7f0e355e122ad6bb9f30162f90d6adb7ea",
+}
+
 # async runtime&utility
 tokio = "1"
 tower-http = "0.7"
@@ -12,7 +18,7 @@ axum = "0.8"
 utoipa = "5.5"
 
 # repository
-sqlx = "0.8"
+sqlx = "0.9"
 chrono = "0.4"
 redis = "1"
 
