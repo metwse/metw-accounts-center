@@ -128,9 +128,7 @@ dependencies = [
  "axum",
  "dotenvy",
  "governor",
- "opentelemetry",
- "opentelemetry-otlp",
- "opentelemetry_sdk",
+ "metw-observability",
  "serde",
  "service",
  "state",
@@ -139,8 +137,6 @@ dependencies = [
  "tower-http 0.7.0",
  "tower_governor",
  "tracing",
- "tracing-opentelemetry",
- "tracing-subscriber",
  "utoipa",
 ]
 
@@ -2547,7 +2543,7 @@ checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 [[package]]
 name = "metw-id"
 version = "0.0.0"
-source = "git+https://github.com/metwse/metw-rs?rev=820c1d7f0e355e122ad6bb9f30162f90d6adb7ea#820c1d7f0e355e122ad6bb9f30162f90d6adb7ea"
+source = "git+https://github.com/metwse/metw-rs?rev=cbf101f62aa7f191542ed90a556d7e3ec5042924#cbf101f62aa7f191542ed90a556d7e3ec5042924"
 dependencies = [
  "chrono",
  "pastey 0.2.2",
@@ -2555,6 +2551,22 @@ dependencies = [
  "serde_with",
  "sqlx",
  "utoipa",
+]
+
+[[package]]
+name = "metw-observability"
+version = "0.0.0"
+source = "git+https://github.com/metwse/metw-rs?rev=cbf101f62aa7f191542ed90a556d7e3ec5042924#cbf101f62aa7f191542ed90a556d7e3ec5042924"
+dependencies = [
+ "axum",
+ "http 1.4.2",
+ "opentelemetry",
+ "opentelemetry-otlp",
+ "opentelemetry_sdk",
+ "tower-http 0.7.0",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -3558,7 +3570,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b570b25f7617e43d59005d0990ccb79e950a423952cea19671b7a876da390adf"
 dependencies = [
  "anyhow",
- "itertools 0.14.0",
+ "itertools 0.10.5",
  "proc-macro2",
  "quote",
  "syn 2.0.117",

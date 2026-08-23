@@ -10,7 +10,6 @@ use axum::{Json, Router, routing::get};
 use serde::Serialize;
 use service::AppState;
 use std::{sync::LazyLock, time::Instant};
-use tower_http::trace::TraceLayer;
 use utoipa::{OpenApi, ToSchema};
 
 /// API routes.
@@ -21,12 +20,6 @@ pub mod middleware;
 
 /// API results.
 pub mod res;
-
-#[cfg(feature = "otel")]
-mod otel;
-
-#[cfg(feature = "otel")]
-pub use otel::otel_layer;
 
 /// OpenAPI documentation.
 #[derive(OpenApi)]
@@ -87,5 +80,5 @@ pub fn app(state: AppState) -> Router {
             middleware::extract_real_ip::extract_real_ip,
         ))
         .fallback(async || res::AppError::NotFound)
-        .layer(TraceLayer::new_for_http())
+        .layer(metw_observability::trace_layer_for_http())
 }

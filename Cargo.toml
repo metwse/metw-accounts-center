@@ -6,7 +6,12 @@ members = ["_docs", "app", "service", "state", "tests"]
 metw-id = {
     git = "https://github.com/metwse/metw-rs",
     package = "metw-id",
-    rev = "820c1d7f0e355e122ad6bb9f30162f90d6adb7ea",
+    rev = "cbf101f62aa7f191542ed90a556d7e3ec5042924",
+}
+metw-observability = {
+    git = "https://github.com/metwse/metw-rs",
+    package = "metw-observability",
+    rev = "cbf101f62aa7f191542ed90a556d7e3ec5042924",
 }
 
 # async runtime&utility
@@ -39,10 +44,6 @@ regex = "1.12"
 
 serde = "1"
 serde_with = "3.2"
-
-aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
-aws-credential-types = "1.2.4"
-aws-sdk-sesv2 = "1.123.0"
 
 # [dev-dependencies]
 test-log = "0.2"
