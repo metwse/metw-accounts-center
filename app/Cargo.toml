@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-metw-observability = { workspace = true }
+metw-server = { workspace = true }
 
 tokio = { workspace = true, features = ["net", "rt", "rt-multi-thread"] }
 tower-http = { workspace = true, features = ["cors", "trace"] }
@@ -27,7 +27,8 @@ service = { path = "../service/" }
 
 [features]
 transparent-errors = []
-otel = ["metw-observability/otel"]
+otel = ["metw-server/otel"]
+allow-all-cors = ["metw-server/allow-all-cors"]
 
 [lints]
 workspace = true

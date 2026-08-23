@@ -80,5 +80,4 @@ pub fn app(state: AppState) -> Router {
             middleware::extract_real_ip::extract_real_ip,
         ))
         .fallback(async || res::AppError::NotFound)
-        .layer(metw_observability::trace_layer_for_http())
 }
