@@ -50,12 +50,8 @@ macro_rules! id_newtype {
                 }
             }
 
-            impl From<[< $name Id >]> for i64 {
-                fn from(value: [< $name Id >]) -> Self {
-                    value.0
-                }
-            }
-
+            /// Creating ID from arbitrary values only available in test mode.
+            #[cfg(test)]
             impl From<i64> for [< $name Id >] {
                 fn from(value: i64) -> Self {
                     [< $name Id >](value)

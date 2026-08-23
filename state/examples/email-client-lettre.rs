@@ -1,7 +1,7 @@
 //! This example sends a dummy email to given address, using `lettre`.
 
 use lettre::{AsyncSmtpTransport, Tokio1Executor, transport::smtp::authentication::Credentials};
-use service::client::EmailClient;
+use service::{client::EmailClient, id::AccountId};
 use state::LettreEmailClientImpl;
 use std::io::{self, Write};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -45,7 +45,7 @@ async fn main() {
     email_client
         .send(
             dest.clone(),
-            0.into(),
+            AccountId::unique(),
             service::util::emails::Template::ConfirmNewEmail {
                 username: "metw".to_string(),
                 email: dest,

@@ -65,7 +65,7 @@ impl AccountRepo for AccountRepoImpl {
         email: &str,
     ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
         let Some(login) = sqlx::query!(
-            r#"SELECT account_id, password_hash,
+            r#"SELECT account_id AS "account_id: AccountId", password_hash,
                     server_password_hash_algorithm AS
                         "server_password_hash_algorithm: ServerPasswordHashAlgorithmJson"
                 FROM accounts
@@ -79,7 +79,7 @@ impl AccountRepo for AccountRepoImpl {
         };
 
         let login = dto::repo::OwnedLoginCredentials {
-            account_id: login.account_id.into(),
+            account_id: login.account_id,
             is_email_verified: true,
             password_hash: login.password_hash,
             server_password_hash_algorithm: login.server_password_hash_algorithm.0,
@@ -94,7 +94,7 @@ impl AccountRepo for AccountRepoImpl {
     ) -> RepoResult<Option<dto::repo::OwnedLoginCredentials>> {
         // TODO: Write this query using JOIN
         let Some(login) = sqlx::query!(
-            r#"SELECT account_id, password_hash,
+            r#"SELECT account_id AS "account_id: AccountId", password_hash,
                     (SELECT is_email_verified FROM account_flags
                         WHERE account_flags.account_id = accounts.account_id) AS "is_email_verified!",
                     server_password_hash_algorithm AS
@@ -110,7 +110,7 @@ impl AccountRepo for AccountRepoImpl {
         };
 
         let login = dto::repo::OwnedLoginCredentials {
-            account_id: login.account_id.into(),
+            account_id: login.account_id,
             is_email_verified: login.is_email_verified,
             password_hash: login.password_hash,
             server_password_hash_algorithm: login.server_password_hash_algorithm.0,
