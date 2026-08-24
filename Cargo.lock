@@ -2543,7 +2543,7 @@ checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 [[package]]
 name = "metw-id"
 version = "0.0.0"
-source = "git+https://github.com/metwse/metw-rs?rev=602a21b628b3a27c3d10fee643f3e4df533deed2#602a21b628b3a27c3d10fee643f3e4df533deed2"
+source = "git+https://github.com/metwse/metw-rs?rev=6f05048613a0d38a767a06a32fa43f57eb244b22#6f05048613a0d38a767a06a32fa43f57eb244b22"
 dependencies = [
  "chrono",
  "pastey 0.2.2",
@@ -2556,7 +2556,7 @@ dependencies = [
 [[package]]
 name = "metw-observability"
 version = "0.0.0"
-source = "git+https://github.com/metwse/metw-rs?rev=602a21b628b3a27c3d10fee643f3e4df533deed2#602a21b628b3a27c3d10fee643f3e4df533deed2"
+source = "git+https://github.com/metwse/metw-rs?rev=6f05048613a0d38a767a06a32fa43f57eb244b22#6f05048613a0d38a767a06a32fa43f57eb244b22"
 dependencies = [
  "axum",
  "http 1.4.2",
@@ -2572,7 +2572,7 @@ dependencies = [
 [[package]]
 name = "metw-server"
 version = "0.1.0"
-source = "git+https://github.com/metwse/metw-rs?rev=602a21b628b3a27c3d10fee643f3e4df533deed2#602a21b628b3a27c3d10fee643f3e4df533deed2"
+source = "git+https://github.com/metwse/metw-rs?rev=6f05048613a0d38a767a06a32fa43f57eb244b22#6f05048613a0d38a767a06a32fa43f57eb244b22"
 dependencies = [
  "axum",
  "metw-observability",

@@ -6,12 +6,12 @@ members = ["_docs", "app", "service", "state", "tests"]
 metw-id = {
     git = "https://github.com/metwse/metw-rs",
     package = "metw-id",
-    rev = "602a21b628b3a27c3d10fee643f3e4df533deed2",
+    rev = "6f05048613a0d38a767a06a32fa43f57eb244b22",
 }
 metw-server = {
     git = "https://github.com/metwse/metw-rs",
     package = "metw-server",
-    rev = "602a21b628b3a27c3d10fee643f3e4df533deed2",
+    rev = "6f05048613a0d38a767a06a32fa43f57eb244b22",
 }
 
 # async runtime&utility
