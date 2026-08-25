@@ -2542,8 +2542,8 @@ checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 
 [[package]]
 name = "metw-id"
-version = "0.0.0"
-source = "git+https://github.com/metwse/metw-rs?rev=b3bafa38a645f2031ceea155571e3d7043f286f9#b3bafa38a645f2031ceea155571e3d7043f286f9"
+version = "0.1.0"
+source = "git+https://github.com/metwse/metw-backend-crates?tag=metw-id-v0.1.0#bc6ede9698b39bedce65b85c2d9ffad8ef000d53"
 dependencies = [
  "chrono",
  "pastey 0.2.2",
@@ -2556,7 +2556,7 @@ dependencies = [
 [[package]]
 name = "metw-server"
 version = "0.0.0"
-source = "git+https://github.com/metwse/metw-rs?rev=b3bafa38a645f2031ceea155571e3d7043f286f9#b3bafa38a645f2031ceea155571e3d7043f286f9"
+source = "git+https://github.com/metwse/metw-backend-crates?rev=bc6ede9698b39bedce65b85c2d9ffad8ef000d53#bc6ede9698b39bedce65b85c2d9ffad8ef000d53"
 dependencies = [
  "axum",
  "http 1.4.2",

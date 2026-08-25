@@ -4,14 +4,14 @@ members = ["_docs", "app", "service", "state", "tests"]
 
 [workspace.dependencies]
 metw-id = {
-    git = "https://github.com/metwse/metw-rs",
+    git = "https://github.com/metwse/metw-backend-crates",
     package = "metw-id",
-    rev = "b3bafa38a645f2031ceea155571e3d7043f286f9",
+    tag = "metw-id-v0.1.0",
 }
 metw-server = {
-    git = "https://github.com/metwse/metw-rs",
+    git = "https://github.com/metwse/metw-backend-crates",
     package = "metw-server",
-    rev = "b3bafa38a645f2031ceea155571e3d7043f286f9",
+    rev = "bc6ede9698b39bedce65b85c2d9ffad8ef000d53",
 }
 
 # async runtime&utility
