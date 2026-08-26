@@ -1,5 +1,5 @@
-use std::{cmp::max, net::IpAddr};
 use metw_id::snowflake;
+use std::{cmp::max, net::IpAddr};
 
 /// Generate a random username string.
 pub fn random_username() -> &'static str {

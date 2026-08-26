@@ -4,21 +4,17 @@ use lettre::{
     message::{Mailbox, MultiPart},
 };
 use metw_id::snowflake;
-use service::{
-    client::EmailClient,
-    id::AccountId,
-    util::emails,
-};
+use service::{client::EmailClient, id::AccountId, util::emails};
 use tracing::{error, trace};
 
 /// Email client for sending emails.
-pub struct LettreEmailClientImpl {
+pub struct EmailClientImpl {
     mailer: AsyncSmtpTransport<Tokio1Executor>,
     from_address: Mailbox,
     callback_url: String,
 }
 
-impl LettreEmailClientImpl {
+impl EmailClientImpl {
     /// Creates a new Amazon SES v2 email client.
     pub fn boxed_new(
         mailer: AsyncSmtpTransport<Tokio1Executor>,
@@ -34,7 +30,7 @@ impl LettreEmailClientImpl {
 }
 
 #[async_trait]
-impl EmailClient for LettreEmailClientImpl {
+impl EmailClient for EmailClientImpl {
     /// TODO: Log sent emails
     async fn send(&self, email: String, account_id: AccountId, template: emails::Template) {
         let _ = account_id;
@@ -49,7 +45,11 @@ impl EmailClient for LettreEmailClientImpl {
 
         let Ok(msg) = Message::builder()
             .from(self.from_address.clone())
-            .message_id(Some(format!("<{}-{}>", snowflake::next(), self.from_address)))
+            .message_id(Some(format!(
+                "<{}-{}>",
+                snowflake::next(),
+                self.from_address
+            )))
             .to(dest)
             .subject(template.subject())
             .multipart(MultiPart::alternative_plain_html(

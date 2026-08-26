@@ -17,24 +17,14 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 mod captcha_client;
-
-#[cfg(feature = "email-client-aws")]
-mod aws_email_client;
-
-#[cfg(feature = "email-client-lettre")]
-mod lettre_email_client;
+mod email_client;
 
 mod account_repo;
 mod email_limiting_repo;
 mod token_repo;
 
 pub use captcha_client::CaptchaClientImpl;
-
-#[cfg(feature = "email-client-aws")]
-pub use aws_email_client::AwsEmailClientImpl;
-
-#[cfg(feature = "email-client-lettre")]
-pub use lettre_email_client::LettreEmailClientImpl;
+pub use email_client::EmailClientImpl;
 
 pub use account_repo::AccountRepoImpl;
 pub use email_limiting_repo::EmailLimitingRepoImpl;
@@ -80,20 +70,9 @@ pub struct Config {
     /// Cloudflare Turnstile secret for CAPTCHA.
     pub cloudflare_turnstile_secret: String,
 
-    /// AWS SES key ID.
-    #[cfg(feature = "email-client-aws")]
-    pub aws_access_key_id: String,
-    #[cfg(feature = "email-client-aws")]
-    pub aws_secret_access_key: String,
-    #[cfg(feature = "email-client-aws")]
-    pub aws_region: String,
-
     /// SMTP server credentials.
-    #[cfg(feature = "email-client-lettre")]
     pub smtp_relay: String,
-    #[cfg(feature = "email-client-lettre")]
     pub smtp_username: String,
-    #[cfg(feature = "email-client-lettre")]
     pub smtp_password: String,
 
     /// From address of emails sent by the email client.
@@ -135,34 +114,6 @@ impl Config {
         let email_limiting_service =
             EmailLimitingService::new(EmailLimitingRepoImpl::boxed_new(&redis_con_generator).await);
 
-        #[cfg(all(feature = "email-client-aws", not(feature = "email-client-lettre")))]
-        let email_client = {
-            let aws_credentials = aws_credential_types::Credentials::new(
-                self.aws_access_key_id,
-                self.aws_secret_access_key,
-                None,
-                None,
-                "MetwAccountsCenterConfig",
-            );
-            let aws_credentials_provider =
-                aws_credential_types::provider::SharedCredentialsProvider::new(aws_credentials);
-
-            let aws_config = aws_config::defaults(aws_config::BehaviorVersion::latest())
-                .credentials_provider(aws_credentials_provider)
-                .region(aws_config::Region::new(self.aws_region))
-                .load()
-                .await;
-
-            let aws_sesv2_client = aws_sdk_sesv2::Client::new(&aws_config);
-
-            AwsEmailClientImpl::boxed_new(
-                aws_sesv2_client,
-                self.noreply_email_address,
-                self.email_callback_url,
-            )
-        };
-
-        #[cfg(feature = "email-client-lettre")]
         let email_client = {
             use lettre::{
                 AsyncSmtpTransport, Tokio1Executor, transport::smtp::authentication::Credentials,
@@ -175,11 +126,7 @@ impl Config {
                 .credentials(creds)
                 .build();
 
-            LettreEmailClientImpl::boxed_new(
-                mailer,
-                self.noreply_email_address,
-                self.email_callback_url,
-            )
+            EmailClientImpl::boxed_new(mailer, self.noreply_email_address, self.email_callback_url)
         };
 
         let captcha_client = CaptchaClientImpl::boxed_new(self.cloudflare_turnstile_secret);

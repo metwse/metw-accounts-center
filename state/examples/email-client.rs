@@ -2,7 +2,7 @@
 
 use lettre::{AsyncSmtpTransport, Tokio1Executor, transport::smtp::authentication::Credentials};
 use service::{client::EmailClient, id::AccountId};
-use state::LettreEmailClientImpl;
+use state::EmailClientImpl;
 use std::io::{self, Write};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -27,7 +27,7 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let email_client = LettreEmailClientImpl::boxed_new(
+    let email_client = EmailClientImpl::boxed_new(
         mailer,
         noreply_email_address,
         "http://example.com".to_owned(),
