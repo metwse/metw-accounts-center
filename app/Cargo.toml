@@ -23,7 +23,7 @@ dotenvy = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 
 state = { path = "../state/" }
-service = { path = "../service/" }
+service = { path = "../service/", features = ["email-templates"] }
 
 [features]
 transparent-errors = []

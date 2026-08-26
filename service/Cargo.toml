@@ -27,6 +27,8 @@ regex = { workspace = true }
 
 serde = { workspace = true }
 serde_with = { workspace = true}
+serde_json = { workspace = true }
+serde_variant = { workspace = true }
 
 # encryption/signature utility
 biscuit = "0.8"
@@ -46,15 +48,16 @@ service = { path = ".", features = ["mock"] }
 
 [build-dependencies]
 # email templates
-toml = { version = "1", features = ["parse", "serde"] }
-strfmt = "0.2"
-minify-html = "0.18"
+toml = { version = "1", features = ["parse", "serde"], optional = true }
+strfmt = { version = "0.2", optional = true }
+minify-html = { version = "0.18", optional = true }
 
 
 [features]
 # tokio/time requred for time outs in mock token service.
 mock = ["tokio/time"]
 testutil = []
+email-templates = ["dep:toml", "dep:strfmt", "dep:minify-html"]
 
 [lints]
 workspace = true

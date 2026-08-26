@@ -1,10 +1,17 @@
+use serde::Serialize;
+
 /// Email templates.
 ///
-/// See [`TokenScope`].
+/// If the `email-templates` feature flag is enabled, the methods of this
+/// struct return strings formatted for sending `multipart/HTML` emails. The
+/// feature is not enabled, the templates are serialized as JSON. The
+/// `email-templates` feature *should be enabled* in the production environment.
+///
+/// See also: [`TokenScope`].
 ///
 /// [`TokenScope`]: `crate::token::TokenScope`
 #[allow(missing_docs)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub enum Template {
     /// See [`CompleteSignup`].
     ///
@@ -35,6 +42,7 @@ pub enum Template {
     },
 }
 
+#[cfg(feature = "email-templates")]
 macro_rules! get_template {
     (subject $name:literal) => {
         get_template!(@ "-subject.txt" $name)
@@ -53,6 +61,7 @@ macro_rules! get_template {
     };
 }
 
+#[cfg(feature = "email-templates")]
 macro_rules! build_email {
     (subject $template:expr) => {
         match $template {
@@ -112,16 +121,45 @@ macro_rules! build_email {
 impl Template {
     /// Get subject of the template.
     pub fn subject(&self) -> String {
-        build_email!(subject self).to_string()
+        #[cfg(feature = "email-templates")]
+        {
+            build_email!(subject self).to_string()
+        }
+
+        #[cfg(not(feature = "email-templates"))]
+        {
+            serde_variant::to_variant_name(&self).unwrap().to_string()
+        }
     }
 
     /// Get email body of the template.
     pub fn body_html(&self, callback_url: &str) -> String {
-        build_email!(body_html self, callback_url)
+        #[cfg(feature = "email-templates")]
+        {
+            build_email!(body_html self, callback_url)
+        }
+
+        #[cfg(not(feature = "email-templates"))]
+        {
+            let json = serde_json::json!({
+                "callback_url": callback_url,
+                "template": self
+            });
+
+            serde_json::to_string(&json).unwrap()
+        }
     }
 
     /// Get plaintext email body of the template.
     pub fn body_text(&self, callback_url: &str) -> String {
-        build_email!(body_text self, callback_url)
+        #[cfg(feature = "email-templates")]
+        {
+            build_email!(body_text self, callback_url)
+        }
+
+        #[cfg(not(feature = "email-templates"))]
+        {
+            self.body_html(callback_url)
+        }
     }
 }
