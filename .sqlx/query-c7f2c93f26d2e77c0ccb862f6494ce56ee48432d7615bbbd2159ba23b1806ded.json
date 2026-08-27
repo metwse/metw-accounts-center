@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO accounts (\n                    account_id,\n                    client_password_kdf, server_password_hash_algorithm, password_hash,\n                    master_key_kek_kdf, master_key_encryption_algorithm, encrypted_master_key,\n                    master_key_id\n                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Jsonb",
+        "Jsonb",
+        "Text",
+        "Jsonb",
+        "Jsonb",
+        "Bytea",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c7f2c93f26d2e77c0ccb862f6494ce56ee48432d7615bbbd2159ba23b1806ded"
+}

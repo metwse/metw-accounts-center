@@ -86,7 +86,7 @@ pub struct AccountFlags {
 }
 
 /// Usernames or username aliases assigned to an account.
-#[derive(Debug, FromRow)]
+#[derive(Debug, FromRow, Clone)]
 pub struct Username {
     /// Username.
     pub username: String,
@@ -105,7 +105,7 @@ pub struct Username {
 }
 
 /// Verified email of an account.
-#[derive(Debug, FromRow)]
+#[derive(Debug, FromRow, Clone)]
 pub struct Email {
     /// Email.
     pub email: String,
@@ -121,7 +121,7 @@ pub struct Email {
 }
 
 /// User-registered 3rd party authorization applications.
-#[derive(Debug, FromRow)]
+#[derive(Debug, Clone, FromRow)]
 pub struct App {
     /// Application ID.
     pub app_id: AppId,
@@ -153,8 +153,8 @@ pub struct AccountAppAuthorization {
     /// The account that authorized the application.
     pub account_id: AccountId,
 
-    /// Authenticated account.
-    pub app_id: AccountId,
+    /// Application.
+    pub app_id: AppId,
 
     /// Timestamp the authorization done.
     pub created_at: DateTime<Utc>,

@@ -1,13 +1,6 @@
 use rand::RngExt;
 use sha2::Digest;
 
-/// Client secret.
-#[allow(missing_docs)]
-pub struct ClientSecret {
-    pub client_secret: String,
-    pub client_secret_hash: [u8; 32],
-}
-
 /// Creates a new client secret.
 pub fn random_client_secret() -> String {
     rand::rng()

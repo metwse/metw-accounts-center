@@ -14,7 +14,7 @@ pub struct MockAppRepoImpl {
     state: Arc<Mutex<AppRepoState>>,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct AppRepoState {
     pub apps: HashMap<AppId, entity::App>,
     pub app_redirect_urls: HashMap<AppId, Vec<String>>,
@@ -34,8 +34,11 @@ impl MockAppRepoImpl {
 #[async_trait]
 impl AppRepo for MockAppRepoImpl {
     async fn begin_transaction(&self) -> RepoResult<Box<dyn AppRepoTransaction>> {
+        let state = Arc::clone(&self.state).lock_owned().await;
+
         Ok(Box::new(MockAppRepoTransactionImpl {
-            state: Arc::clone(&self.state).lock_owned().await,
+            state: (*state).clone(),
+            commit_state: state,
         }))
     }
 
@@ -78,12 +81,15 @@ impl AppRepo for MockAppRepoImpl {
 }
 
 struct MockAppRepoTransactionImpl {
-    state: OwnedMutexGuard<AppRepoState>,
+    state: AppRepoState,
+    commit_state: OwnedMutexGuard<AppRepoState>,
 }
 
 #[async_trait]
 impl AppRepoTransaction for MockAppRepoTransactionImpl {
-    async fn commit(self: Box<Self>) -> RepoResult<()> {
+    async fn commit(mut self: Box<Self>) -> RepoResult<()> {
+        *self.commit_state = self.state;
+
         Ok(())
     }
 

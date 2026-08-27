@@ -10,7 +10,7 @@ pub struct MockAccountRepoImpl {
     state: Arc<Mutex<AccountRepoState>>,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct AccountRepoState {
     accounts: HashMap<AccountId, entity::Account>,
     emails: HashMap<String, entity::Email>,
@@ -32,8 +32,11 @@ impl MockAccountRepoImpl {
 #[async_trait]
 impl AccountRepo for MockAccountRepoImpl {
     async fn begin_transaction(&self) -> RepoResult<Box<dyn AccountRepoTransaction>> {
+        let state = Arc::clone(&self.state).lock_owned().await;
+
         Ok(Box::new(MockAccountRepoTransactionImpl {
-            state: Arc::clone(&self.state).lock_owned().await,
+            state: (*state).clone(),
+            commit_state: state,
         }))
     }
 
@@ -290,12 +293,15 @@ impl AccountRepo for MockAccountRepoImpl {
 }
 
 struct MockAccountRepoTransactionImpl {
-    state: OwnedMutexGuard<AccountRepoState>,
+    state: AccountRepoState,
+    commit_state: OwnedMutexGuard<AccountRepoState>,
 }
 
 #[async_trait]
 impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
-    async fn commit(self: Box<Self>) -> RepoResult<()> {
+    async fn commit(mut self: Box<Self>) -> RepoResult<()> {
+        *self.commit_state = self.state;
+
         Ok(())
     }
 
