@@ -13,9 +13,15 @@ CREATE TABLE accounts
     master_key_encryption_algorithm jsonb NOT NULL,
     encrypted_master_key bytea,
 
+    master_key_id bigint,
+
     -- REF: I-AR-1
     CONSTRAINT accounts_account_id_pkey
-        PRIMARY KEY (account_id)
+        PRIMARY KEY (account_id),
+
+    -- TODO: add AR invariant
+    CONSTRAINT accounts_master_key_encrypted_master_key_both_null_check
+        CHECK ((master_key_id IS NULL) = (encrypted_master_key IS NULL))
 );
 
 -- 2 "account_flags" table

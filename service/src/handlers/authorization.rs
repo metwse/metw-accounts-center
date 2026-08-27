@@ -24,10 +24,7 @@ impl AuthorizationHandler {
         let decoded_token = self.0.token_service.decode(&base64_encoded_token)?;
 
         tracing::Span::current().record("account_id", decoded_token.sub.to_string());
-        tracing::Span::current().record(
-            "token_scope",
-            decoded_token.scope.scope_name(),
-        );
+        tracing::Span::current().record("token_scope", decoded_token.scope.scope_name());
 
         match &decoded_token.scope {
             TokenScope::Session | TokenScope::EmailVerificationSession => {

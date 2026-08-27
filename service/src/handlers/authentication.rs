@@ -30,10 +30,7 @@ impl AuthenticationHandler {
 
             Ok(token.sub)
         } else {
-            trace!(
-                scope = token.scope.scope_name(),
-                "got invalid scope"
-            );
+            trace!(scope = token.scope.scope_name(), "got invalid scope");
 
             Err(HandlerError::Unauthorized)
         }
@@ -58,10 +55,7 @@ impl AuthenticationHandler {
 
             Ok(token.sub)
         } else {
-            trace!(
-                scope = token.scope.scope_name(),
-                "got invalid scope"
-            );
+            trace!(scope = token.scope.scope_name(), "got invalid scope");
 
             Err(HandlerError::Unauthorized)
         }
@@ -166,10 +160,7 @@ impl AuthenticationHandler {
         };
 
         tracing::Span::current().record("account_id", login.account_id.to_string());
-        tracing::Span::current().record(
-            "session_scope",
-            token_scope.scope_name(),
-        );
+        tracing::Span::current().record("session_scope", token_scope.scope_name());
 
         Ok(dto::response::Token {
             token: self.0.token_service.sign(&Token {
