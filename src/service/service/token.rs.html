@@ -26,9 +26,9 @@
 <a href=#26 id=26 data-nosnippet>26</a>    }
 <a href=#27 id=27 data-nosnippet>27</a>
 <a href=#28 id=28 data-nosnippet>28</a>    <span class="doccomment">/// Validate and decode the token.
-<a href=#29 id=29 data-nosnippet>29</a>    </span><span class="attr">#[tracing::instrument(skip_all)]
+<a href=#29 id=29 data-nosnippet>29</a>    </span><span class="attr">#[tracing::instrument(level = <span class="string">"debug"</span>, skip_all)]
 <a href=#30 id=30 data-nosnippet>30</a>    </span><span class="kw">pub async fn </span>verify(<span class="kw-2">&amp;</span><span class="self">self</span>, base64_encoded_token: <span class="kw-2">&amp;</span>str) -&gt; ServiceResult&lt;Token&gt; {
-<a href=#31 id=31 data-nosnippet>31</a>        <span class="kw">let </span>decoded_token = <span class="self">self</span>.decode(base64_encoded_token).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#31 id=31 data-nosnippet>31</a>        <span class="kw">let </span>decoded_token = <span class="self">self</span>.decode(base64_encoded_token)<span class="question-mark">?</span>;
 <a href=#32 id=32 data-nosnippet>32</a>
 <a href=#33 id=33 data-nosnippet>33</a>        <span class="kw">if </span>!<span class="self">self</span>.repo.is_revoked(<span class="kw-2">&amp;</span>decoded_token).<span class="kw">await</span><span class="question-mark">? </span>{
 <a href=#34 id=34 data-nosnippet>34</a>            <span class="prelude-val">Ok</span>(decoded_token.into())
@@ -39,7 +39,7 @@
 <a href=#39 id=39 data-nosnippet>39</a>
 <a href=#40 id=40 data-nosnippet>40</a>    <span class="doccomment">/// See [`TokenRepo::check_and_revoke_token`]. Maps revoked tokens to
 <a href=#41 id=41 data-nosnippet>41</a>    /// `Err(ServiceError::TokenRevoked)`
-<a href=#42 id=42 data-nosnippet>42</a>    </span><span class="attr">#[tracing::instrument(skip_all)]
+<a href=#42 id=42 data-nosnippet>42</a>    </span><span class="attr">#[tracing::instrument(level = <span class="string">"debug"</span>, skip_all)]
 <a href=#43 id=43 data-nosnippet>43</a>    </span><span class="kw">pub async fn </span>check_and_revoke_token(<span class="kw-2">&amp;</span><span class="self">self</span>, decoded_token: <span class="kw-2">&amp;</span>DecodedToken) -&gt; ServiceResult&lt;()&gt; {
 <a href=#44 id=44 data-nosnippet>44</a>        <span class="kw">if </span><span class="self">self</span>.repo.check_and_revoke_token(decoded_token).<span class="kw">await</span><span class="question-mark">? </span>{
 <a href=#45 id=45 data-nosnippet>45</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(ServiceError::TokenRevoked);
@@ -50,7 +50,7 @@
 <a href=#50 id=50 data-nosnippet>50</a>
 <a href=#51 id=51 data-nosnippet>51</a>    <span class="doccomment">/// See [`TokenRepo::check_and_revoke_account_tokens_with_scope`]. Maps
 <a href=#52 id=52 data-nosnippet>52</a>    /// revoked tokens to `Err(ServiceError::TokenRevoked)`
-<a href=#53 id=53 data-nosnippet>53</a>    </span><span class="attr">#[tracing::instrument(skip_all)]
+<a href=#53 id=53 data-nosnippet>53</a>    </span><span class="attr">#[tracing::instrument(level = <span class="string">"debug"</span>, skip_all)]
 <a href=#54 id=54 data-nosnippet>54</a>    </span><span class="kw">pub async fn </span>check_and_revoke_account_tokens_with_scope(
 <a href=#55 id=55 data-nosnippet>55</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#56 id=56 data-nosnippet>56</a>        decoded_token: <span class="kw-2">&amp;</span>DecodedToken,
@@ -68,7 +68,7 @@
 <a href=#68 id=68 data-nosnippet>68</a>
 <a href=#69 id=69 data-nosnippet>69</a>    <span class="doccomment">/// See [`TokenRepo::check_and_revoke_account_tokens`]. Maps revoked tokens
 <a href=#70 id=70 data-nosnippet>70</a>    /// to `Err(ServiceError::TokenRevoked)`
-<a href=#71 id=71 data-nosnippet>71</a>    </span><span class="attr">#[tracing::instrument(skip_all)]
+<a href=#71 id=71 data-nosnippet>71</a>    </span><span class="attr">#[tracing::instrument(level = <span class="string">"debug"</span>, skip_all)]
 <a href=#72 id=72 data-nosnippet>72</a>    </span><span class="kw">pub async fn </span>check_and_revoke_account_tokens(
 <a href=#73 id=73 data-nosnippet>73</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#74 id=74 data-nosnippet>74</a>        decoded_token: <span class="kw-2">&amp;</span>DecodedToken,
@@ -86,13 +86,12 @@
 <a href=#86 id=86 data-nosnippet>86</a>
 <a href=#87 id=87 data-nosnippet>87</a>    <span class="doccomment">/// Decode the base64 encoded token and validate its signature and
 <a href=#88 id=88 data-nosnippet>88</a>    /// expiration.
-<a href=#89 id=89 data-nosnippet>89</a>    </span><span class="attr">#[tracing::instrument(skip_all)]
-<a href=#90 id=90 data-nosnippet>90</a>    </span><span class="kw">pub async fn </span>decode(<span class="kw-2">&amp;</span><span class="self">self</span>, base64_encoded_token: <span class="kw-2">&amp;</span>str) -&gt; ServiceResult&lt;DecodedToken&gt; {
-<a href=#91 id=91 data-nosnippet>91</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(decoded_token) = <span class="self">self</span>.jws.decode(base64_encoded_token) {
-<a href=#92 id=92 data-nosnippet>92</a>            <span class="prelude-val">Ok</span>(decoded_token)
-<a href=#93 id=93 data-nosnippet>93</a>        } <span class="kw">else </span>{
-<a href=#94 id=94 data-nosnippet>94</a>            <span class="prelude-val">Err</span>(ServiceError::InvalidJwt)
-<a href=#95 id=95 data-nosnippet>95</a>        }
-<a href=#96 id=96 data-nosnippet>96</a>    }
-<a href=#97 id=97 data-nosnippet>97</a>}
+<a href=#89 id=89 data-nosnippet>89</a>    </span><span class="kw">pub fn </span>decode(<span class="kw-2">&amp;</span><span class="self">self</span>, base64_encoded_token: <span class="kw-2">&amp;</span>str) -&gt; ServiceResult&lt;DecodedToken&gt; {
+<a href=#90 id=90 data-nosnippet>90</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(decoded_token) = <span class="self">self</span>.jws.decode(base64_encoded_token) {
+<a href=#91 id=91 data-nosnippet>91</a>            <span class="prelude-val">Ok</span>(decoded_token)
+<a href=#92 id=92 data-nosnippet>92</a>        } <span class="kw">else </span>{
+<a href=#93 id=93 data-nosnippet>93</a>            <span class="prelude-val">Err</span>(ServiceError::InvalidJwt)
+<a href=#94 id=94 data-nosnippet>94</a>        }
+<a href=#95 id=95 data-nosnippet>95</a>    }
+<a href=#96 id=96 data-nosnippet>96</a>}
 </code></pre></div></section></main></body></html>
