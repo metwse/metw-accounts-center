@@ -9,6 +9,7 @@ use service::{
 };
 use std::time::Duration;
 use tokio::sync::Mutex;
+use tracing::trace;
 
 /// Token repository using Redis.
 pub struct TokenRepoImpl {
@@ -28,6 +29,7 @@ impl TokenRepoImpl {
 
 #[async_trait]
 impl TokenRepo for TokenRepoImpl {
+    #[tracing::instrument(level = "debug", skip_all)]
     async fn check_and_revoke_token(&self, token: &DecodedToken) -> RepoResult<bool> {
         let (is_scope_revoked, is_account_revoked) = tokio::try_join!(
             self.check_scope_revocation(token),
@@ -35,6 +37,8 @@ impl TokenRepo for TokenRepoImpl {
         )?;
 
         if is_scope_revoked || is_account_revoked {
+            trace!("already revoked by scope or account");
+
             return Ok(true);
         }
 
@@ -53,6 +57,7 @@ impl TokenRepo for TokenRepoImpl {
             .await?)
     }
 
+    #[tracing::instrument(level = "debug", skip_all)]
     async fn check_and_revoke_account_tokens_with_scope(
         &self,
         token: &DecodedToken,
@@ -63,6 +68,8 @@ impl TokenRepo for TokenRepoImpl {
         )?;
 
         if is_fingerprint_revoked || is_account_revoked {
+            trace!("already revoked by fingerprint or account");
+
             return Ok(true);
         }
 
@@ -77,6 +84,7 @@ impl TokenRepo for TokenRepoImpl {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip_all)]
     async fn check_and_revoke_account_tokens(&self, token: &DecodedToken) -> RepoResult<bool> {
         let (is_fingerprint_revoked, is_scope_revoked) = tokio::try_join!(
             self.check_fingerprint_revocation(token),
@@ -84,6 +92,8 @@ impl TokenRepo for TokenRepoImpl {
         )?;
 
         if is_fingerprint_revoked || is_scope_revoked {
+            trace!("already revoked by fingerprint or scope");
+
             return Ok(true);
         }
 
@@ -96,6 +106,7 @@ impl TokenRepo for TokenRepoImpl {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip_all)]
     async fn revoke_account_tokens_with_scope(
         &self,
         account_id: AccountId,
@@ -107,6 +118,7 @@ impl TokenRepo for TokenRepoImpl {
             .await
     }
 
+    #[tracing::instrument(level = "debug", skip_all)]
     async fn revoke_account_tokens(
         &self,
         account_id: AccountId,
@@ -117,6 +129,7 @@ impl TokenRepo for TokenRepoImpl {
             .await
     }
 
+    #[tracing::instrument(level = "debug", skip_all)]
     async fn is_revoked(&self, token: &DecodedToken) -> RepoResult<bool> {
         let (is_fingerprint_revoked, is_scope_revoked, is_account_revoked) = tokio::try_join!(
             self.check_fingerprint_revocation(token),

@@ -12,6 +12,7 @@ use service::{
 };
 use std::{net::IpAddr, time::Duration};
 use tokio::sync::Mutex;
+use tracing::trace;
 
 /// Email limiting repository using Redis.
 pub struct EmailLimitingRepoImpl {
@@ -33,6 +34,7 @@ impl EmailLimitingRepoImpl {
 
 #[async_trait]
 impl EmailLimitingRepo for EmailLimitingRepoImpl {
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn check_and_consume_quota(
         &self,
         ip: &IpAddr,
@@ -136,16 +138,24 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
         if block_ip_ttl > 0 || used_ip_quota >= IP_QUOTA {
             Ok(dto::repo::EmailLimitingResult::IpLimited(
                 if used_ip_quota >= IP_QUOTA {
+                    trace!("blocked due to IP quota");
+
                     Duration::from_millis(used_ip_quota_ttl as u64)
                 } else {
+                    trace!("blocked due to IP-timeout");
+
                     Duration::from_millis(block_ip_ttl as u64)
                 },
             ))
         } else if block_email_ttl > 0 || used_email_quota >= EMAIL_QUOTA {
             Ok(dto::repo::EmailLimitingResult::EmailLimited(
                 if used_email_quota >= EMAIL_QUOTA {
+                    trace!("blocked due to email quota");
+
                     Duration::from_millis(used_email_quota_ttl as u64)
                 } else {
+                    trace!("blocked due to email timeout");
+
                     Duration::from_millis(block_email_ttl as u64)
                 },
             ))
@@ -154,6 +164,7 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn refund_ip_quota(&self, ip: &IpAddr, email: &str) -> RepoResult<()> {
         let transaction_con_guard = self.transaction_con_refund_ip_quota.lock().await;
         let con = transaction_con_guard.clone();
@@ -191,6 +202,8 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
                     let pipe = if let Some(block_ip_for) = block_ip_for
                         && block_ip_for == email
                     {
+                        trace!("remote IP timeout");
+
                         pipe.del(&block_ip_key).ignore()
                     } else {
                         pipe
@@ -205,6 +218,7 @@ impl EmailLimitingRepo for EmailLimitingRepoImpl {
         Ok(())
     }
 
+    #[tracing::instrument(level = "debug", skip(self))]
     async fn clear_email_limit(&self, email: &str) -> RepoResult<()> {
         let mut con = self.con.clone();
 

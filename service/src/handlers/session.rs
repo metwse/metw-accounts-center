@@ -19,15 +19,25 @@ pub struct SessionHandler(pub AppState);
 
 impl SessionHandler {
     /// Returns account details.
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(
+        level = "debug",
+        skip(self),
+        fields(username = tracing::field::Empty)
+    )]
     pub async fn me(self, account_id: AccountId) -> HandlerResult<dto::response::Account> {
-        Ok(self.0.account_service.me(account_id).await?)
+        let me = self.0.account_service.me(account_id).await?;
+
+        if let Some(ref username) = me.username {
+            tracing::Span::current().record("username", username);
+        }
+
+        Ok(me)
     }
 
     /// Sends [`ConfirmNewEmail`] to add requested email.
     ///
     /// [`ConfirmNewEmail`]: emails::Template::ConfirmNewEmail
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(level = "debug", skip(self, captcha))]
     pub async fn add_email(
         self,
         account_id: AccountId,
@@ -82,7 +92,7 @@ impl SessionHandler {
     }
 
     /// Removes the email if it is not account's primary email.
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn delete_email(
         self,
         account_id: AccountId,
@@ -103,7 +113,7 @@ impl SessionHandler {
     /// Sends [`ConfirmPrimaryEmailChange`] email to current primary email.
     ///
     /// [`ConfirmPrimaryEmailChange`]: emails::Template::ConfirmPrimaryEmailChange
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(level = "debug", skip(self, captcha))]
     pub async fn set_primary_email(
         self,
         account_id: AccountId,
@@ -169,7 +179,7 @@ impl SessionHandler {
     }
 
     /// Update account password.
-    #[tracing::instrument(skip_all)]
+    #[tracing::instrument(level = "debug", skip(self, change_password_dto))]
     pub async fn change_password(
         &self,
         account_id: AccountId,

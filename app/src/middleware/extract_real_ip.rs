@@ -4,7 +4,7 @@ use std::{net::IpAddr, str::FromStr};
 use tower_governor::key_extractor::KeyExtractor;
 
 /// Extract the remote IP from X-Real-IP header.
-#[tracing::instrument(skip_all)]
+#[tracing::instrument(level = "debug", skip_all)]
 pub async fn extract_real_ip(mut req: Request, next: Next) -> AppMiddlewareResult<Response> {
     let real_ip: IpAddr = match req.headers().get("X-Real-IP") {
         Some(header_value) => header_value

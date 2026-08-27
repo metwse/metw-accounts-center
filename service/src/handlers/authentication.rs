@@ -7,6 +7,7 @@ use crate::{
     util::emails,
 };
 use std::net::IpAddr;
+use tracing::trace;
 use validator::Validate;
 
 /// Gateway handlers for creating accouts or logging into accounts.
@@ -16,13 +17,24 @@ impl AuthenticationHandler {
     /// Verify the session token.
     ///
     /// *This handler is intended for middleware.*
-    #[tracing::instrument(skip_all)]
+    #[tracing::instrument(
+        level = "debug",
+        skip_all,
+        fields(account_id = tracing::field::Empty)
+    )]
     pub async fn auth_session(self, base64_encoded_token: String) -> HandlerResult<AccountId> {
         let token = self.0.token_service.verify(&base64_encoded_token).await?;
 
         if let TokenScope::Session = token.scope {
+            tracing::Span::current().record("account_id", token.sub.to_string());
+
             Ok(token.sub)
         } else {
+            trace!(
+                scope = serde_variant::to_variant_name(&token.scope).unwrap(),
+                "got invalid scope"
+            );
+
             Err(HandlerError::Unauthorized)
         }
     }
@@ -30,7 +42,11 @@ impl AuthenticationHandler {
     /// Verify the pending activation session token.
     ///
     /// *This handler intended is for middleware.*
-    #[tracing::instrument(skip_all)]
+    #[tracing::instrument(
+        level = "debug",
+        skip_all,
+        fields(account_id = tracing::field::Empty)
+    )]
     pub async fn auth_email_verification_session(
         self,
         base64_encoded_token: String,
@@ -38,8 +54,15 @@ impl AuthenticationHandler {
         let token = self.0.token_service.verify(&base64_encoded_token).await?;
 
         if let TokenScope::EmailVerificationSession = token.scope {
+            tracing::Span::current().record("account_id", token.sub.to_string());
+
             Ok(token.sub)
         } else {
+            trace!(
+                scope = serde_variant::to_variant_name(&token.scope).unwrap(),
+                "got invalid scope"
+            );
+
             Err(HandlerError::Unauthorized)
         }
     }
@@ -50,8 +73,14 @@ impl AuthenticationHandler {
     ///
     /// [`ConfirmSignup`]: emails::Template::ConfirmSignup
     #[tracing::instrument(
+        level = "debug",
         skip_all,
-        fields(username = signup_dto.username, email = signup_dto.email, ip = ?ip)
+        fields(
+            username = signup_dto.username,
+            email = signup_dto.email,
+            ip = ?ip,
+            account_id = tracing::field::Empty
+        )
     )]
     pub async fn signup(
         self,
@@ -84,6 +113,8 @@ impl AuthenticationHandler {
             }
         };
 
+        tracing::Span::current().record("account_id", account_id.to_string());
+
         let complete_signup_jwt = self.0.token_service.sign(&Token {
             sub: account_id,
             scope: TokenScope::CompleteSignup {
@@ -111,7 +142,15 @@ impl AuthenticationHandler {
 
     /// Returns a session JWT, with [`TokenScope::Session`] or
     /// [`TokenScope::EmailVerificationSession`] scope.
-    #[tracing::instrument(skip_all, fields(account = ?login_dto.account_identifier))]
+    #[tracing::instrument(
+        level = "debug",
+        skip_all,
+        fields(
+            account_identifier = ?login_dto.account_identifier,
+            account_id = tracing::field::Empty,
+            session_scope = tracing::field::Empty,
+        )
+    )]
     pub async fn login(
         self,
         login_dto: dto::request::Login,
@@ -120,13 +159,17 @@ impl AuthenticationHandler {
 
         let login = self.0.account_service.login(&login_dto).await?;
 
-        tracing::trace!(%login.account_id);
-
         let token_scope = if login.is_email_verified {
             TokenScope::Session
         } else {
             TokenScope::EmailVerificationSession
         };
+
+        tracing::Span::current().record("account_id", login.account_id.to_string());
+        tracing::Span::current().record(
+            "session_scope",
+            serde_variant::to_variant_name(&token_scope).unwrap(),
+        );
 
         Ok(dto::response::Token {
             token: self.0.token_service.sign(&Token {
@@ -137,7 +180,7 @@ impl AuthenticationHandler {
     }
 
     /// Returns KDFs of an account.
-    #[tracing::instrument(skip_all)]
+    #[tracing::instrument(level = "debug", skip_all)]
     pub async fn get_kdf(
         &self,
         account_identifier: dto::request::AccountIdentifier,
@@ -153,10 +196,11 @@ impl AuthenticationHandler {
     ///
     /// Both the session tokens and authorization tokens can be revoked using
     /// this.
+    #[tracing::instrument(level = "debug", skip_all)]
     pub async fn logout(self, token_dto: dto::request::Token) -> HandlerResult<()> {
         self.0
             .token_service
-            .check_and_revoke_token(&self.0.token_service.decode(&token_dto.token).await?)
+            .check_and_revoke_token(&self.0.token_service.decode(&token_dto.token)?)
             .await?;
 
         Ok(())

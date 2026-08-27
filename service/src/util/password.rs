@@ -4,6 +4,7 @@ use argon2::{
 };
 
 /// Argon2-hashed password.
+#[tracing::instrument(level = "debug", skip_all)]
 pub async fn check(password: &str, hash: &str) -> bool {
     let password = password.to_string();
     let hash = hash.to_string();
@@ -22,6 +23,7 @@ pub async fn check(password: &str, hash: &str) -> bool {
 }
 
 /// Do Argon2 hasing on the password.
+#[tracing::instrument(level = "debug", skip_all)]
 pub async fn hash(password: &str) -> String {
     let password = password.to_string();
 

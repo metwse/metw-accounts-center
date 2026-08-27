@@ -22,7 +22,7 @@ fn extract_token(req: &Request) -> Option<String> {
 }
 
 /// Authenticate a login session.
-#[tracing::instrument(skip_all)]
+#[tracing::instrument(level = "debug", skip_all)]
 pub async fn auth_session(
     State(state): State<AppState>,
     mut req: Request,
@@ -46,7 +46,7 @@ pub async fn auth_session(
 }
 
 /// Authenticate the login session before email verification.
-#[tracing::instrument(skip_all)]
+#[tracing::instrument(level = "debug", skip_all)]
 pub async fn auth_email_verification_session(
     State(state): State<AppState>,
     mut req: Request,

@@ -20,6 +20,8 @@ dotenvy = { workspace = true }
 service = { path = "../service/" }
 
 serde = { workspace = true, features = ["derive"] }
+serde_variant = { workspace = true }
+
 envy = { workspace = true }
 
 # Client-specific utilities

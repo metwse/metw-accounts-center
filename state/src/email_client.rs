@@ -31,7 +31,11 @@ impl EmailClientImpl {
 
 #[async_trait]
 impl EmailClient for EmailClientImpl {
-    /// TODO: Log sent emails
+    #[tracing::instrument(
+        level = "debug",
+        skip(self, template),
+        fields(template = serde_variant::to_variant_name(&template).unwrap())
+    )]
     async fn send(&self, email: String, account_id: AccountId, template: emails::Template) {
         let _ = account_id;
 

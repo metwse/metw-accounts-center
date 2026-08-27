@@ -18,17 +18,29 @@ impl CaptchaClientImpl {
 
 #[async_trait]
 impl CaptchaClient for CaptchaClientImpl {
+    #[tracing::instrument(
+        level = "debug",
+        skip_all,
+        fields(captcha_success = tracing::field::Empty)
+    )]
     async fn validate(&self, id: String) -> bool {
-        let Ok(validated) = self
+        let validated = match self
             .client
             .siteverify(SiteVerifyRequest {
                 response: id,
                 ..Default::default()
             })
             .await
-        else {
-            return false;
+        {
+            Ok(validated) => validated,
+            Err(err) => {
+                tracing::error!(?err, "captcha validation error");
+
+                return false;
+            }
         };
+
+        tracing::Span::current().record("captcha_success", validated.success.to_string());
 
         validated.success
     }

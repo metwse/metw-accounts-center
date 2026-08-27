@@ -13,7 +13,11 @@ impl AccountService {
     }
 
     /// Sign up a new account.
-    #[tracing::instrument(skip_all)]
+    #[tracing::instrument(
+        level = "debug",
+        skip_all,
+        fields(account_id = tracing::field::Empty, username = signup_dto.username)
+    )]
     pub async fn signup(&self, signup_dto: &dto::request::Signup) -> ServiceResult<AccountId> {
         let (is_email_taken_res, is_username_taken_rs) = tokio::join!(
             self.repo.is_email_taken(&signup_dto.email),
@@ -58,6 +62,8 @@ impl AccountService {
 
         transaction.commit().await?;
 
+        tracing::Span::current().record("account_id", account_id.to_string());
+
         Ok(account_id)
     }
 
@@ -94,7 +100,11 @@ impl AccountService {
     }
 
     /// Log into the account
-    #[tracing::instrument(skip_all)]
+    #[tracing::instrument(
+        level = "debug",
+        skip_all,
+        fields(account_identifier = ?login_dto.account_identifier)
+    )]
     pub async fn login(
         &self,
         login_dto: &dto::request::Login,
@@ -124,7 +134,7 @@ impl AccountService {
     }
 
     /// Account's key derivation functions.
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn get_kdf(
         &self,
         account_identifier: &dto::request::AccountIdentifier,
@@ -155,7 +165,7 @@ impl AccountService {
     }
 
     /// Fetch the account details.
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn me(&self, account_id: AccountId) -> ServiceResult<dto::response::Account> {
         let (username, username_aliases, email, secondary_emails) = tokio::try_join!(
             self.repo.get_primary_username(account_id),
@@ -176,7 +186,7 @@ impl AccountService {
     }
 
     /// Change account's password.
-    #[tracing::instrument(skip(self, change_password_dto))]
+    #[tracing::instrument(level = "debug", skip(self, change_password_dto))]
     pub async fn change_password(
         &self,
         account_id: AccountId,
@@ -229,7 +239,7 @@ impl AccountService {
     }
 
     /// Remove a secondary email.
-    #[tracing::instrument(skip_all, fields(account_id))]
+    #[tracing::instrument(level = "debug", skip_all, fields(account_id))]
     pub async fn remove_email_if_not_primary(
         &self,
         account_id: AccountId,
@@ -247,7 +257,6 @@ impl AccountService {
     }
 
     /// Returns true if the email has been taken by the given account.
-    #[tracing::instrument(skip_all, fields(account_id))]
     pub async fn is_email_taken_by(
         &self,
         account_id: AccountId,
@@ -257,13 +266,11 @@ impl AccountService {
     }
 
     /// Primary email of the account.
-    #[tracing::instrument(skip(self))]
     pub async fn get_primary_email(&self, account_id: AccountId) -> ServiceResult<Option<String>> {
         Ok(self.repo.get_primary_email(account_id).await?)
     }
 
     /// Primary username of the account.
-    #[tracing::instrument(skip(self))]
     pub async fn get_primary_username(
         &self,
         account_id: AccountId,
@@ -272,7 +279,7 @@ impl AccountService {
     }
 
     /// Add the email as a secondary email to the account.
-    #[tracing::instrument(skip_all, fields(account_id))]
+    #[tracing::instrument(level = "debug", skip_all, fields(account_id))]
     pub async fn auth_add_email(&self, account_id: AccountId, email: &str) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
         transaction
@@ -285,7 +292,7 @@ impl AccountService {
     }
 
     /// Change account's primary email.
-    #[tracing::instrument(skip_all, fields(account_id))]
+    #[tracing::instrument(level = "debug", skip_all, fields(account_id))]
     pub async fn auth_change_primary_email(
         &self,
         account_id: AccountId,
@@ -304,7 +311,7 @@ impl AccountService {
     }
 
     /// Complete signup by adding the email and activating the account.
-    #[tracing::instrument(skip_all, fields(account_id))]
+    #[tracing::instrument(level = "debug", skip_all, fields(account_id))]
     pub async fn auth_complete_signup(
         &self,
         account_id: AccountId,

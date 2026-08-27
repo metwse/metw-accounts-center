@@ -1875,7 +1875,7 @@ dependencies = [
 [[package]]
 name = "metw-server"
 version = "0.0.0"
-source = "git+https://github.com/metwse/metw-backend-crates?rev=bc6ede9698b39bedce65b85c2d9ffad8ef000d53#bc6ede9698b39bedce65b85c2d9ffad8ef000d53"
+source = "git+https://github.com/metwse/metw-backend-crates?rev=7e65f43fd644d64095665ab4289150d77d5d3a60#7e65f43fd644d64095665ab4289150d77d5d3a60"
 dependencies = [
  "axum",
  "http",
@@ -3799,6 +3799,7 @@ dependencies = [
  "metw-id",
  "redis",
  "serde",
+ "serde_variant",
  "service",
  "sqlx",
  "test-log",

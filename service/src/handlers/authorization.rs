@@ -10,16 +10,29 @@ impl AuthorizationHandler {
     /// Handle privileged tokens.
     ///
     /// See [`TokenScope`].
-    #[tracing::instrument(skip_all)]
+    #[tracing::instrument(
+        level = "debug",
+        skip_all,
+        fields(
+            account_id = tracing::field::Empty,
+            token_scope = tracing::field::Empty,
+        )
+    )]
     pub async fn auth(self, token_dto: dto::request::Token, ip: IpAddr) -> HandlerResult<()> {
         let base64_encoded_token = token_dto.token;
 
-        let decoded_token = self.0.token_service.decode(&base64_encoded_token).await?;
+        let decoded_token = self.0.token_service.decode(&base64_encoded_token)?;
 
-        trace!(account_id = %decoded_token.sub, variant = decoded_token.scope.scope_name());
+        tracing::Span::current().record("account_id", decoded_token.sub.to_string());
+        tracing::Span::current().record(
+            "token_scope",
+            serde_variant::to_variant_name(&decoded_token.scope).unwrap(),
+        );
 
         match &decoded_token.scope {
             TokenScope::Session | TokenScope::EmailVerificationSession => {
+                trace!("got session token at authorization endpoint");
+
                 Err(HandlerError::Unauthorized)
             }
 

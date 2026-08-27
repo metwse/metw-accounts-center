@@ -31,7 +31,6 @@ impl MockEmailClientImpl {
 
 #[async_trait]
 impl EmailClient for MockEmailClientImpl {
-    #[tracing::instrument(skip_all)]
     async fn send(&self, _email: String, account_id: AccountId, template: emails::Template) {
         let mut debug = self.emails.lock().await;
 

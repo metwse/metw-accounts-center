@@ -26,7 +26,7 @@ impl EmailVerificationSessionHandler {
     /// Sends a [`ConfirmSignup`] email.
     ///
     /// [`ConfirmSignup`]: emails::Template::ConfirmSignup
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(level = "debug", skip(self, captcha))]
     pub async fn retry_signup(
         self,
         account_id: AccountId,
