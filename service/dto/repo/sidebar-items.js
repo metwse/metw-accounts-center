@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["EmailLimitingResult"],"struct":["OwnedLoginCredentials"]};
+window.SIDEBAR_ITEMS = {"enum":["EmailLimitingResult"],"struct":["OwnedBasicAppInfo","OwnedLoginCredentials"]};
