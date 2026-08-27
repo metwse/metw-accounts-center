@@ -45,6 +45,7 @@ CREATE TABLE account_app_authorizations (
 
     key_encryption_algorithm jsonb NOT NULL,
     master_key_encrypted_key bytea,
+    master_key_id bigint,
 
     CONSTRAINT account_app_authorizations_account_id_app_id_pkey
         PRIMARY KEY (account_id, app_id),
@@ -55,5 +56,8 @@ CREATE TABLE account_app_authorizations (
 
     CONSTRAINT account_app_authorizations_app_id_fk
         FOREIGN KEY (app_id) REFERENCES apps (app_id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT account_app_authorizations_master_key_id_master_key_encrypted_key_both_null_check
+        CHECK ((master_key_id IS NULL) = (master_key_encrypted_key IS NULL))
 );

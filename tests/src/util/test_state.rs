@@ -8,10 +8,12 @@ use service::{
     handlers::{AuthenticationHandler, AuthorizationHandler, HandlerResult},
     id::AccountId,
     repo::{
-        AccountRepo, TokenRepo,
-        mock::{MockAccountRepoImpl, MockEmailLimitingRepoImpl, MockTokenRepoImpl},
+        AccountRepo, AppRepo, TokenRepo,
+        mock::{
+            MockAccountRepoImpl, MockAppRepoImpl, MockEmailLimitingRepoImpl, MockTokenRepoImpl,
+        },
     },
-    service::{AccountService, EmailLimitingService, TokenService},
+    service::{AccountService, AppService, EmailLimitingService, TokenService},
     testutil::{random_email, random_ipv6, random_username},
     util::emails,
 };
@@ -28,6 +30,7 @@ pub struct TestState {
 impl Default for TestState {
     fn default() -> Self {
         let account_service = AccountService::new(MockAccountRepoImpl::boxed_new());
+        let app_service = AppService::new(MockAppRepoImpl::boxed_new());
         let token_service =
             TokenService::new(MockTokenRepoImpl::boxed_new(), b"secret123".to_vec());
         let email_limiting_service =
@@ -40,6 +43,7 @@ impl Default for TestState {
         Self {
             state: AppState {
                 account_service: account_service.into(),
+                app_service: app_service.into(),
                 token_service: token_service.into(),
                 email_limiting_service: email_limiting_service.into(),
                 email_client: (email_client as Box<dyn EmailClient>).into(),
@@ -66,6 +70,13 @@ impl TestState {
     /// Set the account repository.
     pub fn with_account_repo(mut self, account_repo: Box<dyn AccountRepo>) -> Self {
         self.state.account_service = AccountService::new(account_repo).into();
+
+        self
+    }
+
+    /// Set the application repository.
+    pub fn with_app_repo(mut self, app_repo: Box<dyn AppRepo>) -> Self {
+        self.state.app_service = AppService::new(app_repo).into();
 
         self
     }

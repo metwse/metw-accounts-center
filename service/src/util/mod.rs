@@ -10,6 +10,9 @@ pub mod token;
 /// Unique identifier types and the ID generation algorithm.
 pub mod id;
 
+/// Generate and validate client secrets.
+pub mod client_secret;
+
 mod jsonwebsignature;
 
 pub use jsonwebsignature::JsonWebSignature;

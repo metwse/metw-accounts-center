@@ -350,15 +350,17 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
             "INSERT INTO accounts (
                     account_id,
                     client_password_kdf, server_password_hash_algorithm, password_hash,
-                    master_key_kek_kdf, master_key_encryption_algorithm, encrypted_master_key
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+                    master_key_kek_kdf, master_key_encryption_algorithm, encrypted_master_key,
+                    master_key_id
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
             account.account_id as _,
             Json(&account.client_password_kdf) as _,
             Json(&account.server_password_hash_algorithm) as _,
             account.password_hash,
             Json(&account.master_key_kek_kdf) as _,
             Json(&account.master_key_encryption_algorithm) as _,
-            account.encrypted_master_key
+            account.encrypted_master_key,
+            account.master_key_id as _
         )
         .execute(&mut *self.tx)
         .await?;

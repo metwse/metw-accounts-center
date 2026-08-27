@@ -10,6 +10,14 @@ pub struct MockAccountRepoImpl {
     state: Arc<Mutex<AccountRepoState>>,
 }
 
+#[derive(Default)]
+struct AccountRepoState {
+    accounts: HashMap<AccountId, entity::Account>,
+    emails: HashMap<String, entity::Email>,
+    usernames: HashMap<String, entity::Username>,
+    account_flags: HashMap<AccountId, entity::AccountFlags>,
+}
+
 impl MockAccountRepoImpl {
     /// Create a new mock repository.
     pub fn boxed_new() -> Box<Self> {
@@ -279,14 +287,6 @@ impl AccountRepo for MockAccountRepoImpl {
 
         Ok(email_entity.account_id == account_id)
     }
-}
-
-#[derive(Default)]
-struct AccountRepoState {
-    accounts: HashMap<AccountId, entity::Account>,
-    emails: HashMap<String, entity::Email>,
-    usernames: HashMap<String, entity::Username>,
-    account_flags: HashMap<AccountId, entity::AccountFlags>,
 }
 
 struct MockAccountRepoTransactionImpl {

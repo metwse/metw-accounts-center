@@ -12,7 +12,6 @@ CREATE TABLE accounts
     master_key_kek_kdf jsonb NOT NULL,
     master_key_encryption_algorithm jsonb NOT NULL,
     encrypted_master_key bytea,
-
     master_key_id bigint,
 
     -- REF: I-AR-1

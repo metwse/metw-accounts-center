@@ -1,4 +1,7 @@
-use crate::{entity, id::AccountId};
+use crate::{
+    entity,
+    id::{AccountId, AppId},
+};
 use sqlx::prelude::FromRow;
 use std::time::Duration;
 
@@ -15,4 +18,10 @@ pub enum EmailLimitingResult {
     IpLimited(Duration),
     EmailLimited(Duration),
     Allowed,
+}
+
+#[derive(Debug)]
+pub struct OwnedBasicAppInfo {
+    pub app_id: AppId,
+    pub name: String,
 }

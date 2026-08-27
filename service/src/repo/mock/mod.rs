@@ -1,5 +1,7 @@
 mod account;
 
+mod app;
+
 mod token;
 
 mod email_limiting;
@@ -8,6 +10,8 @@ mod email_limiting;
 mod tests;
 
 pub use account::MockAccountRepoImpl;
+
+pub use app::MockAppRepoImpl;
 
 pub use token::MockTokenRepoImpl;
 

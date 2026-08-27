@@ -30,6 +30,10 @@ serde_with = { workspace = true}
 serde_json = { workspace = true }
 serde_variant = { workspace = true }
 
+# for client secret generation
+rand = "0.10"
+sha2 = "0.11"
+
 # encryption/signature utility
 biscuit = "0.8"
 argon2 = "0.5"

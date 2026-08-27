@@ -48,8 +48,9 @@ impl AccountService {
             password_hash: Some(password_hash),
 
             master_key_kek_kdf: entity::ClientPasswordKdf::None,
-            master_key_encryption_algorithm: entity::MasterKeyEncryptionAlgorithm::None,
+            master_key_encryption_algorithm: entity::KeyEncryptionAlgorithm::None,
             encrypted_master_key: None,
+            master_key_id: None,
         };
 
         transaction.insert_account(&account).await?;
