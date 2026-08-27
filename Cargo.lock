@@ -1874,8 +1874,8 @@ dependencies = [
 
 [[package]]
 name = "metw-server"
-version = "0.0.0"
-source = "git+https://github.com/metwse/metw-backend-crates?tag=metw-id-v0.1.0#bc6ede9698b39bedce65b85c2d9ffad8ef000d53"
+version = "0.1.0"
+source = "git+https://github.com/metwse/metw-backend-crates?tag=metw-server-v0.1.0#45872919a6ea1de838027af0b2dfedf73226992a"
 dependencies = [
  "axum",
  "http",
