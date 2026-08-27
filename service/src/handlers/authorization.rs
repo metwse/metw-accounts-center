@@ -26,7 +26,7 @@ impl AuthorizationHandler {
         tracing::Span::current().record("account_id", decoded_token.sub.to_string());
         tracing::Span::current().record(
             "token_scope",
-            serde_variant::to_variant_name(&decoded_token.scope).unwrap(),
+            decoded_token.scope.scope_name(),
         );
 
         match &decoded_token.scope {

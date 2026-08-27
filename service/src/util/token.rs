@@ -82,13 +82,7 @@ pub static SAFE_EXPIRATION_MARGIN: Duration = Duration::from_secs(10);
 impl TokenScope {
     /// Get the scope name.
     pub fn scope_name(&self) -> &'static str {
-        match self {
-            Self::Session => "session",
-            Self::EmailVerificationSession { .. } => "pending-activation-session",
-            Self::AddEmail { .. } => "add-email",
-            Self::ChangePrimaryEmail { .. } => "change-primary-email",
-            Self::CompleteSignup { .. } => "complete-signup",
-        }
+        serde_variant::to_variant_name(&self).unwrap()
     }
 
     /// Duration the token type valid for.

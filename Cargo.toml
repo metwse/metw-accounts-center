@@ -11,7 +11,7 @@ metw-id = {
 metw-server = {
     git = "https://github.com/metwse/metw-backend-crates",
     package = "metw-server",
-    rev = "7e65f43fd644d64095665ab4289150d77d5d3a60",
+    tag = "metw-id-v0.1.0",
 }
 
 # async runtime&utility

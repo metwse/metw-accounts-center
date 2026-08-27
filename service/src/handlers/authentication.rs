@@ -31,7 +31,7 @@ impl AuthenticationHandler {
             Ok(token.sub)
         } else {
             trace!(
-                scope = serde_variant::to_variant_name(&token.scope).unwrap(),
+                scope = token.scope.scope_name(),
                 "got invalid scope"
             );
 
@@ -59,7 +59,7 @@ impl AuthenticationHandler {
             Ok(token.sub)
         } else {
             trace!(
-                scope = serde_variant::to_variant_name(&token.scope).unwrap(),
+                scope = token.scope.scope_name(),
                 "got invalid scope"
             );
 
@@ -168,7 +168,7 @@ impl AuthenticationHandler {
         tracing::Span::current().record("account_id", login.account_id.to_string());
         tracing::Span::current().record(
             "session_scope",
-            serde_variant::to_variant_name(&token_scope).unwrap(),
+            token_scope.scope_name(),
         );
 
         Ok(dto::response::Token {
