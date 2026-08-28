@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT redirect_url FROM app_redirect_urls WHERE app_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "redirect_url",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "app_redirect_urls",
+            "name": "redirect_url"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "00effe91f434f938f31c0f0509609ff552c9951dce2e70d58933479e20316915"
+}

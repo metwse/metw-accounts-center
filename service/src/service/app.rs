@@ -22,7 +22,7 @@ impl AppService {
         &self,
         account_id: AccountId,
         name: String,
-    ) -> ServiceResult<(AppId, String)> {
+    ) -> ServiceResult<dto::service::NewApp> {
         let app_id = AppId::unique();
         let client_secret = client_secret::random_client_secret();
         let client_secret_hash = client_secret::hash_client_secret(&client_secret);
@@ -38,7 +38,10 @@ impl AppService {
         transaction.insert_app(app).await?;
         transaction.commit().await?;
 
-        Ok((app_id, client_secret))
+        Ok(dto::service::NewApp {
+            app_id,
+            client_secret,
+        })
     }
 
     /// Get the list of registered applications.

@@ -21,6 +21,9 @@
 /// Account service tests.
 pub mod account_service;
 
+/// Application service tests.
+pub mod app_service;
+
 /// Token repository tests.
 pub mod token_repo;
 

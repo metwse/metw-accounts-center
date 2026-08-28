@@ -1,4 +1,4 @@
-use crate::id::AccountId;
+use crate::id::{AccountId, AppId};
 
 /// Password verified login.
 ///
@@ -11,4 +11,10 @@ use crate::id::AccountId;
 pub struct Login {
     pub account_id: AccountId,
     pub is_email_verified: bool,
+}
+
+/// Newly created application.
+pub struct NewApp {
+    pub app_id: AppId,
+    pub client_secret: String,
 }
