@@ -135,6 +135,13 @@ pub struct Captcha {
     pub captcha: String,
 }
 
+/// Request for creating a new application.
+#[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
+pub struct CreateApp {
+    #[validate(length(min = 2, max = 32))]
+    pub name: String,
+}
+
 impl Validate for AccountIdentifier {
     fn validate(&self) -> Result<(), validator::ValidationErrors> {
         match self {

@@ -1,7 +1,7 @@
 use super::{HandlerError, HandlerResult};
 use crate::{
     dto,
-    id::AccountId,
+    id::{AccountId, AppId},
     service::ServiceError,
     state::AppState,
     token::{Token, TokenScope},
@@ -193,5 +193,48 @@ impl SessionHandler {
             .await?;
 
         Ok(())
+    }
+
+    /// Gets list of the applications owned by the account.
+    #[tracing::instrument(level = "debug", skip(self))]
+    pub async fn get_my_apps(
+        &self,
+        account_id: AccountId,
+    ) -> HandlerResult<Vec<dto::response::BasicAppInfo>> {
+        let apps = self.0.app_service.get_apps(account_id).await?;
+
+        Ok(apps
+            .into_iter()
+            .map(|app| dto::response::BasicAppInfo {
+                app_id: app.app_id,
+                name: app.name,
+            })
+            .collect())
+    }
+
+    /// Register a new application.
+    #[tracing::instrument(level = "debug", skip(self, captcha))]
+    pub async fn create_app(
+        &self,
+        account_id: AccountId,
+        create_app_dto: dto::request::CreateApp,
+        captcha: dto::request::Captcha,
+    ) -> HandlerResult<dto::response::AppInfo> {
+        create_app_dto.validate()?;
+        if !self.0.captcha_client.validate(captcha.captcha).await {
+            return Err(HandlerError::InvalidCaptcha);
+        }
+
+        let app = self
+            .0
+            .app_service
+            .create_app(account_id, &create_app_dto.name)
+            .await?;
+
+        Ok(dto::response::AppInfo {
+            app_id: app.app_id,
+            name: create_app_dto.name,
+            client_secret: app.client_secret,
+        })
     }
 }

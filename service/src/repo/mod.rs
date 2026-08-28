@@ -229,6 +229,9 @@ pub trait AppRepoTransaction: Send + Sync {
         client_secret_hash: &[u8; 32],
     ) -> RepoResult<()>;
 
+    /// Change name of the application.
+    async fn update_name(&mut self, app_id: AppId, name: &str) -> RepoResult<()>;
+
     /// Deletes the application.
     async fn delete_app(&mut self, app_id: AppId) -> RepoResult<()>;
 

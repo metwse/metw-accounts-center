@@ -21,7 +21,7 @@ impl AppService {
     pub async fn create_app(
         &self,
         account_id: AccountId,
-        name: String,
+        name: &str,
     ) -> ServiceResult<dto::service::NewApp> {
         let app_id = AppId::unique();
         let client_secret = client_secret::random_client_secret();
@@ -30,7 +30,7 @@ impl AppService {
         let app = entity::App {
             app_id,
             owner_account_id: account_id,
-            name,
+            name: name.to_string(),
             client_secret_hash,
         };
 

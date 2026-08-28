@@ -31,7 +31,7 @@ pub mod res;
     nest(
         (path = "/", api = routes::authentication::ApiDoc, tags = ["authentication"]),
         (path = "/", api = routes::authorization::ApiDoc, tags = ["authorization"]),
-        (path = "/me", api = routes::session::ApiDoc, tags = ["session"]),
+        (path = "/", api = routes::session::ApiDoc, tags = ["session"]),
         (path = "/", api = routes::email_verification_session::ApiDoc, tags = ["email_verification_session"])
     )
 )]

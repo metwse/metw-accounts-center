@@ -120,6 +120,18 @@ impl AppRepoTransaction for AppRepoTransactionImpl<'_> {
         Ok(())
     }
 
+    async fn update_name(&mut self, app_id: AppId, name: &str) -> RepoResult<()> {
+        sqlx::query!(
+            "UPDATE apps SET name = $2 WHERE app_id = $1",
+            app_id as _,
+            name
+        )
+        .execute(&mut *self.tx)
+        .await?;
+
+        Ok(())
+    }
+
     async fn delete_app(&mut self, app_id: AppId) -> RepoResult<()> {
         sqlx::query!("DELETE FROM apps WHERE app_id = $1", app_id as _)
             .execute(&mut *self.tx)

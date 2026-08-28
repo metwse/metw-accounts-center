@@ -111,7 +111,14 @@ impl AppRepoTransaction for MockAppRepoTransactionImpl {
         Ok(())
     }
 
-    /// Deletes the application.
+    async fn update_name(&mut self, app_id: AppId, name: &str) -> RepoResult<()> {
+        if let Some(app_entity) = self.state.apps.get_mut(&app_id) {
+            app_entity.name = name.to_owned();
+        }
+
+        Ok(())
+    }
+
     async fn delete_app(&mut self, app_id: AppId) -> RepoResult<()> {
         self.state.apps.remove(&app_id);
         self.state.app_redirect_urls.remove(&app_id);
@@ -136,7 +143,6 @@ impl AppRepoTransaction for MockAppRepoTransactionImpl {
         }
     }
 
-    /// Removes the redirect URL.
     async fn remove_redirect_url(&mut self, app_id: AppId, redirect_url: &str) -> RepoResult<()> {
         let redirect_urls = self.state.app_redirect_urls.entry(app_id).or_default();
 

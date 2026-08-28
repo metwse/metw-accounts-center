@@ -10,14 +10,14 @@ pub async fn create_service_and_check_ownership(ctx: &TestState) -> HandlerResul
     let app1 = ctx
         .state
         .app_service
-        .create_app(account1_id, app1_name.to_string())
+        .create_app(account1_id, app1_name)
         .await?;
 
     let app2_name = random_username();
     let app2 = ctx
         .state
         .app_service
-        .create_app(account2_id, app2_name.to_string())
+        .create_app(account2_id, app2_name)
         .await?;
 
     let account1_apps = ctx.state.app_service.get_apps(account1_id).await?;

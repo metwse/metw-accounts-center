@@ -1,4 +1,7 @@
-use crate::{entity, id::AccountId};
+use crate::{
+    entity,
+    id::{AccountId, AppId},
+};
 use serde::Serialize;
 use utoipa::ToSchema;
 
@@ -30,4 +33,19 @@ pub struct AccountKdf {
 #[derive(Debug, Serialize, ToSchema)]
 pub struct Token {
     pub token: String,
+}
+
+/// Application name and ID.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct BasicAppInfo {
+    pub app_id: AppId,
+    pub name: String,
+}
+
+/// Newly created application.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct AppInfo {
+    pub app_id: AppId,
+    pub name: String,
+    pub client_secret: String,
 }

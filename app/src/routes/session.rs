@@ -19,8 +19,7 @@ use std::{net::IpAddr, time::Duration};
 use utoipa::OpenApi;
 
 #[utoipa::path(
-    get, path = "",
-    security(("session_jwt" = [])),
+    get, path = "me",
     responses(
         (status = OK, body = dto::response::Account)
     )
@@ -33,8 +32,7 @@ async fn me(
 }
 
 #[utoipa::path(
-    post, path = "/emails",
-    security(("session_jwt" = [])),
+    post, path = "me/emails",
     request_body = dto::request::Email,
     params(("captcha" = dto::request::Captcha, Query)),
     responses(
@@ -56,8 +54,7 @@ async fn add_email(
 }
 
 #[utoipa::path(
-    delete, path = "/emails",
-    security(("session_jwt" = [])),
+    delete, path = "me/emails",
     request_body = dto::request::Email,
     responses(
         (status = OK)
@@ -76,8 +73,7 @@ async fn delete_email(
 }
 
 #[utoipa::path(
-    post, path = "/emails/set-primary",
-    security(("session_jwt" = [])),
+    post, path = "me/emails/set-primary",
     request_body = dto::request::Email,
     params(("captcha" = dto::request::Captcha, Query)),
     responses(
@@ -98,7 +94,7 @@ async fn set_primary_email(
 }
 
 #[utoipa::path(
-    post, path = "/change-password",
+    post, path = "me/change-password",
     request_body = dto::request::ChangePassword,
 )]
 async fn change_password(
@@ -113,6 +109,41 @@ async fn change_password(
     ))
 }
 
+#[utoipa::path(
+    get, path = "me/apps",
+    params(("captcha" = dto::request::Captcha, Query)),
+    responses(
+        (status = OK, body = Vec<dto::response::BasicAppInfo>)
+    )
+)]
+async fn get_apps(
+    State(state): State<AppState>,
+    Extension(account_id): Extension<AccountId>,
+) -> AppResult<Vec<dto::response::BasicAppInfo>> {
+    Ok(AppJson(
+        SessionHandler(state).get_my_apps(account_id).await?,
+    ))
+}
+
+#[utoipa::path(
+    post, path = "me/apps",
+    responses(
+        (status = OK, body = dto::response::AppInfo)
+    )
+)]
+async fn create_app(
+    State(state): State<AppState>,
+    Extension(account_id): Extension<AccountId>,
+    AppQuery(captcha): AppQuery<dto::request::Captcha>,
+    AppJson(create_app_dto): AppJson<dto::request::CreateApp>,
+) -> AppResult<dto::response::AppInfo> {
+    Ok(AppJson(
+        SessionHandler(state)
+            .create_app(account_id, create_app_dto, captcha)
+            .await?,
+    ))
+}
+
 pub fn routes(state: AppState) -> Router {
     Router::new()
         .route("/me", get(me))
@@ -120,6 +151,8 @@ pub fn routes(state: AppState) -> Router {
         .route("/me/emails", delete(delete_email))
         .route("/me/emails/set-primary", post(set_primary_email))
         .route("/me/change-password", post(change_password))
+        .route("/me/apps", get(get_apps))
+        .route("/me/apps", post(create_app))
         .layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
             5,
             Duration::from_secs(5),
@@ -134,11 +167,14 @@ pub fn routes(state: AppState) -> Router {
 
 #[derive(OpenApi)]
 #[openapi(
-    paths(me, add_email, delete_email, set_primary_email, change_password),
+    paths(me, add_email, delete_email, set_primary_email, change_password, get_apps, create_app),
     components(schemas(
         dto::response::Account,
+        dto::response::BasicAppInfo,
+        dto::response::AppInfo,
         dto::request::Email,
-        dto::request::ChangePassword
+        dto::request::ChangePassword,
+        dto::request::CreateApp,
     )),
     modifiers(&ApiDocAuthAddon),
     security(("session_jwt" = []))
