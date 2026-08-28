@@ -5,7 +5,6 @@ use service::{
     repo::{AppRepo, AppRepoTransaction, RepoResult},
 };
 use sqlx::{PgPool, PgTransaction};
-use tracing::trace;
 
 /// Application repository using PostgreSQL.
 pub struct AppRepoImpl {
@@ -55,18 +54,16 @@ impl AppRepo for AppRepoImpl {
 
     async fn is_app_owned_by(&self, account_id: AccountId, app_id: AppId) -> RepoResult<bool> {
         let is_app_owned_by = sqlx::query_scalar!(
-            r"SELECT EXISTS(SELECT 1 FROM apps WHERE owner_account_id = $1 AND app_id = $2)",
+            r#"SELECT EXISTS(
+                    SELECT 1 FROM apps WHERE owner_account_id = $1 AND app_id = $2
+                ) AS "exists!""#,
             account_id as _,
             app_id as _
         )
         .fetch_one(&self.pool)
         .await?;
 
-        if is_app_owned_by.is_none() {
-            trace!(?app_id, "app does not exists");
-        }
-
-        Ok(is_app_owned_by.unwrap_or(false))
+        Ok(is_app_owned_by)
     }
 }
 

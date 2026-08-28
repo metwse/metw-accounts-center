@@ -106,11 +106,9 @@ impl AppRepoTransaction for MockAppRepoTransactionImpl {
     ) -> RepoResult<()> {
         if let Some(app_entity) = self.state.apps.get_mut(&app_id) {
             app_entity.client_secret_hash = client_secret_hash.to_owned();
-
-            Ok(())
-        } else {
-            Err(RepoError::Internal("application does not exists"))
         }
+
+        Ok(())
     }
 
     /// Deletes the application.
