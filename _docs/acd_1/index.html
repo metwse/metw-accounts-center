@@ -16,7 +16,7 @@ compare-and-swap / test-and-set.</li>
 </ul>
 <div class="table"><table><thead><tr><th>Function Example</th><th>Type</th><th>Description</th></tr></thead><tbody>
 <tr><td><a href="../../service/repo/trait.AccountRepo.html#tymethod.get_primary_email" title="method service::repo::AccountRepo::get_primary_email"><code>get_primary_email</code></a></td><td>read</td><td>Gets primary email of the account.</td></tr>
-<tr><td><a href="../../service/repo/trait.AccountRepo.html#tymethod.set_primary_email_if_current_is" title="method service::repo::AccountRepo::set_primary_email_if_current_is"><code>set_primary_email_if_current_is</code></a></td><td>compare-and-swap</td><td>If the provided primary email is still the current primary email, changes the email.</td></tr>
+<tr><td><a href="service::repo::AccountRepo::set_primary_email_if_current_is"><code>set_primary_email_if_current_is</code></a></td><td>compare-and-swap</td><td>If the provided primary email is still the current primary email, changes the email.</td></tr>
 </tbody></table>
 </div>
 <ul>
@@ -24,7 +24,7 @@ compare-and-swap / test-and-set.</li>
 operation must reside within a transaction.</li>
 </ul>
 <div class="table"><table><thead><tr><th>Function Example</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><a href="../../service/repo/trait.AccountRepoTransaction.html#tymethod.insert_account" title="method service::repo::AccountRepoTransaction::insert_account"><code>insert_account</code></a></td><td>insert</td><td>Inserts a new user.</td></tr>
+<tr><td><a href="service::repo::AccountRepoTransaction::insert_account"><code>insert_account</code></a></td><td>insert</td><td>Inserts a new user.</td></tr>
 <tr><td><a href="../../service/repo/trait.AccountRepoTransaction.html#tymethod.insert_default_flags" title="method service::repo::AccountRepoTransaction::insert_default_flags"><code>insert_default_flags</code></a></td><td>insert</td><td>Inserts default user flags.</td></tr>
 </tbody></table>
 </div>
@@ -52,7 +52,7 @@ units of work.</p>
 variants of <a href="../../service/service/error/enum.ServiceError.html" title="enum service::service::error::ServiceError"><code>ServiceError</code></a>. Low-level database infrastructure failures
 bypass specific mappings and propagate as generic errors.</li>
 </ul>
-<p>As an example, error conditions in <a href="../../service/service/account/struct.AccountService.html#method.signup" title="method service::service::account::AccountService::signup"><code>AccountService::signup</code></a> are:</p>
+<p>As an example, error conditions in <a href="service::service::AccountService::signup"><code>AccountService::signup</code></a> are:</p>
 <div class="table"><table><thead><tr><th>Condition</th><th>Error Type</th></tr></thead><tbody>
 <tr><td>Username is already taken</td><td><a href="../../service/service/error/enum.ServiceError.html#variant.UsernameTaken" title="variant service::service::error::ServiceError::UsernameTaken"><code>ServiceError::UsernameTaken</code></a></td></tr>
 <tr><td>Email is already taken</td><td><a href="../../service/service/error/enum.ServiceError.html#variant.EmailTaken" title="variant service::service::error::ServiceError::EmailTaken"><code>ServiceError::EmailTaken</code></a></td></tr>

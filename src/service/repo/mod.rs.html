@@ -125,15 +125,15 @@
 <a href=#125 id=125 data-nosnippet>125</a>    /// owner of an email would change at the exact moment their email is being
 <a href=#126 id=126 data-nosnippet>126</a>    /// set as the primary email, but it is still a safety hazard that must
 <a href=#127 id=127 data-nosnippet>127</a>    /// still be prevented.
-<a href=#128 id=128 data-nosnippet>128</a>    </span><span class="kw">async fn </span>set_primary_email_if_current_is(
+<a href=#128 id=128 data-nosnippet>128</a>    </span><span class="kw">async fn </span>compare_and_set_primary_email(
 <a href=#129 id=129 data-nosnippet>129</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#130 id=130 data-nosnippet>130</a>        account_id: AccountId,
-<a href=#131 id=131 data-nosnippet>131</a>        current_primary_email: <span class="kw-2">&amp;</span>str,
+<a href=#131 id=131 data-nosnippet>131</a>        expected_primary_email: <span class="kw-2">&amp;</span>str,
 <a href=#132 id=132 data-nosnippet>132</a>        new_primary_email: <span class="kw-2">&amp;</span>str,
 <a href=#133 id=133 data-nosnippet>133</a>    ) -&gt; RepoResult&lt;bool&gt;;
 <a href=#134 id=134 data-nosnippet>134</a>
 <a href=#135 id=135 data-nosnippet>135</a>    <span class="doccomment">/// Remove the email if it is not primary email of the account.
-<a href=#136 id=136 data-nosnippet>136</a>    </span><span class="kw">async fn </span>remove_email_if_not_primary(
+<a href=#136 id=136 data-nosnippet>136</a>    </span><span class="kw">async fn </span>delete_email_if_not_primary(
 <a href=#137 id=137 data-nosnippet>137</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#138 id=138 data-nosnippet>138</a>        account_id: AccountId,
 <a href=#139 id=139 data-nosnippet>139</a>        email: <span class="kw-2">&amp;</span>str,
@@ -146,7 +146,7 @@
 <a href=#146 id=146 data-nosnippet>146</a>    </span><span class="kw">async fn </span>is_email_taken(<span class="kw-2">&amp;</span><span class="self">self</span>, email: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;bool&gt;;
 <a href=#147 id=147 data-nosnippet>147</a>
 <a href=#148 id=148 data-nosnippet>148</a>    <span class="doccomment">/// Returns true if the email has been taken by the given account.
-<a href=#149 id=149 data-nosnippet>149</a>    </span><span class="kw">async fn </span>is_email_taken_by(<span class="kw-2">&amp;</span><span class="self">self</span>, account_id: AccountId, email: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;bool&gt;;
+<a href=#149 id=149 data-nosnippet>149</a>    </span><span class="kw">async fn </span>is_email_owned_by(<span class="kw-2">&amp;</span><span class="self">self</span>, account_id: AccountId, email: <span class="kw-2">&amp;</span>str) -&gt; RepoResult&lt;bool&gt;;
 <a href=#150 id=150 data-nosnippet>150</a>}
 <a href=#151 id=151 data-nosnippet>151</a>
 <a href=#152 id=152 data-nosnippet>152</a><span class="doccomment">/// Transactional account repository access wrapper.
@@ -156,13 +156,13 @@
 <a href=#156 id=156 data-nosnippet>156</a>    </span><span class="kw">async fn </span>commit(<span class="self">self</span>: Box&lt;<span class="self">Self</span>&gt;) -&gt; RepoResult&lt;()&gt;;
 <a href=#157 id=157 data-nosnippet>157</a>
 <a href=#158 id=158 data-nosnippet>158</a>    <span class="doccomment">/// Register a new account.
-<a href=#159 id=159 data-nosnippet>159</a>    </span><span class="kw">async fn </span>insert_account(<span class="kw-2">&amp;mut </span><span class="self">self</span>, account: <span class="kw-2">&amp;</span>entity::Account) -&gt; RepoResult&lt;()&gt;;
+<a href=#159 id=159 data-nosnippet>159</a>    </span><span class="kw">async fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, account_entity: <span class="kw-2">&amp;</span>entity::Account) -&gt; RepoResult&lt;()&gt;;
 <a href=#160 id=160 data-nosnippet>160</a>
 <a href=#161 id=161 data-nosnippet>161</a>    <span class="doccomment">/// Load default flags to user.
 <a href=#162 id=162 data-nosnippet>162</a>    </span><span class="kw">async fn </span>insert_default_flags(<span class="kw-2">&amp;mut </span><span class="self">self</span>, account_id: AccountId) -&gt; RepoResult&lt;()&gt;;
 <a href=#163 id=163 data-nosnippet>163</a>
 <a href=#164 id=164 data-nosnippet>164</a>    <span class="doccomment">/// Add a secondary email to the account.
-<a href=#165 id=165 data-nosnippet>165</a>    </span><span class="kw">async fn </span>add_email(
+<a href=#165 id=165 data-nosnippet>165</a>    </span><span class="kw">async fn </span>insert_email(
 <a href=#166 id=166 data-nosnippet>166</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#167 id=167 data-nosnippet>167</a>        account_id: AccountId,
 <a href=#168 id=168 data-nosnippet>168</a>        email: <span class="kw-2">&amp;</span>str,
@@ -170,7 +170,7 @@
 <a href=#170 id=170 data-nosnippet>170</a>    ) -&gt; RepoResult&lt;()&gt;;
 <a href=#171 id=171 data-nosnippet>171</a>
 <a href=#172 id=172 data-nosnippet>172</a>    <span class="doccomment">/// Add username alias to the account.
-<a href=#173 id=173 data-nosnippet>173</a>    </span><span class="kw">async fn </span>add_username(
+<a href=#173 id=173 data-nosnippet>173</a>    </span><span class="kw">async fn </span>insert_username(
 <a href=#174 id=174 data-nosnippet>174</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#175 id=175 data-nosnippet>175</a>        account_id: AccountId,
 <a href=#176 id=176 data-nosnippet>176</a>        username: <span class="kw-2">&amp;</span>str,
@@ -178,14 +178,14 @@
 <a href=#178 id=178 data-nosnippet>178</a>    ) -&gt; RepoResult&lt;()&gt;;
 <a href=#179 id=179 data-nosnippet>179</a>
 <a href=#180 id=180 data-nosnippet>180</a>    <span class="doccomment">/// Set the is email verified flag of the account.
-<a href=#181 id=181 data-nosnippet>181</a>    </span><span class="kw">async fn </span>set_is_email_verified_flag(
+<a href=#181 id=181 data-nosnippet>181</a>    </span><span class="kw">async fn </span>set_email_verified_flag(
 <a href=#182 id=182 data-nosnippet>182</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#183 id=183 data-nosnippet>183</a>        account_id: AccountId,
 <a href=#184 id=184 data-nosnippet>184</a>        is_email_verified: bool,
 <a href=#185 id=185 data-nosnippet>185</a>    ) -&gt; RepoResult&lt;()&gt;;
 <a href=#186 id=186 data-nosnippet>186</a>
 <a href=#187 id=187 data-nosnippet>187</a>    <span class="doccomment">/// Change account password.
-<a href=#188 id=188 data-nosnippet>188</a>    </span><span class="kw">async fn </span>change_password(
+<a href=#188 id=188 data-nosnippet>188</a>    </span><span class="kw">async fn </span>set_password_credentials(
 <a href=#189 id=189 data-nosnippet>189</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#190 id=190 data-nosnippet>190</a>        account_id: AccountId,
 <a href=#191 id=191 data-nosnippet>191</a>        password_hash: <span class="kw-2">&amp;</span>str,

@@ -10,7 +10,7 @@
 <a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span>tracing::trace;
 <a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span>validator::Validate;
 <a href=#12 id=12 data-nosnippet>12</a>
-<a href=#13 id=13 data-nosnippet>13</a><span class="doccomment">/// Gateway handlers for creating accouts or logging into accounts.
+<a href=#13 id=13 data-nosnippet>13</a><span class="doccomment">/// Gateway handlers for creating accounts or logging into accounts.
 <a href=#14 id=14 data-nosnippet>14</a></span><span class="kw">pub struct </span>AuthenticationHandler(<span class="kw">pub </span>AppState);
 <a href=#15 id=15 data-nosnippet>15</a>
 <a href=#16 id=16 data-nosnippet>16</a><span class="kw">impl </span>AuthenticationHandler {
@@ -95,7 +95,7 @@
 <a href=#95 id=95 data-nosnippet>95</a>            .check_and_consume_quota(<span class="kw-2">&amp;</span>ip, <span class="kw-2">&amp;</span>email)
 <a href=#96 id=96 data-nosnippet>96</a>            .<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#97 id=97 data-nosnippet>97</a>
-<a href=#98 id=98 data-nosnippet>98</a>        <span class="kw">let </span>account_id = <span class="kw">match </span><span class="self">self</span>.<span class="number">0</span>.account_service.signup(<span class="kw-2">&amp;</span>signup_dto).<span class="kw">await </span>{
+<a href=#98 id=98 data-nosnippet>98</a>        <span class="kw">let </span>account_id = <span class="kw">match </span><span class="self">self</span>.<span class="number">0</span>.account_service.create(<span class="kw-2">&amp;</span>signup_dto).<span class="kw">await </span>{
 <a href=#99 id=99 data-nosnippet>99</a>            <span class="prelude-val">Ok</span>(account_id) =&gt; account_id,
 <a href=#100 id=100 data-nosnippet>100</a>            <span class="prelude-val">Err</span>(err) =&gt; {
 <a href=#101 id=101 data-nosnippet>101</a>                <span class="self">self</span>.<span class="number">0
@@ -151,7 +151,7 @@
 <a href=#151 id=151 data-nosnippet>151</a>    ) -&gt; HandlerResult&lt;dto::response::Token&gt; {
 <a href=#152 id=152 data-nosnippet>152</a>        login_dto.validate()<span class="question-mark">?</span>;
 <a href=#153 id=153 data-nosnippet>153</a>
-<a href=#154 id=154 data-nosnippet>154</a>        <span class="kw">let </span>login = <span class="self">self</span>.<span class="number">0</span>.account_service.login(<span class="kw-2">&amp;</span>login_dto).<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#154 id=154 data-nosnippet>154</a>        <span class="kw">let </span>login = <span class="self">self</span>.<span class="number">0</span>.account_service.verify_login(<span class="kw-2">&amp;</span>login_dto).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#155 id=155 data-nosnippet>155</a>
 <a href=#156 id=156 data-nosnippet>156</a>        <span class="kw">let </span>token_scope = <span class="kw">if </span>login.is_email_verified {
 <a href=#157 id=157 data-nosnippet>157</a>            TokenScope::Session
@@ -172,29 +172,33 @@
 <a href=#172 id=172 data-nosnippet>172</a>
 <a href=#173 id=173 data-nosnippet>173</a>    <span class="doccomment">/// Returns KDFs of an account.
 <a href=#174 id=174 data-nosnippet>174</a>    </span><span class="attr">#[tracing::instrument(level = <span class="string">"debug"</span>, skip_all)]
-<a href=#175 id=175 data-nosnippet>175</a>    </span><span class="kw">pub async fn </span>get_kdf(
+<a href=#175 id=175 data-nosnippet>175</a>    </span><span class="kw">pub async fn </span>get_client_password_kdf(
 <a href=#176 id=176 data-nosnippet>176</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#177 id=177 data-nosnippet>177</a>        account_identifier: dto::request::AccountIdentifier,
 <a href=#178 id=178 data-nosnippet>178</a>    ) -&gt; HandlerResult&lt;dto::response::AccountKdf&gt; {
 <a href=#179 id=179 data-nosnippet>179</a>        account_identifier.validate()<span class="question-mark">?</span>;
 <a href=#180 id=180 data-nosnippet>180</a>
-<a href=#181 id=181 data-nosnippet>181</a>        <span class="kw">let </span>kdf = <span class="self">self</span>.<span class="number">0</span>.account_service.get_kdf(<span class="kw-2">&amp;</span>account_identifier).<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#182 id=182 data-nosnippet>182</a>
-<a href=#183 id=183 data-nosnippet>183</a>        <span class="prelude-val">Ok</span>(kdf)
-<a href=#184 id=184 data-nosnippet>184</a>    }
-<a href=#185 id=185 data-nosnippet>185</a>
-<a href=#186 id=186 data-nosnippet>186</a>    <span class="doccomment">/// Revokes the JWT.
-<a href=#187 id=187 data-nosnippet>187</a>    ///
-<a href=#188 id=188 data-nosnippet>188</a>    /// Both the session tokens and authorization tokens can be revoked using
-<a href=#189 id=189 data-nosnippet>189</a>    /// this.
-<a href=#190 id=190 data-nosnippet>190</a>    </span><span class="attr">#[tracing::instrument(level = <span class="string">"debug"</span>, skip_all)]
-<a href=#191 id=191 data-nosnippet>191</a>    </span><span class="kw">pub async fn </span>logout(<span class="self">self</span>, token_dto: dto::request::Token) -&gt; HandlerResult&lt;()&gt; {
-<a href=#192 id=192 data-nosnippet>192</a>        <span class="self">self</span>.<span class="number">0
-<a href=#193 id=193 data-nosnippet>193</a>            </span>.token_service
-<a href=#194 id=194 data-nosnippet>194</a>            .check_and_revoke_token(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.token_service.decode(<span class="kw-2">&amp;</span>token_dto.token)<span class="question-mark">?</span>)
-<a href=#195 id=195 data-nosnippet>195</a>            .<span class="kw">await</span><span class="question-mark">?</span>;
-<a href=#196 id=196 data-nosnippet>196</a>
-<a href=#197 id=197 data-nosnippet>197</a>        <span class="prelude-val">Ok</span>(())
-<a href=#198 id=198 data-nosnippet>198</a>    }
-<a href=#199 id=199 data-nosnippet>199</a>}
+<a href=#181 id=181 data-nosnippet>181</a>        <span class="kw">let </span>kdf = <span class="self">self
+<a href=#182 id=182 data-nosnippet>182</a>            </span>.<span class="number">0
+<a href=#183 id=183 data-nosnippet>183</a>            </span>.account_service
+<a href=#184 id=184 data-nosnippet>184</a>            .get_client_password_kdf(<span class="kw-2">&amp;</span>account_identifier)
+<a href=#185 id=185 data-nosnippet>185</a>            .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#186 id=186 data-nosnippet>186</a>
+<a href=#187 id=187 data-nosnippet>187</a>        <span class="prelude-val">Ok</span>(kdf)
+<a href=#188 id=188 data-nosnippet>188</a>    }
+<a href=#189 id=189 data-nosnippet>189</a>
+<a href=#190 id=190 data-nosnippet>190</a>    <span class="doccomment">/// Revokes the JWT.
+<a href=#191 id=191 data-nosnippet>191</a>    ///
+<a href=#192 id=192 data-nosnippet>192</a>    /// Both the session tokens and authorization tokens can be revoked using
+<a href=#193 id=193 data-nosnippet>193</a>    /// this.
+<a href=#194 id=194 data-nosnippet>194</a>    </span><span class="attr">#[tracing::instrument(level = <span class="string">"debug"</span>, skip_all)]
+<a href=#195 id=195 data-nosnippet>195</a>    </span><span class="kw">pub async fn </span>logout(<span class="self">self</span>, token_dto: dto::request::Token) -&gt; HandlerResult&lt;()&gt; {
+<a href=#196 id=196 data-nosnippet>196</a>        <span class="self">self</span>.<span class="number">0
+<a href=#197 id=197 data-nosnippet>197</a>            </span>.token_service
+<a href=#198 id=198 data-nosnippet>198</a>            .check_and_revoke_token(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.token_service.decode(<span class="kw-2">&amp;</span>token_dto.token)<span class="question-mark">?</span>)
+<a href=#199 id=199 data-nosnippet>199</a>            .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#200 id=200 data-nosnippet>200</a>
+<a href=#201 id=201 data-nosnippet>201</a>        <span class="prelude-val">Ok</span>(())
+<a href=#202 id=202 data-nosnippet>202</a>    }
+<a href=#203 id=203 data-nosnippet>203</a>}
 </code></pre></div></section></main></body></html>

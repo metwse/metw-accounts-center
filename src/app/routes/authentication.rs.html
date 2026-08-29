@@ -59,13 +59,13 @@
 <a href=#59 id=59 data-nosnippet>59</a>    ),
 <a href=#60 id=60 data-nosnippet>60</a>    params((<span class="string">"account_identifier" </span>= dto::request::AccountIdentifier, Path))
 <a href=#61 id=61 data-nosnippet>61</a>)]
-<a href=#62 id=62 data-nosnippet>62</a></span><span class="kw">async fn </span>get_kdf(
+<a href=#62 id=62 data-nosnippet>62</a></span><span class="kw">async fn </span>get_client_password_kdf(
 <a href=#63 id=63 data-nosnippet>63</a>    State(state): State&lt;AppState&gt;,
 <a href=#64 id=64 data-nosnippet>64</a>    Path(account_identifier): Path&lt;dto::request::AccountIdentifier&gt;,
 <a href=#65 id=65 data-nosnippet>65</a>) -&gt; AppResult&lt;dto::response::AccountKdf&gt; {
 <a href=#66 id=66 data-nosnippet>66</a>    <span class="prelude-val">Ok</span>(AppJson(
 <a href=#67 id=67 data-nosnippet>67</a>        AuthenticationHandler(state)
-<a href=#68 id=68 data-nosnippet>68</a>            .get_kdf(account_identifier)
+<a href=#68 id=68 data-nosnippet>68</a>            .get_client_password_kdf(account_identifier)
 <a href=#69 id=69 data-nosnippet>69</a>            .<span class="kw">await</span><span class="question-mark">?</span>,
 <a href=#70 id=70 data-nosnippet>70</a>    ))
 <a href=#71 id=71 data-nosnippet>71</a>}
@@ -91,22 +91,25 @@
 <a href=#91 id=91 data-nosnippet>91</a>    </span>Router::new()
 <a href=#92 id=92 data-nosnippet>92</a>        .route(<span class="string">"/signup"</span>, post(signup))
 <a href=#93 id=93 data-nosnippet>93</a>        .route(<span class="string">"/login"</span>, post(login))
-<a href=#94 id=94 data-nosnippet>94</a>        .route(<span class="string">"/login/{account_identifier}/kdf"</span>, get(get_kdf))
-<a href=#95 id=95 data-nosnippet>95</a>        .route(<span class="string">"/logout"</span>, post(logout))
-<a href=#96 id=96 data-nosnippet>96</a>        .layer(basic::&lt;GovernorIpKeyExtractor&gt;(<span class="number">5</span>, Duration::from_secs(<span class="number">5</span>)))
-<a href=#97 id=97 data-nosnippet>97</a>        .with_state(state.clone())
-<a href=#98 id=98 data-nosnippet>98</a>}
-<a href=#99 id=99 data-nosnippet>99</a>
-<a href=#100 id=100 data-nosnippet>100</a><span class="attr">#[derive(OpenApi)]
-<a href=#101 id=101 data-nosnippet>101</a>#[openapi(
-<a href=#102 id=102 data-nosnippet>102</a>    paths(signup, login, get_kdf, logout),
-<a href=#103 id=103 data-nosnippet>103</a>    components(schemas(
-<a href=#104 id=104 data-nosnippet>104</a>        dto::request::Login,
-<a href=#105 id=105 data-nosnippet>105</a>        dto::request::Token,
-<a href=#106 id=106 data-nosnippet>106</a>        dto::request::Captcha,
-<a href=#107 id=107 data-nosnippet>107</a>        dto::request::AccountIdentifier,
-<a href=#108 id=108 data-nosnippet>108</a>        dto::request::Signup
-<a href=#109 id=109 data-nosnippet>109</a>    ))
-<a href=#110 id=110 data-nosnippet>110</a>)]
-<a href=#111 id=111 data-nosnippet>111</a></span><span class="kw">pub struct </span>ApiDoc;
+<a href=#94 id=94 data-nosnippet>94</a>        .route(
+<a href=#95 id=95 data-nosnippet>95</a>            <span class="string">"/login/{account_identifier}/kdf"</span>,
+<a href=#96 id=96 data-nosnippet>96</a>            get(get_client_password_kdf),
+<a href=#97 id=97 data-nosnippet>97</a>        )
+<a href=#98 id=98 data-nosnippet>98</a>        .route(<span class="string">"/logout"</span>, post(logout))
+<a href=#99 id=99 data-nosnippet>99</a>        .layer(basic::&lt;GovernorIpKeyExtractor&gt;(<span class="number">5</span>, Duration::from_secs(<span class="number">5</span>)))
+<a href=#100 id=100 data-nosnippet>100</a>        .with_state(state.clone())
+<a href=#101 id=101 data-nosnippet>101</a>}
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a><span class="attr">#[derive(OpenApi)]
+<a href=#104 id=104 data-nosnippet>104</a>#[openapi(
+<a href=#105 id=105 data-nosnippet>105</a>    paths(signup, login, get_client_password_kdf, logout),
+<a href=#106 id=106 data-nosnippet>106</a>    components(schemas(
+<a href=#107 id=107 data-nosnippet>107</a>        dto::request::Login,
+<a href=#108 id=108 data-nosnippet>108</a>        dto::request::Token,
+<a href=#109 id=109 data-nosnippet>109</a>        dto::request::Captcha,
+<a href=#110 id=110 data-nosnippet>110</a>        dto::request::AccountIdentifier,
+<a href=#111 id=111 data-nosnippet>111</a>        dto::request::Signup
+<a href=#112 id=112 data-nosnippet>112</a>    ))
+<a href=#113 id=113 data-nosnippet>113</a>)]
+<a href=#114 id=114 data-nosnippet>114</a></span><span class="kw">pub struct </span>ApiDoc;
 </code></pre></div></section></main></body></html>
