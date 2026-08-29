@@ -1,14 +1,15 @@
 use crate::res::AppMiddlewareResult;
 use axum::{
-    extract::{Request, State},
+    Extension,
+    extract::{Path, Request, State},
     http::header,
     middleware::Next,
     response::Response,
 };
 use service::{
     AppState,
-    handlers::{AuthenticationHandler, HandlerError},
-    id::AccountId,
+    handlers::{AppManagementHandler, AuthenticationHandler, HandlerError},
+    id::{AccountId, AppId},
 };
 use tower_governor::key_extractor::KeyExtractor;
 use utoipa::{Modify, openapi};
@@ -66,6 +67,28 @@ pub async fn auth_email_verification_session(
             Ok(next.run(req).await)
         }
         Err(_) => Err(HandlerError::Unauthorized)?,
+    }
+}
+
+/// Authenticate the login session before email verification.
+#[tracing::instrument(level = "debug", skip_all)]
+pub async fn auth_app_owership(
+    State(state): State<AppState>,
+    Extension(account_id): Extension<AccountId>,
+    Path(app_id): Path<AppId>,
+    mut req: Request,
+    next: Next,
+) -> AppMiddlewareResult<Response> {
+    if AppManagementHandler(state)
+        .auth_app_ownership(account_id, app_id)
+        .await
+        .is_ok()
+    {
+        req.extensions_mut().insert(app_id);
+
+        Ok(next.run(req).await)
+    } else {
+        Err(HandlerError::Unauthorized)?
     }
 }
 

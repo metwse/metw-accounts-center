@@ -31,8 +31,9 @@ pub mod res;
     nest(
         (path = "/", api = routes::authentication::ApiDoc, tags = ["authentication"]),
         (path = "/", api = routes::authorization::ApiDoc, tags = ["authorization"]),
+        (path = "/", api = routes::app_management::ApiDoc, tags = ["app_management"]),
         (path = "/", api = routes::session::ApiDoc, tags = ["session"]),
-        (path = "/", api = routes::email_verification_session::ApiDoc, tags = ["email_verification_session"])
+        (path = "/", api = routes::email_verification_session::ApiDoc, tags = ["email_verification_session"]),
     )
 )]
 pub struct ApiDoc;
@@ -74,6 +75,7 @@ pub fn app(state: AppState) -> Router {
         .with_state(state.clone())
         .merge(routes::authentication::routes(state.clone()))
         .merge(routes::authorization::routes(state.clone()))
+        .merge(routes::app_management::routes(state.clone()))
         .merge(routes::email_verification_session::routes(state.clone()))
         .merge(routes::session::routes(state))
         .route_layer(axum::middleware::from_fn(

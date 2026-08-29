@@ -75,6 +75,15 @@ impl AppService {
         Ok(client_secret)
     }
 
+    /// Rename the application.
+    pub async fn rename_app(&self, app_id: AppId, name: &str) -> ServiceResult<()> {
+        let mut transaction = self.repo.begin_transaction().await?;
+        transaction.update_name(app_id, name).await?;
+        transaction.commit().await?;
+
+        Ok(())
+    }
+
     /// Delete the application.
     pub async fn delete_app(&self, app_id: AppId) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
@@ -93,7 +102,7 @@ impl AppService {
         Ok(())
     }
 
-    /// Remove an redirect URL.
+    /// Remove a redirect URL.
     pub async fn remove_redirect_url(
         &self,
         app_id: AppId,

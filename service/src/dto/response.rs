@@ -49,3 +49,9 @@ pub struct AppInfo {
     pub name: String,
     pub client_secret: String,
 }
+
+/// The new secret after the client secret roll.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct AppClientSecret {
+    pub client_secret: String,
+}

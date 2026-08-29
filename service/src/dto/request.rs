@@ -5,7 +5,7 @@ use utoipa::{IntoParams, PartialSchema, ToSchema};
 use validator::Validate;
 
 static USERNAME_REGEX_STR: &str = "^[a-z]([_.]?[a-z0-9])*$";
-static REDIRECT_URL_REGEX_STR: &str = "^/";
+static REDIRECT_URL_REGEX_STR: &str = "^http([s]?)://";
 
 static USERNAME_REGEX: LazyLock<regex::Regex> =
     LazyLock::new(|| regex::Regex::new(USERNAME_REGEX_STR).unwrap());
@@ -135,11 +135,18 @@ pub struct Captcha {
     pub captcha: String,
 }
 
-/// Request for creating a new application.
+/// Request for creating a new application or renaming one.
 #[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
-pub struct CreateApp {
+pub struct AppName {
     #[validate(length(min = 2, max = 32))]
     pub name: String,
+}
+
+/// Request containing redirect URL.
+#[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
+pub struct RedirectUrl {
+    #[validate(url, regex(path = *REDIRECT_URL_REGEX))]
+    pub redirect_url: String,
 }
 
 impl Validate for AccountIdentifier {
@@ -255,11 +262,16 @@ fn username_regex() {
 #[cfg(test)]
 #[test]
 fn redirect_url_regex() {
-    let valids = ["/test", "/", "/p/a/t/h", "////"];
+    let valids = [
+        "http://test",
+        "https://123",
+        "http://p/a/t/h",
+        "http://////",
+    ];
 
     let invalids = [
         "javascript:alert(1)",
-        "https://example.com",
+        "htps://example.com",
         "localhost:8000/",
         "file:///home/metw",
     ];

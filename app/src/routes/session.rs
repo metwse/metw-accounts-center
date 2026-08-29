@@ -111,7 +111,6 @@ async fn change_password(
 
 #[utoipa::path(
     get, path = "me/apps",
-    params(("captcha" = dto::request::Captcha, Query)),
     responses(
         (status = OK, body = Vec<dto::response::BasicAppInfo>)
     )
@@ -135,7 +134,7 @@ async fn create_app(
     State(state): State<AppState>,
     Extension(account_id): Extension<AccountId>,
     AppQuery(captcha): AppQuery<dto::request::Captcha>,
-    AppJson(create_app_dto): AppJson<dto::request::CreateApp>,
+    AppJson(create_app_dto): AppJson<dto::request::AppName>,
 ) -> AppResult<dto::response::AppInfo> {
     Ok(AppJson(
         SessionHandler(state)
@@ -154,7 +153,7 @@ pub fn routes(state: AppState) -> Router {
         .route("/me/apps", get(get_apps))
         .route("/me/apps", post(create_app))
         .layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
-            5,
+            10,
             Duration::from_secs(5),
         ))
         .layer(limiter::basic::<GovernorIpKeyExtractor>(
@@ -174,7 +173,7 @@ pub fn routes(state: AppState) -> Router {
         dto::response::AppInfo,
         dto::request::Email,
         dto::request::ChangePassword,
-        dto::request::CreateApp,
+        dto::request::AppName,
     )),
     modifiers(&ApiDocAuthAddon),
     security(("session_jwt" = []))

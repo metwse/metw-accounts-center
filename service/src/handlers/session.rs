@@ -1,7 +1,7 @@
 use super::{HandlerError, HandlerResult};
 use crate::{
     dto,
-    id::{AccountId, AppId},
+    id::AccountId,
     service::ServiceError,
     state::AppState,
     token::{Token, TokenScope},
@@ -217,7 +217,7 @@ impl SessionHandler {
     pub async fn create_app(
         &self,
         account_id: AccountId,
-        create_app_dto: dto::request::CreateApp,
+        create_app_dto: dto::request::AppName,
         captcha: dto::request::Captcha,
     ) -> HandlerResult<dto::response::AppInfo> {
         create_app_dto.validate()?;
