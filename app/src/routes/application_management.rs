@@ -28,7 +28,7 @@ use utoipa::OpenApi;
         (status = OK, body = dto::response::RotatedClientSecret)
     )
 )]
-async fn roll_client_secret(
+async fn rotate_client_secret(
     State(state): State<AppState>,
     Extension(application_id): Extension<ApplicationId>,
 ) -> AppResult<dto::response::RotatedClientSecret> {
@@ -129,7 +129,7 @@ pub fn routes(state: AppState) -> Router {
     Router::new()
         .route(
             "/me/applications/{application_id}/rotate-client-secret",
-            post(roll_client_secret),
+            post(rotate_client_secret),
         )
         .route(
             "/me/applications/{application_id}/name",
@@ -170,7 +170,7 @@ pub fn routes(state: AppState) -> Router {
 #[derive(OpenApi)]
 #[openapi(
     paths(
-        roll_client_secret, rename_application, delete_application,
+        rotate_client_secret, rename_application, delete_application,
         add_redirect_url, remove_redirect_url, get_redirect_urls
     ),
     components(schemas(

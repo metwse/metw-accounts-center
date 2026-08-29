@@ -16,19 +16,21 @@ use utoipa::OpenApi;
         (status = OK)
     )
 )]
-async fn auth(
+async fn execute_token_action(
     State(state): State<AppState>,
     Extension(real_ip): Extension<IpAddr>,
     AppJson(token_dto): AppJson<dto::request::Token>,
 ) -> AppResult<()> {
     Ok(AppJson(
-        AuthorizationHandler(state).auth(token_dto, real_ip).await?,
+        AuthorizationHandler(state)
+            .execute_token_action(token_dto, real_ip)
+            .await?,
     ))
 }
 
 pub fn routes(state: AppState) -> Router {
     Router::new()
-        .route("/auth", post(auth))
+        .route("/auth", post(execute_token_action))
         .layer(limiter::basic::<GovernorIpKeyExtractor>(
             2,
             Duration::from_secs(5),
@@ -37,5 +39,5 @@ pub fn routes(state: AppState) -> Router {
 }
 
 #[derive(OpenApi)]
-#[openapi(paths(auth), components(schemas(dto::request::Token)))]
+#[openapi(paths(execute_token_action), components(schemas(dto::request::Token)))]
 pub struct ApiDoc;

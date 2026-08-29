@@ -125,15 +125,15 @@ pub trait AccountRepo: Send + Sync {
     /// owner of an email would change at the exact moment their email is being
     /// set as the primary email, but it is still a safety hazard that must
     /// still be prevented.
-    async fn set_primary_email_if_current_is(
+    async fn compare_and_set_primary_email(
         &self,
         account_id: AccountId,
-        current_primary_email: &str,
+        expected_primary_email: &str,
         new_primary_email: &str,
     ) -> RepoResult<bool>;
 
     /// Remove the email if it is not primary email of the account.
-    async fn remove_email_if_not_primary(
+    async fn delete_email_if_not_primary(
         &self,
         account_id: AccountId,
         email: &str,
@@ -146,7 +146,7 @@ pub trait AccountRepo: Send + Sync {
     async fn is_email_taken(&self, email: &str) -> RepoResult<bool>;
 
     /// Returns true if the email has been taken by the given account.
-    async fn is_email_taken_by(&self, account_id: AccountId, email: &str) -> RepoResult<bool>;
+    async fn is_email_owned_by(&self, account_id: AccountId, email: &str) -> RepoResult<bool>;
 }
 
 /// Transactional account repository access wrapper.
@@ -156,13 +156,13 @@ pub trait AccountRepoTransaction: Send + Sync {
     async fn commit(self: Box<Self>) -> RepoResult<()>;
 
     /// Register a new account.
-    async fn insert_account(&mut self, account: &entity::Account) -> RepoResult<()>;
+    async fn insert(&mut self, account_entity: &entity::Account) -> RepoResult<()>;
 
     /// Load default flags to user.
     async fn insert_default_flags(&mut self, account_id: AccountId) -> RepoResult<()>;
 
     /// Add a secondary email to the account.
-    async fn add_email(
+    async fn insert_email(
         &mut self,
         account_id: AccountId,
         email: &str,
@@ -170,7 +170,7 @@ pub trait AccountRepoTransaction: Send + Sync {
     ) -> RepoResult<()>;
 
     /// Add username alias to the account.
-    async fn add_username(
+    async fn insert_username(
         &mut self,
         account_id: AccountId,
         username: &str,
@@ -178,14 +178,14 @@ pub trait AccountRepoTransaction: Send + Sync {
     ) -> RepoResult<()>;
 
     /// Set the is email verified flag of the account.
-    async fn set_is_email_verified_flag(
+    async fn set_email_verified_flag(
         &mut self,
         account_id: AccountId,
         is_email_verified: bool,
     ) -> RepoResult<()>;
 
     /// Change account password.
-    async fn change_password(
+    async fn set_password_credentials(
         &mut self,
         account_id: AccountId,
         password_hash: &str,

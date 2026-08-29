@@ -215,16 +215,17 @@ impl AccountRepo for MockAccountRepoImpl {
         Ok(secondary_emails)
     }
 
-    async fn set_primary_email_if_current_is(
+    async fn compare_and_set_primary_email(
         &self,
         account_id: AccountId,
-        current_primary_email: &str,
+        expected_primary_email: &str,
         new_primary_email: &str,
     ) -> RepoResult<bool> {
         let mut state = self.lock_state().await;
 
         {
-            let Some(current_primary_email_entity) = state.emails.get(current_primary_email) else {
+            let Some(current_primary_email_entity) = state.emails.get(expected_primary_email)
+            else {
                 return Ok(false);
             };
             let Some(new_primary_email_entity) = state.emails.get(new_primary_email) else {
@@ -234,7 +235,7 @@ impl AccountRepo for MockAccountRepoImpl {
             if !(current_primary_email_entity.is_primary
                 && current_primary_email_entity.account_id == account_id
                 && new_primary_email_entity.account_id == account_id
-                && new_primary_email != current_primary_email)
+                && new_primary_email != expected_primary_email)
             {
                 return Ok(false);
             }
@@ -242,7 +243,7 @@ impl AccountRepo for MockAccountRepoImpl {
 
         state
             .emails
-            .get_mut(current_primary_email)
+            .get_mut(expected_primary_email)
             .unwrap()
             .is_primary = false;
         state.emails.get_mut(new_primary_email).unwrap().is_primary = true;
@@ -250,7 +251,7 @@ impl AccountRepo for MockAccountRepoImpl {
         Ok(true)
     }
 
-    async fn remove_email_if_not_primary(
+    async fn delete_email_if_not_primary(
         &self,
         account_id: AccountId,
         email: &str,
@@ -281,7 +282,7 @@ impl AccountRepo for MockAccountRepoImpl {
         Ok(state.emails.contains_key(email))
     }
 
-    async fn is_email_taken_by(&self, account_id: AccountId, email: &str) -> RepoResult<bool> {
+    async fn is_email_owned_by(&self, account_id: AccountId, email: &str) -> RepoResult<bool> {
         let state = self.lock_state().await;
 
         let Some(email_entity) = state.emails.get(email) else {
@@ -305,10 +306,10 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         Ok(())
     }
 
-    async fn insert_account(&mut self, account: &entity::Account) -> RepoResult<()> {
+    async fn insert(&mut self, account_entity: &entity::Account) -> RepoResult<()> {
         self.state
             .accounts
-            .insert(account.account_id, account.clone());
+            .insert(account_entity.account_id, account_entity.clone());
 
         Ok(())
     }
@@ -325,7 +326,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         Ok(())
     }
 
-    async fn add_email(
+    async fn insert_email(
         &mut self,
         account_id: AccountId,
         email: &str,
@@ -348,7 +349,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         }
     }
 
-    async fn add_username(
+    async fn insert_username(
         &mut self,
         account_id: AccountId,
         username: &str,
@@ -372,7 +373,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         }
     }
 
-    async fn set_is_email_verified_flag(
+    async fn set_email_verified_flag(
         &mut self,
         account_id: AccountId,
         is_email_verified: bool,
@@ -386,7 +387,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         }
     }
 
-    async fn change_password(
+    async fn set_password_credentials(
         &mut self,
         account_id: AccountId,
         password_hash: &str,

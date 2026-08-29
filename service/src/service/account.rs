@@ -18,7 +18,7 @@ impl AccountService {
         skip_all,
         fields(account_id = tracing::field::Empty, username = signup_dto.username)
     )]
-    pub async fn signup(&self, signup_dto: &dto::request::Signup) -> ServiceResult<AccountId> {
+    pub async fn create(&self, signup_dto: &dto::request::Signup) -> ServiceResult<AccountId> {
         let (is_email_taken_res, is_username_taken_rs) = tokio::join!(
             self.repo.is_email_taken(&signup_dto.email),
             self.repo.is_username_taken(&signup_dto.username)
@@ -53,12 +53,12 @@ impl AccountService {
             master_key_id: None,
         };
 
-        transaction.insert_account(&account).await?;
+        transaction.insert(&account).await?;
 
         transaction.insert_default_flags(account_id).await?;
 
         transaction
-            .add_username(account_id, &signup_dto.username, true)
+            .insert_username(account_id, &signup_dto.username, true)
             .await?;
 
         transaction.commit().await?;
@@ -106,7 +106,7 @@ impl AccountService {
         skip_all,
         fields(account_identifier = ?login_dto.account_identifier)
     )]
-    pub async fn login(
+    pub async fn verify_login(
         &self,
         login_dto: &dto::request::Login,
     ) -> ServiceResult<dto::service::Login> {
@@ -136,7 +136,7 @@ impl AccountService {
 
     /// Account's key derivation functions.
     #[tracing::instrument(level = "debug", skip(self))]
-    pub async fn get_kdf(
+    pub async fn get_client_password_kdf(
         &self,
         account_identifier: &dto::request::AccountIdentifier,
     ) -> ServiceResult<dto::response::AccountKdf> {
@@ -167,7 +167,7 @@ impl AccountService {
 
     /// Fetch the account details.
     #[tracing::instrument(level = "debug", skip(self))]
-    pub async fn me(&self, account_id: AccountId) -> ServiceResult<dto::response::Account> {
+    pub async fn get(&self, account_id: AccountId) -> ServiceResult<dto::response::Account> {
         let (username, username_aliases, email, secondary_emails) = tokio::try_join!(
             self.repo.get_primary_username(account_id),
             self.repo.get_nonexpiring_username_aliases(account_id),
@@ -213,7 +213,7 @@ impl AccountService {
 
         let mut transaction = self.repo.begin_transaction().await?;
         transaction
-            .change_password(
+            .set_password_credentials(
                 account_id,
                 &server_derived,
                 &entity::ClientPasswordKdf::Base64EncodedPbkdf2Sha256 {
@@ -248,7 +248,7 @@ impl AccountService {
     ) -> ServiceResult<()> {
         if self
             .repo
-            .remove_email_if_not_primary(account_id, email)
+            .delete_email_if_not_primary(account_id, email)
             .await?
         {
             Ok(())
@@ -258,12 +258,12 @@ impl AccountService {
     }
 
     /// Returns true if the email has been taken by the given account.
-    pub async fn is_email_taken_by(
+    pub async fn is_email_owned_by(
         &self,
         account_id: AccountId,
         email: &str,
     ) -> ServiceResult<bool> {
-        Ok(self.repo.is_email_taken_by(account_id, email).await?)
+        Ok(self.repo.is_email_owned_by(account_id, email).await?)
     }
 
     /// Primary email of the account.
@@ -281,10 +281,14 @@ impl AccountService {
 
     /// Add the email as a secondary email to the account.
     #[tracing::instrument(level = "debug", skip_all, fields(account_id))]
-    pub async fn auth_add_email(&self, account_id: AccountId, email: &str) -> ServiceResult<()> {
+    pub async fn confirm_email_addition(
+        &self,
+        account_id: AccountId,
+        email: &str,
+    ) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
         transaction
-            .add_email(account_id, email, false)
+            .insert_email(account_id, email, false)
             .await
             .map_err(|_| ServiceError::AddEmailFailed)?;
         transaction.commit().await?;
@@ -294,7 +298,7 @@ impl AccountService {
 
     /// Change account's primary email.
     #[tracing::instrument(level = "debug", skip_all, fields(account_id))]
-    pub async fn auth_change_primary_email(
+    pub async fn confirm_primary_email_change(
         &self,
         account_id: AccountId,
         current_primary_email: &str,
@@ -302,7 +306,7 @@ impl AccountService {
     ) -> ServiceResult<()> {
         if self
             .repo
-            .set_primary_email_if_current_is(account_id, current_primary_email, new_primary_email)
+            .compare_and_set_primary_email(account_id, current_primary_email, new_primary_email)
             .await?
         {
             Ok(())
@@ -313,18 +317,14 @@ impl AccountService {
 
     /// Complete signup by adding the email and activating the account.
     #[tracing::instrument(level = "debug", skip_all, fields(account_id))]
-    pub async fn auth_complete_signup(
-        &self,
-        account_id: AccountId,
-        email: &str,
-    ) -> ServiceResult<()> {
+    pub async fn complete_signup(&self, account_id: AccountId, email: &str) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
         transaction
-            .add_email(account_id, email, true)
+            .insert_email(account_id, email, true)
             .await
             .map_err(|_| ServiceError::SignupCompleteFailed)?;
         transaction
-            .set_is_email_verified_flag(account_id, true)
+            .set_email_verified_flag(account_id, true)
             .await?;
         transaction.commit().await?;
 

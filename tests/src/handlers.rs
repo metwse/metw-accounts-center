@@ -29,7 +29,7 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
     );
 
     AuthenticationHandler(ctx.state.clone())
-        .get_kdf(dto::request::AccountIdentifier::Email(
+        .get_client_password_kdf(dto::request::AccountIdentifier::Email(
             dto::request::Email {
                 email: email_unverified.into(),
             },
@@ -38,7 +38,7 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
         .unwrap_err();
 
     AuthenticationHandler(ctx.state.clone())
-        .get_kdf(dto::request::AccountIdentifier::Username(
+        .get_client_password_kdf(dto::request::AccountIdentifier::Username(
             dto::request::Username {
                 username: username.into(),
             },
@@ -50,12 +50,14 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
         .await?;
 
     AuthenticationHandler(ctx.state.clone())
-        .get_kdf(dto::request::AccountIdentifier::AccountId(login_account_id))
+        .get_client_password_kdf(dto::request::AccountIdentifier::AccountId(login_account_id))
         .await?;
 
     assert!(account_id == login_account_id);
 
-    let me = SessionHandler(ctx.state.clone()).me(account_id).await?;
+    let me = SessionHandler(ctx.state.clone())
+        .get_current_account(account_id)
+        .await?;
     assert!(me.username.is_some());
     // No primary email as the account is not verified yet.
     assert!(me.email.is_none());
@@ -104,7 +106,7 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
 
     // Now the second email is added.
     AuthorizationHandler(ctx.state.clone())
-        .auth(
+        .execute_token_action(
             dto::request::Token {
                 token: complete_signup_jwt,
             },
@@ -130,13 +132,15 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
         unreachable!()
     };
 
-    let me = SessionHandler(ctx.state.clone()).me(account_id).await?;
+    let me = SessionHandler(ctx.state.clone())
+        .get_current_account(account_id)
+        .await?;
     assert!(me.username.is_some());
     assert!(me.email.is_none());
 
     // Now the email is added.
     AuthorizationHandler(ctx.state.clone())
-        .auth(
+        .execute_token_action(
             dto::request::Token {
                 token: complete_signup_jwt,
             },
@@ -145,7 +149,9 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
         .await?;
     tokio::time::sleep(Duration::from_secs(1)).await;
 
-    let me = SessionHandler(ctx.state.clone()).me(account_id).await?;
+    let me = SessionHandler(ctx.state.clone())
+        .get_current_account(account_id)
+        .await?;
     assert!(me.email.unwrap() == email);
 
     // Try logging in with username and password.
@@ -209,7 +215,7 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
     // Provide session tokens to authorization handler.
     assert_matches!(
         AuthorizationHandler(ctx.state.clone())
-            .auth(
+            .execute_token_action(
                 dto::request::Token {
                     token: session_jwt_from_email
                 },
@@ -224,7 +230,7 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
     // call will return Unauthorized.
     assert_matches!(
         AuthorizationHandler(ctx.state.clone())
-            .auth(
+            .execute_token_action(
                 dto::request::Token {
                     token: session_jwt_from_username
                 },
@@ -379,7 +385,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
     // Try to add account2's email as primary email
     assert_matches!(
         SessionHandler(ctx.state.clone())
-            .set_primary_email(
+            .change_primary_email(
                 acccount_id,
                 dto::request::Email {
                     email: new_email.to_string()
@@ -407,7 +413,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
 
         // Add the email.
         AuthorizationHandler(ctx.state.clone())
-            .auth(
+            .execute_token_action(
                 dto::request::Token {
                     token: add_email_jwt.clone(),
                 },
@@ -422,7 +428,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
 
     // Change primary email.
     SessionHandler(ctx.state.clone())
-        .set_primary_email(
+        .change_primary_email(
             acccount_id,
             dto::request::Email {
                 email: new_email.to_string(),
@@ -449,7 +455,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
 
         // Change the primary email.
         AuthorizationHandler(ctx.state.clone())
-            .auth(
+            .execute_token_action(
                 dto::request::Token {
                     token: change_primary_email_jwt.clone(),
                 },
@@ -460,7 +466,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
 
     // Delete the old email.
     SessionHandler(ctx.state.clone())
-        .delete_email(
+        .remove_email(
             acccount_id,
             dto::request::Email {
                 email: email.to_string(),
@@ -471,7 +477,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
     // Cannot remove primary email.
     assert!(
         SessionHandler(ctx.state.clone())
-            .delete_email(
+            .remove_email(
                 acccount_id,
                 dto::request::Email {
                     email: new_email.to_string()

@@ -18,7 +18,11 @@ impl AuthorizationHandler {
             token_scope = tracing::field::Empty,
         )
     )]
-    pub async fn auth(self, token_dto: dto::request::Token, ip: IpAddr) -> HandlerResult<()> {
+    pub async fn execute_token_action(
+        self,
+        token_dto: dto::request::Token,
+        ip: IpAddr,
+    ) -> HandlerResult<()> {
         let base64_encoded_token = token_dto.token;
 
         let decoded_token = self.0.token_service.decode(&base64_encoded_token)?;
@@ -50,7 +54,7 @@ impl AuthorizationHandler {
 
                 self.0
                     .account_service
-                    .auth_add_email(decoded_token.sub, email)
+                    .confirm_email_addition(decoded_token.sub, email)
                     .await?;
 
                 Ok(())
@@ -67,7 +71,7 @@ impl AuthorizationHandler {
 
                 self.0
                     .account_service
-                    .auth_change_primary_email(
+                    .confirm_primary_email_change(
                         decoded_token.sub,
                         current_primary_email,
                         new_primary_email,
@@ -94,7 +98,7 @@ impl AuthorizationHandler {
 
                 self.0
                     .account_service
-                    .auth_complete_signup(decoded_token.sub, email)
+                    .complete_signup(decoded_token.sub, email)
                     .await?;
 
                 Ok(())

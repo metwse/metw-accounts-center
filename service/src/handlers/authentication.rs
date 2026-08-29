@@ -10,7 +10,7 @@ use std::net::IpAddr;
 use tracing::trace;
 use validator::Validate;
 
-/// Gateway handlers for creating accouts or logging into accounts.
+/// Gateway handlers for creating accounts or logging into accounts.
 pub struct AuthenticationHandler(pub AppState);
 
 impl AuthenticationHandler {
@@ -95,7 +95,7 @@ impl AuthenticationHandler {
             .check_and_consume_quota(&ip, &email)
             .await?;
 
-        let account_id = match self.0.account_service.signup(&signup_dto).await {
+        let account_id = match self.0.account_service.create(&signup_dto).await {
             Ok(account_id) => account_id,
             Err(err) => {
                 self.0
@@ -151,7 +151,7 @@ impl AuthenticationHandler {
     ) -> HandlerResult<dto::response::Token> {
         login_dto.validate()?;
 
-        let login = self.0.account_service.login(&login_dto).await?;
+        let login = self.0.account_service.verify_login(&login_dto).await?;
 
         let token_scope = if login.is_email_verified {
             TokenScope::Session
@@ -172,13 +172,17 @@ impl AuthenticationHandler {
 
     /// Returns KDFs of an account.
     #[tracing::instrument(level = "debug", skip_all)]
-    pub async fn get_kdf(
+    pub async fn get_client_password_kdf(
         &self,
         account_identifier: dto::request::AccountIdentifier,
     ) -> HandlerResult<dto::response::AccountKdf> {
         account_identifier.validate()?;
 
-        let kdf = self.0.account_service.get_kdf(&account_identifier).await?;
+        let kdf = self
+            .0
+            .account_service
+            .get_client_password_kdf(&account_identifier)
+            .await?;
 
         Ok(kdf)
     }

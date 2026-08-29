@@ -24,14 +24,17 @@ impl SessionHandler {
         skip(self),
         fields(username = tracing::field::Empty)
     )]
-    pub async fn me(self, account_id: AccountId) -> HandlerResult<dto::response::Account> {
-        let me = self.0.account_service.me(account_id).await?;
+    pub async fn get_current_account(
+        self,
+        account_id: AccountId,
+    ) -> HandlerResult<dto::response::Account> {
+        let account = self.0.account_service.get(account_id).await?;
 
-        if let Some(ref username) = me.username {
+        if let Some(ref username) = account.username {
             tracing::Span::current().record("username", username);
         }
 
-        Ok(me)
+        Ok(account)
     }
 
     /// Sends [`ConfirmNewEmail`] to add requested email.
@@ -93,7 +96,7 @@ impl SessionHandler {
 
     /// Removes the email if it is not account's primary email.
     #[tracing::instrument(level = "debug", skip(self))]
-    pub async fn delete_email(
+    pub async fn remove_email(
         self,
         account_id: AccountId,
         email_dto: dto::request::Email,
@@ -114,7 +117,7 @@ impl SessionHandler {
     ///
     /// [`ConfirmPrimaryEmailChange`]: emails::Template::ConfirmPrimaryEmailChange
     #[tracing::instrument(level = "debug", skip(self, captcha))]
-    pub async fn set_primary_email(
+    pub async fn change_primary_email(
         self,
         account_id: AccountId,
         email_dto: dto::request::Email,
@@ -149,7 +152,7 @@ impl SessionHandler {
         if !self
             .0
             .account_service
-            .is_email_taken_by(account_id, &new_primary_email)
+            .is_email_owned_by(account_id, &new_primary_email)
             .await?
         {
             return Err(HandlerError::Service(ServiceError::EmailNotFound));

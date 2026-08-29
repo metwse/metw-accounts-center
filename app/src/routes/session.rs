@@ -24,11 +24,15 @@ use utoipa::OpenApi;
         (status = OK, body = dto::response::Account)
     )
 )]
-async fn me(
+async fn get_current_account(
     State(state): State<AppState>,
     Extension(account_id): Extension<AccountId>,
 ) -> AppResult<dto::response::Account> {
-    Ok(AppJson(SessionHandler(state).me(account_id).await?))
+    Ok(AppJson(
+        SessionHandler(state)
+            .get_current_account(account_id)
+            .await?,
+    ))
 }
 
 #[utoipa::path(
@@ -60,14 +64,14 @@ async fn add_email(
         (status = OK)
     )
 )]
-async fn delete_email(
+async fn remove_email(
     State(state): State<AppState>,
     Extension(account_id): Extension<AccountId>,
     AppJson(email_dto): AppJson<dto::request::Email>,
 ) -> AppResult<()> {
     Ok(AppJson(
         SessionHandler(state)
-            .delete_email(account_id, email_dto)
+            .remove_email(account_id, email_dto)
             .await?,
     ))
 }
@@ -80,7 +84,7 @@ async fn delete_email(
         (status = OK)
     )
 )]
-async fn set_primary_email(
+async fn change_primary_email(
     State(state): State<AppState>,
     Extension(account_id): Extension<AccountId>,
     AppQuery(captcha): AppQuery<dto::request::Captcha>,
@@ -88,7 +92,7 @@ async fn set_primary_email(
 ) -> AppResult<()> {
     Ok(AppJson(
         SessionHandler(state)
-            .set_primary_email(account_id, email_dto, captcha)
+            .change_primary_email(account_id, email_dto, captcha)
             .await?,
     ))
 }
@@ -147,10 +151,10 @@ async fn create_application(
 
 pub fn routes(state: AppState) -> Router {
     Router::new()
-        .route("/me", get(me))
+        .route("/me", get(get_current_account))
         .route("/me/emails", post(add_email))
-        .route("/me/emails", delete(delete_email))
-        .route("/me/emails/set-primary", post(set_primary_email))
+        .route("/me/emails", delete(remove_email))
+        .route("/me/emails/set-primary", post(change_primary_email))
         .route("/me/change-password", post(change_password))
         .route("/me/applications", get(get_owned_applications))
         .route("/me/applications", post(create_application))
@@ -169,7 +173,8 @@ pub fn routes(state: AppState) -> Router {
 #[derive(OpenApi)]
 #[openapi(
     paths(
-        me, add_email, delete_email, set_primary_email, change_password,
+        get_current_account, add_email,
+        remove_email, change_primary_email, change_password,
         get_owned_applications, create_application
     ),
     components(schemas(

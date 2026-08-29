@@ -59,13 +59,13 @@ async fn login(
     ),
     params(("account_identifier" = dto::request::AccountIdentifier, Path))
 )]
-async fn get_kdf(
+async fn get_client_password_kdf(
     State(state): State<AppState>,
     Path(account_identifier): Path<dto::request::AccountIdentifier>,
 ) -> AppResult<dto::response::AccountKdf> {
     Ok(AppJson(
         AuthenticationHandler(state)
-            .get_kdf(account_identifier)
+            .get_client_password_kdf(account_identifier)
             .await?,
     ))
 }
@@ -91,7 +91,10 @@ pub fn routes(state: AppState) -> Router {
     Router::new()
         .route("/signup", post(signup))
         .route("/login", post(login))
-        .route("/login/{account_identifier}/kdf", get(get_kdf))
+        .route(
+            "/login/{account_identifier}/kdf",
+            get(get_client_password_kdf),
+        )
         .route("/logout", post(logout))
         .layer(basic::<GovernorIpKeyExtractor>(5, Duration::from_secs(5)))
         .with_state(state.clone())
@@ -99,7 +102,7 @@ pub fn routes(state: AppState) -> Router {
 
 #[derive(OpenApi)]
 #[openapi(
-    paths(signup, login, get_kdf, logout),
+    paths(signup, login, get_client_password_kdf, logout),
     components(schemas(
         dto::request::Login,
         dto::request::Token,

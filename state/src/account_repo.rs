@@ -228,10 +228,10 @@ impl AccountRepo for AccountRepoImpl {
         Ok(emails?)
     }
 
-    async fn set_primary_email_if_current_is(
+    async fn compare_and_set_primary_email(
         &self,
         account_id: AccountId,
-        current_primary_email: &str,
+        expected_primary_email: &str,
         new_primary_email: &str,
     ) -> RepoResult<bool> {
         let mut tx = self.pool.begin().await?;
@@ -242,7 +242,7 @@ impl AccountRepo for AccountRepoImpl {
                       EXISTS(SELECT * FROM emails WHERE
                              account_id = $1 AND is_primary = false AND email = $3)",
             account_id as _,
-            current_primary_email,
+            expected_primary_email,
             new_primary_email
         )
         .execute(&mut *tx)
@@ -270,7 +270,7 @@ impl AccountRepo for AccountRepoImpl {
         Ok(true)
     }
 
-    async fn remove_email_if_not_primary(
+    async fn delete_email_if_not_primary(
         &self,
         account_id: AccountId,
         email: &str,
@@ -311,7 +311,7 @@ impl AccountRepo for AccountRepoImpl {
         Ok(is_email_taken)
     }
 
-    async fn is_email_taken_by(&self, account_id: AccountId, email: &str) -> RepoResult<bool> {
+    async fn is_email_owned_by(&self, account_id: AccountId, email: &str) -> RepoResult<bool> {
         let is_email_taken = sqlx::query_scalar!(
             "SELECT EXISTS(SELECT * FROM emails WHERE account_id = $1 AND email = $2)",
             account_id as _,
@@ -345,7 +345,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         Ok(())
     }
 
-    async fn insert_account(&mut self, account: &entity::Account) -> RepoResult<()> {
+    async fn insert(&mut self, account_entity: &entity::Account) -> RepoResult<()> {
         sqlx::query!(
             "INSERT INTO accounts (
                     account_id,
@@ -353,14 +353,14 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
                     master_key_kek_kdf, master_key_encryption_algorithm, encrypted_master_key,
                     master_key_id
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-            account.account_id as _,
-            Json(&account.client_password_kdf) as _,
-            Json(&account.server_password_hash_algorithm) as _,
-            account.password_hash,
-            Json(&account.master_key_kek_kdf) as _,
-            Json(&account.master_key_encryption_algorithm) as _,
-            account.encrypted_master_key,
-            account.master_key_id as _
+            account_entity.account_id as _,
+            Json(&account_entity.client_password_kdf) as _,
+            Json(&account_entity.server_password_hash_algorithm) as _,
+            account_entity.password_hash,
+            Json(&account_entity.master_key_kek_kdf) as _,
+            Json(&account_entity.master_key_encryption_algorithm) as _,
+            account_entity.encrypted_master_key,
+            account_entity.master_key_id as _
         )
         .execute(&mut *self.tx)
         .await?;
@@ -379,7 +379,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         Ok(())
     }
 
-    async fn add_email(
+    async fn insert_email(
         &mut self,
         account_id: AccountId,
         email: &str,
@@ -398,7 +398,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         Ok(())
     }
 
-    async fn add_username(
+    async fn insert_username(
         &mut self,
         account_id: AccountId,
         username: &str,
@@ -417,7 +417,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         Ok(())
     }
 
-    async fn set_is_email_verified_flag(
+    async fn set_email_verified_flag(
         &mut self,
         account_id: AccountId,
         is_email_verified: bool,
@@ -433,7 +433,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         Ok(())
     }
 
-    async fn change_password(
+    async fn set_password_credentials(
         &mut self,
         account_id: AccountId,
         password_hash: &str,
