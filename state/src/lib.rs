@@ -1,7 +1,7 @@
 //! # metw-accounts-center state
 //!
-//! This crate contains the state, *side effects*, of the [`service`] crate.
-//! External integrations and data repository is served by this crate.
+//! This crate implements the persistence and integration interfaces defined
+//! by the `service` crate.
 //!
 //! ## Setup Recommendations
 //!
@@ -12,7 +12,8 @@
 //! ## Development Notes
 //!
 //! - Concurrent transactions *are not supported* on multiplexed Redis
-//!   connections. Use one connection per function require transactions.
+//!   connections. Use a dedicated connection for each operation that requires
+//!   a Redis transaction.
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
@@ -79,7 +80,7 @@ pub struct Config {
 
     /// From address of emails sent by the email client.
     pub noreply_email_address: String,
-    /// Callback URL for authorization tokens.
+    /// Front end callback URL used in action emails.
     pub email_callback_url: String,
 
     /// JWT signature secret.

@@ -1,7 +1,8 @@
 //! # metw-accounts-center
 //!
-//! metw-accounts-center is an identity management system implemented as a
-//! zero-knowledge service.
+//! metw-accounts-center is an identity-management service designed so that
+//! sensitive user key material is encrypted client-side before being stored
+//! by the server.
 //!
 //! Goals:
 //! - Authentication Service: An application can use this service as an
@@ -18,10 +19,11 @@
 //!
 //! ## Architecture: E2EE-Authentication
 //!
+//! (TODO: update this section)
+//!
 //! Account public keys are served publicly. When users log into their accounts,
 //! they retrieve their encrypted private keys from the server and decrypt them
-//! locally. This private key is then used for OAuth2-like flows, where the
-//! users directly authorize other applications.
+//! locally.
 //!
 //! ```txt
 //! +-- CLIENT - (Account Creation) --------------------------------+

@@ -9,8 +9,8 @@
 //!
 //! This project strictly adheres to the [Separation of Concerns][SoC] (SoC)
 //! principle. The service abstraction layers are:
-//! - [`repo`]: Defines traits for application storage, database, and cache
-//!   access.
+//! - [`repo`]: Defines persistence interfaces for relational data, cache
+//!   state, and other stored state.
 //! - [`service`]: Provides an interface for manipulating application state.
 //!   Elaborates on low-level transactions defined in the `repo` layer to the
 //!   upper layers.
@@ -31,7 +31,7 @@
 //! communication between `service` and `repo` layers.
 //!
 //! [`util`] is used for miscellaneous utilities that do not fit into
-//! categories above. Check out documentations of the `util` for details.
+//! categories above. Check out documentations for `util` for details.
 //! Conceptually, the [`checked_now`], [`token`] and [`id`] modules are
 //! re-exported at the crate root as they are too common.
 //!
@@ -47,8 +47,7 @@ pub mod entity;
 
 /// Data transfer objects.
 ///
-/// Types for the inter-layer communication interface are defined by objects in
-/// this module
+/// Types used for communication between layers are defined in this module.
 pub mod dto;
 
 /// The data access layer.

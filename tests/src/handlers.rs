@@ -212,7 +212,7 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
         HandlerError::Service(ServiceError::AccountNotFound)
     );
 
-    // Provide session tokens to authorization handler.
+    // Provide session tokens to the token-action handler.
     assert_matches!(
         TokenActionHandler(ctx.state.clone())
             .execute_token_action(

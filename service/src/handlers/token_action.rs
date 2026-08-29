@@ -3,7 +3,7 @@ use crate::{dto, state::AppState, token::TokenScope};
 use std::net::IpAddr;
 use tracing::trace;
 
-/// Account handlers that **does require** escalated privileges.
+/// Executes privileged account actions represented by signed tokens.
 pub struct TokenActionHandler(pub AppState);
 
 impl TokenActionHandler {
@@ -32,7 +32,7 @@ impl TokenActionHandler {
 
         match &decoded_token.scope {
             TokenScope::Session | TokenScope::EmailVerificationSession => {
-                trace!("got session token at authorization endpoint");
+                trace!("got session token at token action endpoint");
 
                 Err(HandlerError::Unauthorized)
             }

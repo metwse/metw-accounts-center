@@ -1,4 +1,4 @@
-/// Access control authentication middleware.
+/// Access-control middleware.
 pub mod access_control;
 
 /// IP middleware.

@@ -21,19 +21,20 @@
 //! | Function Example | Type | Description |
 //! |--|--|--|
 //! | [`get_primary_email`] | read | Gets primary email of the account. |
-//! | [`set_primary_email_if_current_is`] | compare-and-swap | If the provided primary email is still the current primary email, changes the email. |
+//! | [`compare_and_set_primary_email`] | compare-and-swap | If the provided primary email is still the current primary email, changes the email. |
 //!
-//! - Any insert, delete, update, or upsert (insert or update if exists)
-//!   operation must reside within a transaction.
+//! - For relational entity repositories that expose a `*RepoTransaction`,
+//!  insert, delete, update, and upsert operations must be implemented through
+//!  that transaction type.
 //!
 //! | Function Example | Type | Description |
 //! |--|--|--|
-//! | [`insert_account`] | insert | Inserts a new user. |
+//! | [`insert_username`] | insert | Inserts a new username. |
 //! | [`insert_default_flags`] | insert | Inserts default user flags. |
 //!
-//! - `*Repo` variants that return a single item like "fetch one" do not return
-//!   a `RowNotFound` error; they must be mapped to an `Option`. Those that
-//!   are "fetch many" return a `Vec`.
+//! - `RepoError` represents internal persistence failures. It may propagate
+//!   through internal layers for tracing and error handling, but its details
+//!   must be redacted before constructing an external response.
 //!
 //! | Function Example | Type | Description |
 //! |--|--|--|
@@ -51,9 +52,9 @@
 //!
 //! [`RepoError`]: service::repo::RepoError
 //!
-//! [`set_primary_email_if_current_is`]: service::repo::AccountRepo::set_primary_email_if_current_is
+//! [`compare_and_set_primary_email`]: service::repo::AccountRepo::compare_and_set_primary_email
 //! [`get_primary_email`]: service::repo::AccountRepo::get_primary_email
-//! [`insert_account`]: service::repo::AccountRepoTransaction::insert_account
+//! [`insert_username`]: service::repo::AccountRepoTransaction::insert_username
 //! [`insert_default_flags`]: service::repo::AccountRepoTransaction::insert_default_flags
 //! [`get_primary_email`]: service::repo::AccountRepo::get_primary_email
 //! [`get_secondary_emails`]: service::repo::AccountRepo::get_secondary_emails
@@ -110,13 +111,16 @@
 //!   middleware.
 //!
 //! - In handlers that are HTTP endpoints, at first request validation happens.
-//!   Everything coming from the user *must be* a [`dto::request`]; and the
-//!   handler response, if exists, must be [`dto::response`].
+//!   Structured request bodies and query parameters are represented by
+//!   [`dto::request`] types and validated by handlers. Path parameters and
+//!   headers may use dedicated domain types or extractors. Successful responsei
+//!   bodies are represented by [`dto::response`] types.
 //!
 //! - Middleware handlers may return types other than [`dto::response`].
 //!
-//! - The handler owns the allocation and passes references to the service
-//!   layer. It, however, transfer ownership of the allocation to `client`s.
+//! - Handlers own request DTOs and generally pass borrowed values to services.
+//!   When an external client must retain request data, the handler transfers
+//!   ownership to that client.
 //!
 //! [`handlers`]: service::handlers
 //!
