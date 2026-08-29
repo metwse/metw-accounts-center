@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Login","NewApp"]};
+window.SIDEBAR_ITEMS = {"struct":["CreatedApplication","Login"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["authentication","authorization","email_verification_session","session"]};
+window.SIDEBAR_ITEMS = {"mod":["application_management","authentication","authorization","email_verification_session","session"]};

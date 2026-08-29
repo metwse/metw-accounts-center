@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["MockAccountRepoImpl","MockAppRepoImpl","MockEmailLimitingRepoImpl","MockTokenRepoImpl"]};
+window.SIDEBAR_ITEMS = {"struct":["MockAccountRepoImpl","MockApplicationRepoImpl","MockEmailLimitingRepoImpl","MockTokenRepoImpl"]};

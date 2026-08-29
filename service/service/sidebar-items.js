@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ServiceError"],"struct":["AccountService","AppService","EmailLimitingService","TokenService"],"type":["ServiceResult"]};
+window.SIDEBAR_ITEMS = {"enum":["ServiceError"],"struct":["AccountService","ApplicationService","EmailLimitingService","TokenService"],"type":["ServiceResult"]};
