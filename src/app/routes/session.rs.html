@@ -2,7 +2,7 @@
 <a href=#2 id=2 data-nosnippet>2</a>
 <a href=#3 id=3 data-nosnippet>3</a></span><span class="kw">use crate</span>::{
 <a href=#4 id=4 data-nosnippet>4</a>    middleware::{
-<a href=#5 id=5 data-nosnippet>5</a>        auth::{ApiDocAuthAddon, GovernorAccountIdKeyExtractor, auth_session},
+<a href=#5 id=5 data-nosnippet>5</a>        access_control::{ApiDocSecurityAddon, GovernorAccountIdKeyExtractor, require_session},
 <a href=#6 id=6 data-nosnippet>6</a>        extract_real_ip::GovernorIpKeyExtractor,
 <a href=#7 id=7 data-nosnippet>7</a>        limiter,
 <a href=#8 id=8 data-nosnippet>8</a>    },
@@ -158,35 +158,38 @@
 <a href=#158 id=158 data-nosnippet>158</a>        .route(<span class="string">"/me/change-password"</span>, post(change_password))
 <a href=#159 id=159 data-nosnippet>159</a>        .route(<span class="string">"/me/applications"</span>, get(get_owned_applications))
 <a href=#160 id=160 data-nosnippet>160</a>        .route(<span class="string">"/me/applications"</span>, post(create_application))
-<a href=#161 id=161 data-nosnippet>161</a>        .layer(limiter::basic::&lt;GovernorAccountIdKeyExtractor&gt;(
+<a href=#161 id=161 data-nosnippet>161</a>        .route_layer(limiter::basic::&lt;GovernorAccountIdKeyExtractor&gt;(
 <a href=#162 id=162 data-nosnippet>162</a>            <span class="number">10</span>,
 <a href=#163 id=163 data-nosnippet>163</a>            Duration::from_secs(<span class="number">5</span>),
 <a href=#164 id=164 data-nosnippet>164</a>        ))
-<a href=#165 id=165 data-nosnippet>165</a>        .layer(limiter::basic::&lt;GovernorIpKeyExtractor&gt;(
+<a href=#165 id=165 data-nosnippet>165</a>        .route_layer(limiter::basic::&lt;GovernorIpKeyExtractor&gt;(
 <a href=#166 id=166 data-nosnippet>166</a>            <span class="number">25</span>,
 <a href=#167 id=167 data-nosnippet>167</a>            Duration::from_secs(<span class="number">5</span>),
 <a href=#168 id=168 data-nosnippet>168</a>        ))
-<a href=#169 id=169 data-nosnippet>169</a>        .route_layer(middleware::from_fn_with_state(state.clone(), auth_session))
-<a href=#170 id=170 data-nosnippet>170</a>        .with_state(state)
-<a href=#171 id=171 data-nosnippet>171</a>}
-<a href=#172 id=172 data-nosnippet>172</a>
-<a href=#173 id=173 data-nosnippet>173</a><span class="attr">#[derive(OpenApi)]
-<a href=#174 id=174 data-nosnippet>174</a>#[openapi(
-<a href=#175 id=175 data-nosnippet>175</a>    paths(
-<a href=#176 id=176 data-nosnippet>176</a>        get_current_account, add_email,
-<a href=#177 id=177 data-nosnippet>177</a>        remove_email, change_primary_email, change_password,
-<a href=#178 id=178 data-nosnippet>178</a>        get_owned_applications, create_application
-<a href=#179 id=179 data-nosnippet>179</a>    ),
-<a href=#180 id=180 data-nosnippet>180</a>    components(schemas(
-<a href=#181 id=181 data-nosnippet>181</a>        dto::response::Account,
-<a href=#182 id=182 data-nosnippet>182</a>        dto::response::ApplicationSummary,
-<a href=#183 id=183 data-nosnippet>183</a>        dto::response::CreatedApplication,
-<a href=#184 id=184 data-nosnippet>184</a>        dto::request::Email,
-<a href=#185 id=185 data-nosnippet>185</a>        dto::request::ChangePassword,
-<a href=#186 id=186 data-nosnippet>186</a>        dto::request::ApplicationName,
-<a href=#187 id=187 data-nosnippet>187</a>    )),
-<a href=#188 id=188 data-nosnippet>188</a>    modifiers(<span class="kw-2">&amp;</span>ApiDocAuthAddon),
-<a href=#189 id=189 data-nosnippet>189</a>    security((<span class="string">"session_jwt" </span>= []</span>))
-<a href=#190 id=190 data-nosnippet>190</a>)]
-<a href=#191 id=191 data-nosnippet>191</a><span class="kw">pub struct </span>ApiDoc;
+<a href=#169 id=169 data-nosnippet>169</a>        .route_layer(middleware::from_fn_with_state(
+<a href=#170 id=170 data-nosnippet>170</a>            state.clone(),
+<a href=#171 id=171 data-nosnippet>171</a>            require_session,
+<a href=#172 id=172 data-nosnippet>172</a>        ))
+<a href=#173 id=173 data-nosnippet>173</a>        .with_state(state)
+<a href=#174 id=174 data-nosnippet>174</a>}
+<a href=#175 id=175 data-nosnippet>175</a>
+<a href=#176 id=176 data-nosnippet>176</a><span class="attr">#[derive(OpenApi)]
+<a href=#177 id=177 data-nosnippet>177</a>#[openapi(
+<a href=#178 id=178 data-nosnippet>178</a>    paths(
+<a href=#179 id=179 data-nosnippet>179</a>        get_current_account, add_email,
+<a href=#180 id=180 data-nosnippet>180</a>        remove_email, change_primary_email, change_password,
+<a href=#181 id=181 data-nosnippet>181</a>        get_owned_applications, create_application
+<a href=#182 id=182 data-nosnippet>182</a>    ),
+<a href=#183 id=183 data-nosnippet>183</a>    components(schemas(
+<a href=#184 id=184 data-nosnippet>184</a>        dto::response::Account,
+<a href=#185 id=185 data-nosnippet>185</a>        dto::response::ApplicationSummary,
+<a href=#186 id=186 data-nosnippet>186</a>        dto::response::CreatedApplication,
+<a href=#187 id=187 data-nosnippet>187</a>        dto::request::Email,
+<a href=#188 id=188 data-nosnippet>188</a>        dto::request::ChangePassword,
+<a href=#189 id=189 data-nosnippet>189</a>        dto::request::ApplicationName,
+<a href=#190 id=190 data-nosnippet>190</a>    )),
+<a href=#191 id=191 data-nosnippet>191</a>    modifiers(<span class="kw-2">&amp;</span>ApiDocSecurityAddon),
+<a href=#192 id=192 data-nosnippet>192</a>    security((<span class="string">"session_jwt" </span>= []</span>))
+<a href=#193 id=193 data-nosnippet>193</a>)]
+<a href=#194 id=194 data-nosnippet>194</a><span class="kw">pub struct </span>ApiDoc;
 </code></pre></div></section></main></body></html>

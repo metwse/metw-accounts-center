@@ -5,7 +5,7 @@
 <a href=#5 id=5 data-nosnippet>5</a>        mock::{Emails, MockCaptchaClientImpl, MockEmailClientImpl},
 <a href=#6 id=6 data-nosnippet>6</a>    },
 <a href=#7 id=7 data-nosnippet>7</a>    dto,
-<a href=#8 id=8 data-nosnippet>8</a>    handlers::{AuthenticationHandler, AuthorizationHandler, HandlerResult},
+<a href=#8 id=8 data-nosnippet>8</a>    handlers::{AuthenticationHandler, HandlerResult, TokenActionHandler},
 <a href=#9 id=9 data-nosnippet>9</a>    id::AccountId,
 <a href=#10 id=10 data-nosnippet>10</a>    repo::{
 <a href=#11 id=11 data-nosnippet>11</a>        AccountRepo, ApplicationRepo, TokenRepo,
@@ -139,7 +139,7 @@
 <a href=#139 id=139 data-nosnippet>139</a>            <span class="macro">unreachable!</span>()
 <a href=#140 id=140 data-nosnippet>140</a>        };
 <a href=#141 id=141 data-nosnippet>141</a>
-<a href=#142 id=142 data-nosnippet>142</a>        AuthorizationHandler(<span class="self">self</span>.state.clone())
+<a href=#142 id=142 data-nosnippet>142</a>        TokenActionHandler(<span class="self">self</span>.state.clone())
 <a href=#143 id=143 data-nosnippet>143</a>            .execute_token_action(
 <a href=#144 id=144 data-nosnippet>144</a>                dto::request::Token {
 <a href=#145 id=145 data-nosnippet>145</a>                    token: complete_signup_jwt,

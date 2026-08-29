@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["auth","extract_real_ip","limiter"]};
+window.SIDEBAR_ITEMS = {"mod":["access_control","extract_real_ip","limiter"]};

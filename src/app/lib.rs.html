@@ -31,9 +31,9 @@
 <a href=#31 id=31 data-nosnippet>31</a>    nest(
 <a href=#32 id=32 data-nosnippet>32</a>        (path = <span class="string">"/"</span>, api = routes::application_management::ApiDoc, tags = [<span class="string">"application_management"</span>]</span>),
 <a href=#33 id=33 data-nosnippet>33</a>        (path = <span class="string">"/"</span>, api = routes::authentication::ApiDoc, tags = [<span class="string">"authentication"</span>]),
-<a href=#34 id=34 data-nosnippet>34</a>        (path = <span class="string">"/"</span>, api = routes::authorization::ApiDoc, tags = [<span class="string">"authorization"</span>]),
-<a href=#35 id=35 data-nosnippet>35</a>        (path = <span class="string">"/"</span>, api = routes::session::ApiDoc, tags = [<span class="string">"session"</span>]),
-<a href=#36 id=36 data-nosnippet>36</a>        (path = <span class="string">"/"</span>, api = routes::email_verification_session::ApiDoc, tags = [<span class="string">"email_verification_session"</span>]),
+<a href=#34 id=34 data-nosnippet>34</a>        (path = <span class="string">"/"</span>, api = routes::session::ApiDoc, tags = [<span class="string">"session"</span>]),
+<a href=#35 id=35 data-nosnippet>35</a>        (path = <span class="string">"/"</span>, api = routes::email_verification_session::ApiDoc, tags = [<span class="string">"email_verification_session"</span>]),
+<a href=#36 id=36 data-nosnippet>36</a>        (path = <span class="string">"/"</span>, api = routes::token_action::ApiDoc, tags = [<span class="string">"token_action"</span>]),
 <a href=#37 id=37 data-nosnippet>37</a>    )
 <a href=#38 id=38 data-nosnippet>38</a>)]
 <a href=#39 id=39 data-nosnippet>39</a><span class="kw">pub struct </span>ApiDoc;
@@ -75,9 +75,9 @@
 <a href=#75 id=75 data-nosnippet>75</a>        .with_state(state.clone())
 <a href=#76 id=76 data-nosnippet>76</a>        .merge(routes::application_management::routes(state.clone()))
 <a href=#77 id=77 data-nosnippet>77</a>        .merge(routes::authentication::routes(state.clone()))
-<a href=#78 id=78 data-nosnippet>78</a>        .merge(routes::authorization::routes(state.clone()))
-<a href=#79 id=79 data-nosnippet>79</a>        .merge(routes::email_verification_session::routes(state.clone()))
-<a href=#80 id=80 data-nosnippet>80</a>        .merge(routes::session::routes(state))
+<a href=#78 id=78 data-nosnippet>78</a>        .merge(routes::email_verification_session::routes(state.clone()))
+<a href=#79 id=79 data-nosnippet>79</a>        .merge(routes::session::routes(state.clone()))
+<a href=#80 id=80 data-nosnippet>80</a>        .merge(routes::token_action::routes(state.clone()))
 <a href=#81 id=81 data-nosnippet>81</a>        .route_layer(axum::middleware::from_fn(
 <a href=#82 id=82 data-nosnippet>82</a>            middleware::extract_real_ip::extract_real_ip,
 <a href=#83 id=83 data-nosnippet>83</a>        ))

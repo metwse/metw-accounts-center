@@ -96,7 +96,7 @@
 <a href=#96 id=96 data-nosnippet>96</a>            get(get_client_password_kdf),
 <a href=#97 id=97 data-nosnippet>97</a>        )
 <a href=#98 id=98 data-nosnippet>98</a>        .route(<span class="string">"/logout"</span>, post(logout))
-<a href=#99 id=99 data-nosnippet>99</a>        .layer(basic::&lt;GovernorIpKeyExtractor&gt;(<span class="number">5</span>, Duration::from_secs(<span class="number">5</span>)))
+<a href=#99 id=99 data-nosnippet>99</a>        .route_layer(basic::&lt;GovernorIpKeyExtractor&gt;(<span class="number">5</span>, Duration::from_secs(<span class="number">5</span>)))
 <a href=#100 id=100 data-nosnippet>100</a>        .with_state(state.clone())
 <a href=#101 id=101 data-nosnippet>101</a>}
 <a href=#102 id=102 data-nosnippet>102</a>
