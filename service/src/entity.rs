@@ -1,4 +1,4 @@
-use crate::id::{AccountId, AppId, MasterKeyId};
+use crate::id::{AccountId, ApplicationId, MasterKeyId};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
@@ -122,9 +122,9 @@ pub struct Email {
 
 /// User-registered 3rd party authorization applications.
 #[derive(Debug, Clone, FromRow)]
-pub struct App {
+pub struct Application {
     /// Application ID.
-    pub app_id: AppId,
+    pub application_id: ApplicationId,
 
     /// Account owns the application.
     pub owner_account_id: AccountId,
@@ -139,9 +139,9 @@ pub struct App {
 
 /// Redirect URLs that the application allows redirecting to.
 #[derive(Debug, FromRow)]
-pub struct AppRedirectUrl {
+pub struct ApplicationRedirectUrl {
     /// Application ID.
-    pub app_id: AppId,
+    pub application_id: ApplicationId,
 
     /// The redirect URL.
     pub redirect_url: String,
@@ -149,12 +149,12 @@ pub struct AppRedirectUrl {
 
 /// Authorized application by a user.
 #[derive(Debug, FromRow)]
-pub struct AccountAppAuthorization {
+pub struct AccountApplicationConsent {
     /// The account that authorized the application.
     pub account_id: AccountId,
 
     /// Application.
-    pub app_id: AppId,
+    pub application_id: ApplicationId,
 
     /// Timestamp the authorization done.
     pub created_at: DateTime<Utc>,

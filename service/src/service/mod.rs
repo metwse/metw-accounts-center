@@ -1,12 +1,12 @@
 mod account;
-mod app;
+mod application;
 mod email_limiting;
 mod token;
 
 mod error;
 
 pub use account::AccountService;
-pub use app::AppService;
+pub use application::ApplicationService;
 pub use email_limiting::EmailLimitingService;
 pub use token::TokenService;
 

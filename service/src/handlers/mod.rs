@@ -1,4 +1,4 @@
-mod app_management;
+mod application_management;
 mod authentication;
 mod authorization;
 mod email_verification_session;
@@ -6,7 +6,7 @@ mod session;
 
 mod error;
 
-pub use app_management::AppManagementHandler;
+pub use application_management::ApplicationManagementHandler;
 pub use authentication::AuthenticationHandler;
 pub use authorization::AuthorizationHandler;
 pub use email_verification_session::EmailVerificationSessionHandler;

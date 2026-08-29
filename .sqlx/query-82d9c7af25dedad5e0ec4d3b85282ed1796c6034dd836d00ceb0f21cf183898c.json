@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM application_redirect_urls\n                WHERE application_id = $1 AND redirect_url = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "82d9c7af25dedad5e0ec4d3b85282ed1796c6034dd836d00ceb0f21cf183898c"
+}

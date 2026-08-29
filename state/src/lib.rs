@@ -20,7 +20,7 @@ mod captcha_client;
 mod email_client;
 
 mod account_repo;
-mod app_repo;
+mod application_repo;
 mod email_limiting_repo;
 mod token_repo;
 
@@ -28,7 +28,7 @@ pub use captcha_client::CaptchaClientImpl;
 pub use email_client::EmailClientImpl;
 
 pub use account_repo::AccountRepoImpl;
-pub use app_repo::AppRepoImpl;
+pub use application_repo::ApplicationRepoImpl;
 pub use email_limiting_repo::EmailLimitingRepoImpl;
 pub use token_repo::TokenRepoImpl;
 
@@ -36,7 +36,7 @@ use serde::Deserialize;
 use service::{
     AppState,
     client::{CaptchaClient, EmailClient},
-    service::{AccountService, AppService, EmailLimitingService, TokenService},
+    service::{AccountService, ApplicationService, EmailLimitingService, TokenService},
 };
 
 /// Redis keys used with repositories.
@@ -99,7 +99,7 @@ impl Config {
         let pgpool = sqlx::PgPool::connect(&self.database_url).await.unwrap();
 
         let account_service = AccountService::new(AccountRepoImpl::boxed_new(pgpool.clone()));
-        let app_service = AppService::new(AppRepoImpl::boxed_new(pgpool));
+        let application_service = ApplicationService::new(ApplicationRepoImpl::boxed_new(pgpool));
 
         let redis_con_generator = Box::new(async move || {
             redis::Client::open(self.redis_url.clone())
@@ -136,7 +136,7 @@ impl Config {
 
         AppState {
             account_service: account_service.into(),
-            app_service: app_service.into(),
+            application_service: application_service.into(),
             token_service: token_service.into(),
             email_limiting_service: email_limiting_service.into(),
             email_client: (email_client as Box<dyn EmailClient>).into(),

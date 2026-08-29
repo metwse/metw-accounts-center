@@ -1,18 +1,12 @@
 mod account;
-
-mod app;
-
-mod token;
-
+mod application;
 mod email_limiting;
+mod token;
 
 #[cfg(test)]
 mod tests;
 
 pub use account::MockAccountRepoImpl;
-
-pub use app::MockAppRepoImpl;
-
-pub use token::MockTokenRepoImpl;
-
+pub use application::MockApplicationRepoImpl;
 pub use email_limiting::MockEmailLimitingRepoImpl;
+pub use token::MockTokenRepoImpl;

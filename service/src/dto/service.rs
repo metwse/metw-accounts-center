@@ -1,4 +1,4 @@
-use crate::id::{AccountId, AppId};
+use crate::id::{AccountId, ApplicationId};
 
 /// Password verified login.
 ///
@@ -14,7 +14,7 @@ pub struct Login {
 }
 
 /// Newly created application.
-pub struct NewApp {
-    pub app_id: AppId,
+pub struct CreatedApplication {
+    pub application_id: ApplicationId,
     pub client_secret: String,
 }

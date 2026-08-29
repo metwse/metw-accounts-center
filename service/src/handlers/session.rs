@@ -197,16 +197,16 @@ impl SessionHandler {
 
     /// Gets list of the applications owned by the account.
     #[tracing::instrument(level = "debug", skip(self))]
-    pub async fn get_my_apps(
+    pub async fn get_owned_applications(
         &self,
         account_id: AccountId,
-    ) -> HandlerResult<Vec<dto::response::BasicAppInfo>> {
-        let apps = self.0.app_service.get_apps(account_id).await?;
+    ) -> HandlerResult<Vec<dto::response::ApplicationSummary>> {
+        let apps = self.0.application_service.list_owned_by(account_id).await?;
 
         Ok(apps
             .into_iter()
-            .map(|app| dto::response::BasicAppInfo {
-                app_id: app.app_id,
+            .map(|app| dto::response::ApplicationSummary {
+                application_id: app.application_id,
                 name: app.name,
             })
             .collect())
@@ -214,12 +214,12 @@ impl SessionHandler {
 
     /// Register a new application.
     #[tracing::instrument(level = "debug", skip(self, captcha))]
-    pub async fn create_app(
+    pub async fn create_application(
         &self,
         account_id: AccountId,
-        create_app_dto: dto::request::AppName,
+        create_app_dto: dto::request::ApplicationName,
         captcha: dto::request::Captcha,
-    ) -> HandlerResult<dto::response::AppInfo> {
+    ) -> HandlerResult<dto::response::CreatedApplication> {
         create_app_dto.validate()?;
         if !self.0.captcha_client.validate(captcha.captcha).await {
             return Err(HandlerError::InvalidCaptcha);
@@ -227,12 +227,12 @@ impl SessionHandler {
 
         let app = self
             .0
-            .app_service
-            .create_app(account_id, &create_app_dto.name)
+            .application_service
+            .create(account_id, &create_app_dto.name)
             .await?;
 
-        Ok(dto::response::AppInfo {
-            app_id: app.app_id,
+        Ok(dto::response::CreatedApplication {
+            application_id: app.application_id,
             name: create_app_dto.name,
             client_secret: app.client_secret,
         })

@@ -1,6 +1,6 @@
 use crate::{
     entity,
-    id::{AccountId, AppId},
+    id::{AccountId, ApplicationId},
 };
 use serde::Serialize;
 use utoipa::ToSchema;
@@ -37,21 +37,21 @@ pub struct Token {
 
 /// Application name and ID.
 #[derive(Debug, Serialize, ToSchema)]
-pub struct BasicAppInfo {
-    pub app_id: AppId,
+pub struct ApplicationSummary {
+    pub application_id: ApplicationId,
     pub name: String,
 }
 
 /// Newly created application.
 #[derive(Debug, Serialize, ToSchema)]
-pub struct AppInfo {
-    pub app_id: AppId,
+pub struct CreatedApplication {
+    pub application_id: ApplicationId,
     pub name: String,
     pub client_secret: String,
 }
 
 /// The new secret after the client secret roll.
 #[derive(Debug, Serialize, ToSchema)]
-pub struct AppClientSecret {
+pub struct RotatedClientSecret {
     pub client_secret: String,
 }

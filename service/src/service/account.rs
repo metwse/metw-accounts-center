@@ -229,12 +229,12 @@ impl AccountService {
         Ok(())
     }
 
-    /// Wheter or not the username has been taken.
+    /// Whether or not the username has been taken.
     pub async fn is_username_taken(&self, username: &str) -> ServiceResult<bool> {
         Ok(self.repo.is_username_taken(username).await?)
     }
 
-    /// Wheter or not the email has been taken.
+    /// Whether or not the email has been taken.
     pub async fn is_email_taken(&self, email: &str) -> ServiceResult<bool> {
         Ok(self.repo.is_email_taken(email).await?)
     }

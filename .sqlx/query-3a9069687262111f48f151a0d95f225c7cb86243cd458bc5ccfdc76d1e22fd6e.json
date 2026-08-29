@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO applications (\n                    application_id, owner_account_id,\n                    name, client_secret_hash\n                ) VALUES ($1, $2, $3, $4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Varchar",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3a9069687262111f48f151a0d95f225c7cb86243cd458bc5ccfdc76d1e22fd6e"
+}

@@ -137,14 +137,14 @@ pub struct Captcha {
 
 /// Request for creating a new application or renaming one.
 #[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
-pub struct AppName {
+pub struct ApplicationName {
     #[validate(length(min = 2, max = 32))]
     pub name: String,
 }
 
 /// Request containing redirect URL.
 #[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
-pub struct RedirectUrl {
+pub struct ApplicationRedirectUrl {
     #[validate(url, regex(path = *REDIRECT_URL_REGEX))]
     pub redirect_url: String,
 }

@@ -110,35 +110,37 @@ async fn change_password(
 }
 
 #[utoipa::path(
-    get, path = "me/apps",
+    get, path = "me/applications",
     responses(
-        (status = OK, body = Vec<dto::response::BasicAppInfo>)
+        (status = OK, body = Vec<dto::response::ApplicationSummary>)
     )
 )]
-async fn get_apps(
+async fn get_owned_applications(
     State(state): State<AppState>,
     Extension(account_id): Extension<AccountId>,
-) -> AppResult<Vec<dto::response::BasicAppInfo>> {
+) -> AppResult<Vec<dto::response::ApplicationSummary>> {
     Ok(AppJson(
-        SessionHandler(state).get_my_apps(account_id).await?,
+        SessionHandler(state)
+            .get_owned_applications(account_id)
+            .await?,
     ))
 }
 
 #[utoipa::path(
-    post, path = "me/apps",
+    post, path = "me/applications",
     responses(
-        (status = OK, body = dto::response::AppInfo)
+        (status = OK, body = dto::response::CreatedApplication)
     )
 )]
-async fn create_app(
+async fn create_application(
     State(state): State<AppState>,
     Extension(account_id): Extension<AccountId>,
     AppQuery(captcha): AppQuery<dto::request::Captcha>,
-    AppJson(create_app_dto): AppJson<dto::request::AppName>,
-) -> AppResult<dto::response::AppInfo> {
+    AppJson(create_app_dto): AppJson<dto::request::ApplicationName>,
+) -> AppResult<dto::response::CreatedApplication> {
     Ok(AppJson(
         SessionHandler(state)
-            .create_app(account_id, create_app_dto, captcha)
+            .create_application(account_id, create_app_dto, captcha)
             .await?,
     ))
 }
@@ -150,8 +152,8 @@ pub fn routes(state: AppState) -> Router {
         .route("/me/emails", delete(delete_email))
         .route("/me/emails/set-primary", post(set_primary_email))
         .route("/me/change-password", post(change_password))
-        .route("/me/apps", get(get_apps))
-        .route("/me/apps", post(create_app))
+        .route("/me/applications", get(get_owned_applications))
+        .route("/me/applications", post(create_application))
         .layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
             10,
             Duration::from_secs(5),
@@ -166,14 +168,17 @@ pub fn routes(state: AppState) -> Router {
 
 #[derive(OpenApi)]
 #[openapi(
-    paths(me, add_email, delete_email, set_primary_email, change_password, get_apps, create_app),
+    paths(
+        me, add_email, delete_email, set_primary_email, change_password,
+        get_owned_applications, create_application
+    ),
     components(schemas(
         dto::response::Account,
-        dto::response::BasicAppInfo,
-        dto::response::AppInfo,
+        dto::response::ApplicationSummary,
+        dto::response::CreatedApplication,
         dto::request::Email,
         dto::request::ChangePassword,
-        dto::request::AppName,
+        dto::request::ApplicationName,
     )),
     modifiers(&ApiDocAuthAddon),
     security(("session_jwt" = []))

@@ -8,8 +8,8 @@ use axum::{
 };
 use service::{
     AppState,
-    handlers::{AppManagementHandler, AuthenticationHandler, HandlerError},
-    id::{AccountId, AppId},
+    handlers::{ApplicationManagementHandler, AuthenticationHandler, HandlerError},
+    id::{AccountId, ApplicationId},
 };
 use tower_governor::key_extractor::KeyExtractor;
 use utoipa::{Modify, openapi};
@@ -72,19 +72,19 @@ pub async fn auth_email_verification_session(
 
 /// Authenticate the login session before email verification.
 #[tracing::instrument(level = "debug", skip_all)]
-pub async fn auth_app_owership(
+pub async fn auth_application_ownership(
     State(state): State<AppState>,
     Extension(account_id): Extension<AccountId>,
-    Path(app_id): Path<AppId>,
+    Path(application_id): Path<ApplicationId>,
     mut req: Request,
     next: Next,
 ) -> AppMiddlewareResult<Response> {
-    if AppManagementHandler(state)
-        .auth_app_ownership(account_id, app_id)
+    if ApplicationManagementHandler(state)
+        .auth_ownership(application_id, account_id)
         .await
         .is_ok()
     {
-        req.extensions_mut().insert(app_id);
+        req.extensions_mut().insert(application_id);
 
         Ok(next.run(req).await)
     } else {
@@ -92,7 +92,7 @@ pub async fn auth_app_owership(
     }
 }
 
-/// utoipa modifiers for middleware documentations.
+/// utoipa modifiers for middleware documentation.
 pub struct ApiDocAuthAddon;
 
 impl Modify for ApiDocAuthAddon {

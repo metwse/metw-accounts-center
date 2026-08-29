@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT EXISTS(\n                    SELECT 1 FROM apps WHERE owner_account_id = $1 AND app_id = $2\n                ) AS \"exists!\"",
+  "query": "SELECT EXISTS(\n                    SELECT 1 FROM applications\n                        WHERE owner_account_id = $1 AND application_id = $2\n                ) AS \"exists!\"",
   "describe": {
     "columns": [
       {
@@ -20,5 +20,5 @@
       null
     ]
   },
-  "hash": "128039146d26a975e975698bd8b29a91399b41028d23dfce7e9fe05fbcea303a"
+  "hash": "26c49ebe738063e9c25129a6f61dd9ed60e99067d64a9dacd1b8cf8b7441b678"
 }

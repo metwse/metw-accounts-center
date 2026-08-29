@@ -29,9 +29,9 @@ pub mod res;
     external_docs(url = "https://metwse.github.io/metw-accounts-center/", description = "Crate documentation"),
     paths(get_status),
     nest(
+        (path = "/", api = routes::application_management::ApiDoc, tags = ["application_management"]),
         (path = "/", api = routes::authentication::ApiDoc, tags = ["authentication"]),
         (path = "/", api = routes::authorization::ApiDoc, tags = ["authorization"]),
-        (path = "/", api = routes::app_management::ApiDoc, tags = ["app_management"]),
         (path = "/", api = routes::session::ApiDoc, tags = ["session"]),
         (path = "/", api = routes::email_verification_session::ApiDoc, tags = ["email_verification_session"]),
     )
@@ -73,9 +73,9 @@ pub fn app(state: AppState) -> Router {
         .route("/", get(get_status))
         .route("/openapi.json", get(async || Json(ApiDoc::openapi())))
         .with_state(state.clone())
+        .merge(routes::application_management::routes(state.clone()))
         .merge(routes::authentication::routes(state.clone()))
         .merge(routes::authorization::routes(state.clone()))
-        .merge(routes::app_management::routes(state.clone()))
         .merge(routes::email_verification_session::routes(state.clone()))
         .merge(routes::session::routes(state))
         .route_layer(axum::middleware::from_fn(

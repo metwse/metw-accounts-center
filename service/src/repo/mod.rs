@@ -1,6 +1,6 @@
 use crate::{
     dto, entity,
-    id::{AccountId, AppId},
+    id::{AccountId, ApplicationId},
     token::{DecodedToken, TokenScope},
 };
 use async_trait::async_trait;
@@ -194,52 +194,64 @@ pub trait AccountRepoTransaction: Send + Sync {
     ) -> RepoResult<()>;
 }
 
-/// 3rd party applications - user-registered auhtorization consent screen.
+/// 3rd party applications - user-registered authorization consent screen.
 #[async_trait]
-pub trait AppRepo: Send + Sync {
+pub trait ApplicationRepo: Send + Sync {
     /// Begin a new transactional unit.
-    async fn begin_transaction(&self) -> RepoResult<Box<dyn AppRepoTransaction>>;
+    async fn begin_transaction(&self) -> RepoResult<Box<dyn ApplicationRepoTransaction>>;
 
     /// Gets list of the applications owned by the account.
-    async fn get_apps(
+    async fn list_by_owner(
         &self,
         account_id: AccountId,
-    ) -> RepoResult<Vec<dto::repo::OwnedBasicAppInfo>>;
+    ) -> RepoResult<Vec<dto::repo::OwnedApplicationSummary>>;
 
     /// Gets list of the redirect URLs of the application.
-    async fn get_redirect_urls(&self, app_id: AppId) -> RepoResult<Vec<String>>;
+    async fn list_redirect_urls(&self, application_id: ApplicationId) -> RepoResult<Vec<String>>;
 
-    /// Wheter or not the application is owned by given account.
-    async fn is_app_owned_by(&self, account_id: AccountId, app_id: AppId) -> RepoResult<bool>;
+    /// Whether or not the application is owned by given account.
+    async fn is_owned_by(
+        &self,
+        application_id: ApplicationId,
+        account_id: AccountId,
+    ) -> RepoResult<bool>;
 }
 
 /// Transactional application repository access wrapper.
 #[async_trait]
-pub trait AppRepoTransaction: Send + Sync {
+pub trait ApplicationRepoTransaction: Send + Sync {
     /// Commit the changes.
     async fn commit(self: Box<Self>) -> RepoResult<()>;
 
     /// Inserts a new application.
-    async fn insert_app(&mut self, app: entity::App) -> RepoResult<()>;
+    async fn insert(&mut self, application: entity::Application) -> RepoResult<()>;
+
+    /// Deletes the application.
+    async fn delete(&mut self, application_id: ApplicationId) -> RepoResult<()>;
 
     /// Updates the application's client secret hash.
-    async fn update_client_secret_hash(
+    async fn set_client_secret_hash(
         &mut self,
-        app_id: AppId,
+        application_id: ApplicationId,
         client_secret_hash: &[u8; 32],
     ) -> RepoResult<()>;
 
     /// Change name of the application.
-    async fn update_name(&mut self, app_id: AppId, name: &str) -> RepoResult<()>;
-
-    /// Deletes the application.
-    async fn delete_app(&mut self, app_id: AppId) -> RepoResult<()>;
+    async fn set_name(&mut self, application_id: ApplicationId, name: &str) -> RepoResult<()>;
 
     /// Adds a new redirect URL.
-    async fn add_redirect_url(&mut self, app_id: AppId, redirect_url: &str) -> RepoResult<()>;
+    async fn insert_redirect_url(
+        &mut self,
+        application_id: ApplicationId,
+        redirect_url: &str,
+    ) -> RepoResult<()>;
 
     /// Removes the redirect URL.
-    async fn remove_redirect_url(&mut self, app_id: AppId, redirect_url: &str) -> RepoResult<()>;
+    async fn delete_redirect_url(
+        &mut self,
+        application_id: ApplicationId,
+        redirect_url: &str,
+    ) -> RepoResult<()>;
 }
 
 /// Token revocation state.

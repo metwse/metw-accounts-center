@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "DELETE FROM apps WHERE app_id = $1",
+  "query": "DELETE FROM applications WHERE application_id = $1",
   "describe": {
     "columns": [],
     "parameters": {
@@ -10,5 +10,5 @@
     },
     "nullable": []
   },
-  "hash": "3699849ae2a1c541f3bb9cf51ccb8704e83ef97dd2e6ae6209580c5a890df822"
+  "hash": "484ac661c4c42e493e970ed217c3753bdb28d60ed9682c1bd6e0d14e9859b9bb"
 }

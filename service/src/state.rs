@@ -1,6 +1,6 @@
 use crate::{
     client::{CaptchaClient, EmailClient},
-    service::{AccountService, AppService, EmailLimitingService, TokenService},
+    service::{AccountService, ApplicationService, EmailLimitingService, TokenService},
 };
 use std::sync::Arc;
 
@@ -9,7 +9,7 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct AppState {
     pub account_service: Arc<AccountService>,
-    pub app_service: Arc<AppService>,
+    pub application_service: Arc<ApplicationService>,
     pub token_service: Arc<TokenService>,
     pub email_limiting_service: Arc<EmailLimitingService>,
     pub email_client: Arc<dyn EmailClient>,

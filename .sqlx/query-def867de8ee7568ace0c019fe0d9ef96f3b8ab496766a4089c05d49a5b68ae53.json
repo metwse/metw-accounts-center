@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT name, app_id AS \"app_id!: AppId\" FROM apps WHERE owner_account_id = $1",
+  "query": "SELECT name, application_id AS \"application_id!: ApplicationId\"\n                FROM applications WHERE owner_account_id = $1",
   "describe": {
     "columns": [
       {
@@ -9,19 +9,19 @@
         "type_info": "Varchar",
         "origin": {
           "Table": {
-            "table": "apps",
+            "table": "applications",
             "name": "name"
           }
         }
       },
       {
         "ordinal": 1,
-        "name": "app_id!: AppId",
+        "name": "application_id!: ApplicationId",
         "type_info": "Int8",
         "origin": {
           "Table": {
-            "table": "apps",
-            "name": "app_id"
+            "table": "applications",
+            "name": "application_id"
           }
         }
       }
@@ -36,5 +36,5 @@
       false
     ]
   },
-  "hash": "367ab6921ce76703bdd802ab9e5f63f44559253dd8e86f47ee6f2e8b6f18dd96"
+  "hash": "def867de8ee7568ace0c019fe0d9ef96f3b8ab496766a4089c05d49a5b68ae53"
 }
