@@ -4,10 +4,10 @@ use std::net::IpAddr;
 use tracing::trace;
 
 /// Account handlers that **does require** escalated privileges.
-pub struct AuthorizationHandler(pub AppState);
+pub struct TokenActionHandler(pub AppState);
 
-impl AuthorizationHandler {
-    /// Handle privileged tokens.
+impl TokenActionHandler {
+    /// Handle email tokens.
     ///
     /// See [`TokenScope`].
     #[tracing::instrument(

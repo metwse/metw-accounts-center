@@ -18,7 +18,7 @@ impl AccountService {
         skip_all,
         fields(account_id = tracing::field::Empty, username = signup_dto.username)
     )]
-    pub async fn create(&self, signup_dto: &dto::request::Signup) -> ServiceResult<AccountId> {
+    pub async fn signup(&self, signup_dto: &dto::request::Signup) -> ServiceResult<AccountId> {
         let (is_email_taken_res, is_username_taken_rs) = tokio::join!(
             self.repo.is_email_taken(&signup_dto.email),
             self.repo.is_username_taken(&signup_dto.username)

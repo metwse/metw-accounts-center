@@ -2,7 +2,7 @@
 
 use crate::{
     middleware::{
-        auth::{ApiDocAuthAddon, GovernorAccountIdKeyExtractor, auth_session},
+        access_control::{ApiDocSecurityAddon, GovernorAccountIdKeyExtractor, require_session},
         extract_real_ip::GovernorIpKeyExtractor,
         limiter,
     },
@@ -158,15 +158,18 @@ pub fn routes(state: AppState) -> Router {
         .route("/me/change-password", post(change_password))
         .route("/me/applications", get(get_owned_applications))
         .route("/me/applications", post(create_application))
-        .layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
+        .route_layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
             10,
             Duration::from_secs(5),
         ))
-        .layer(limiter::basic::<GovernorIpKeyExtractor>(
+        .route_layer(limiter::basic::<GovernorIpKeyExtractor>(
             25,
             Duration::from_secs(5),
         ))
-        .route_layer(middleware::from_fn_with_state(state.clone(), auth_session))
+        .route_layer(middleware::from_fn_with_state(
+            state.clone(),
+            require_session,
+        ))
         .with_state(state)
 }
 
@@ -185,7 +188,7 @@ pub fn routes(state: AppState) -> Router {
         dto::request::ChangePassword,
         dto::request::ApplicationName,
     )),
-    modifiers(&ApiDocAuthAddon),
+    modifiers(&ApiDocSecurityAddon),
     security(("session_jwt" = []))
 )]
 pub struct ApiDoc;

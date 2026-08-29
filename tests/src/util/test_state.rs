@@ -5,7 +5,7 @@ use service::{
         mock::{Emails, MockCaptchaClientImpl, MockEmailClientImpl},
     },
     dto,
-    handlers::{AuthenticationHandler, AuthorizationHandler, HandlerResult},
+    handlers::{AuthenticationHandler, HandlerResult, TokenActionHandler},
     id::AccountId,
     repo::{
         AccountRepo, ApplicationRepo, TokenRepo,
@@ -139,7 +139,7 @@ impl TestState {
             unreachable!()
         };
 
-        AuthorizationHandler(self.state.clone())
+        TokenActionHandler(self.state.clone())
             .execute_token_action(
                 dto::request::Token {
                     token: complete_signup_jwt,

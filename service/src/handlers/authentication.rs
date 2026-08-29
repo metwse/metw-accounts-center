@@ -95,7 +95,7 @@ impl AuthenticationHandler {
             .check_and_consume_quota(&ip, &email)
             .await?;
 
-        let account_id = match self.0.account_service.create(&signup_dto).await {
+        let account_id = match self.0.account_service.signup(&signup_dto).await {
             Ok(account_id) => account_id,
             Err(err) => {
                 self.0

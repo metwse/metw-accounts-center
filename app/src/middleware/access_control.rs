@@ -14,7 +14,7 @@ use service::{
 use tower_governor::key_extractor::KeyExtractor;
 use utoipa::{Modify, openapi};
 
-fn extract_token(req: &Request) -> Option<String> {
+fn extract_bearer_token(req: &Request) -> Option<String> {
     req.headers()
         .get(header::AUTHORIZATION)
         .and_then(|header| header.to_str().ok())
@@ -24,12 +24,12 @@ fn extract_token(req: &Request) -> Option<String> {
 
 /// Authenticate a login session.
 #[tracing::instrument(level = "debug", skip_all)]
-pub async fn auth_session(
+pub async fn require_session(
     State(state): State<AppState>,
     mut req: Request,
     next: Next,
 ) -> AppMiddlewareResult<Response> {
-    let Some(token) = extract_token(&req) else {
+    let Some(token) = extract_bearer_token(&req) else {
         return Err(HandlerError::Unauthorized)?;
     };
 
@@ -48,12 +48,12 @@ pub async fn auth_session(
 
 /// Authenticate the login session before email verification.
 #[tracing::instrument(level = "debug", skip_all)]
-pub async fn auth_email_verification_session(
+pub async fn require_email_verification_session(
     State(state): State<AppState>,
     mut req: Request,
     next: Next,
 ) -> AppMiddlewareResult<Response> {
-    let Some(token) = extract_token(&req) else {
+    let Some(token) = extract_bearer_token(&req) else {
         return Err(HandlerError::Unauthorized)?;
     };
 
@@ -72,7 +72,7 @@ pub async fn auth_email_verification_session(
 
 /// Authenticate the login session before email verification.
 #[tracing::instrument(level = "debug", skip_all)]
-pub async fn auth_application_ownership(
+pub async fn require_application_ownership(
     State(state): State<AppState>,
     Extension(account_id): Extension<AccountId>,
     Path(application_id): Path<ApplicationId>,
@@ -80,7 +80,7 @@ pub async fn auth_application_ownership(
     next: Next,
 ) -> AppMiddlewareResult<Response> {
     if ApplicationManagementHandler(state)
-        .auth_ownership(application_id, account_id)
+        .authorize_ownership(application_id, account_id)
         .await
         .is_ok()
     {
@@ -93,9 +93,9 @@ pub async fn auth_application_ownership(
 }
 
 /// utoipa modifiers for middleware documentation.
-pub struct ApiDocAuthAddon;
+pub struct ApiDocSecurityAddon;
 
-impl Modify for ApiDocAuthAddon {
+impl Modify for ApiDocSecurityAddon {
     fn modify(&self, openapi: &mut openapi::OpenApi) {
         if let Some(components) = openapi.components.as_mut() {
             components.add_security_scheme(
@@ -122,7 +122,7 @@ impl Modify for ApiDocAuthAddon {
 }
 
 /// A key extractor that tries to get rate limiting key from the extension
-/// added by [`auth_session`] or [`auth_email_verification_session`].
+/// added by [`require_session`] or [`require_email_verification_session`].
 #[derive(Clone, Default)]
 pub struct GovernorAccountIdKeyExtractor;
 

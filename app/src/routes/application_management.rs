@@ -2,9 +2,9 @@
 
 use crate::{
     middleware::{
-        auth::{
-            ApiDocAuthAddon, GovernorAccountIdKeyExtractor, auth_application_ownership,
-            auth_session,
+        access_control::{
+            ApiDocSecurityAddon, GovernorAccountIdKeyExtractor, require_application_ownership,
+            require_session,
         },
         extract_real_ip::GovernorIpKeyExtractor,
         limiter,
@@ -151,19 +151,22 @@ pub fn routes(state: AppState) -> Router {
             "/me/applications/{application_id}/redirect-urls",
             get(get_redirect_urls),
         )
-        .layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
+        .route_layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
             5,
             Duration::from_secs(5),
         ))
-        .layer(limiter::basic::<GovernorIpKeyExtractor>(
+        .route_layer(limiter::basic::<GovernorIpKeyExtractor>(
             5,
             Duration::from_secs(5),
         ))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
-            auth_application_ownership,
+            require_application_ownership,
         ))
-        .route_layer(middleware::from_fn_with_state(state.clone(), auth_session))
+        .route_layer(middleware::from_fn_with_state(
+            state.clone(),
+            require_session,
+        ))
         .with_state(state)
 }
 
@@ -178,7 +181,7 @@ pub fn routes(state: AppState) -> Router {
         dto::request::ApplicationName,
         dto::request::ApplicationRedirectUrl,
     )),
-    modifiers(&ApiDocAuthAddon),
+    modifiers(&ApiDocSecurityAddon),
     security(("session_jwt" = []))
 )]
 pub struct ApiDoc;

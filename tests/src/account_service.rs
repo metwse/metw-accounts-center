@@ -52,18 +52,18 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
     assert!(!account_service.is_username_taken(username).await?);
     assert!(!account_service.is_email_taken(email).await?);
 
-    let account_id = account_service.create(&signup_dto).await?;
+    let account_id = account_service.signup(&signup_dto).await?;
     assert!(account_service.is_username_taken(username).await?);
     assert!(!account_service.is_email_taken(email).await?);
 
     // We will not able to activate this account as the email will be taken
     // from the other account.
     signup_dto.username = username2.to_string();
-    let taken_email_cannot_verify_account_id = account_service.create(&signup_dto).await?;
+    let taken_email_cannot_verify_account_id = account_service.signup(&signup_dto).await?;
 
     signup_dto.email = another_email.to_string();
     assert_matches!(
-        account_service.create(&signup_dto).await,
+        account_service.signup(&signup_dto).await,
         Err(ServiceError::UsernameTaken)
     );
 
@@ -127,7 +127,7 @@ pub async fn account_creation(account_service: Arc<AccountService>) -> ServiceRe
     signup_dto.email = email.to_string();
     signup_dto.username = another_username.to_string();
     assert_matches!(
-        account_service.create(&signup_dto).await,
+        account_service.signup(&signup_dto).await,
         Err(ServiceError::EmailTaken)
     );
 
@@ -174,7 +174,7 @@ pub async fn account_creation_data_race(
     let mut signup_futures = Vec::with_capacity(16);
 
     for _ in 0..16 {
-        signup_futures.push(account_service.create(&signup_dto));
+        signup_futures.push(account_service.signup(&signup_dto));
     }
 
     let signup_results = futures_util::future::join_all(signup_futures).await;

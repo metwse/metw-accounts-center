@@ -96,7 +96,7 @@ pub fn routes(state: AppState) -> Router {
             get(get_client_password_kdf),
         )
         .route("/logout", post(logout))
-        .layer(basic::<GovernorIpKeyExtractor>(5, Duration::from_secs(5)))
+        .route_layer(basic::<GovernorIpKeyExtractor>(5, Duration::from_secs(5)))
         .with_state(state.clone())
 }
 

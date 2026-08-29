@@ -2,8 +2,8 @@ use crate::util::TestState;
 use service::{
     dto,
     handlers::{
-        AuthenticationHandler, AuthorizationHandler, EmailVerificationSessionHandler, HandlerError,
-        HandlerResult, SessionHandler,
+        AuthenticationHandler, EmailVerificationSessionHandler, HandlerError, HandlerResult,
+        SessionHandler, TokenActionHandler,
     },
     id::AccountId,
     service::ServiceError,
@@ -105,7 +105,7 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
     };
 
     // Now the second email is added.
-    AuthorizationHandler(ctx.state.clone())
+    TokenActionHandler(ctx.state.clone())
         .execute_token_action(
             dto::request::Token {
                 token: complete_signup_jwt,
@@ -139,7 +139,7 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
     assert!(me.email.is_none());
 
     // Now the email is added.
-    AuthorizationHandler(ctx.state.clone())
+    TokenActionHandler(ctx.state.clone())
         .execute_token_action(
             dto::request::Token {
                 token: complete_signup_jwt,
@@ -214,7 +214,7 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
 
     // Provide session tokens to authorization handler.
     assert_matches!(
-        AuthorizationHandler(ctx.state.clone())
+        TokenActionHandler(ctx.state.clone())
             .execute_token_action(
                 dto::request::Token {
                     token: session_jwt_from_email
@@ -225,11 +225,11 @@ pub async fn signup_and_login(ctx: &TestState) -> HandlerResult<()> {
             .unwrap_err(),
         HandlerError::Unauthorized
     );
-    // Previous AuthorizationHandler call revoked the token. If the JWTs from
-    // username and email logins are the same, then this AuthorizationHandler
+    // Previous TokenActionHandler call revoked the token. If the JWTs from
+    // username and email logins are the same, then this TokenActionHandler
     // call will return Unauthorized.
     assert_matches!(
-        AuthorizationHandler(ctx.state.clone())
+        TokenActionHandler(ctx.state.clone())
             .execute_token_action(
                 dto::request::Token {
                     token: session_jwt_from_username
@@ -412,7 +412,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
         let add_email_token = ctx.state.token_service.verify(&add_email_jwt).await?;
 
         // Add the email.
-        AuthorizationHandler(ctx.state.clone())
+        TokenActionHandler(ctx.state.clone())
             .execute_token_action(
                 dto::request::Token {
                     token: add_email_jwt.clone(),
@@ -454,7 +454,7 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
             .await?;
 
         // Change the primary email.
-        AuthorizationHandler(ctx.state.clone())
+        TokenActionHandler(ctx.state.clone())
             .execute_token_action(
                 dto::request::Token {
                     token: change_primary_email_jwt.clone(),

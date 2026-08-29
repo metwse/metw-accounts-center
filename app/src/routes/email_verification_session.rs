@@ -2,7 +2,9 @@
 
 use crate::{
     middleware::{
-        auth::{ApiDocAuthAddon, GovernorAccountIdKeyExtractor, auth_email_verification_session},
+        access_control::{
+            ApiDocSecurityAddon, GovernorAccountIdKeyExtractor, require_email_verification_session,
+        },
         extract_real_ip::GovernorIpKeyExtractor,
         limiter,
     },
@@ -39,17 +41,17 @@ async fn retry_signup(
 pub fn routes(state: AppState) -> Router {
     Router::new()
         .route("/signup/retry", post(retry_signup))
-        .layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
+        .route_layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
             2,
             Duration::from_secs(5),
         ))
-        .layer(limiter::basic::<GovernorIpKeyExtractor>(
+        .route_layer(limiter::basic::<GovernorIpKeyExtractor>(
             5,
             Duration::from_secs(5),
         ))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
-            auth_email_verification_session,
+            require_email_verification_session,
         ))
         .with_state(state)
 }
@@ -58,7 +60,7 @@ pub fn routes(state: AppState) -> Router {
 #[openapi(
     paths(retry_signup),
     components(schemas(dto::request::RetrySignup)),
-    modifiers(&ApiDocAuthAddon),
+    modifiers(&ApiDocSecurityAddon),
     security(("email_verification_session_jwt" = []))
 )]
 pub struct ApiDoc;

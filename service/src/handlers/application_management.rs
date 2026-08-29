@@ -19,7 +19,7 @@ impl ApplicationManagementHandler {
     ///
     /// *This handler is intended for middleware.*
     #[tracing::instrument(level = "debug", skip_all)]
-    pub async fn auth_ownership(
+    pub async fn authorize_ownership(
         &self,
         application_id: ApplicationId,
         account_id: AccountId,

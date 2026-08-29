@@ -1,16 +1,16 @@
-//! See [`AuthorizationHandler`].
+//! See [`TokenActionHandler`].
 
 use crate::{
     middleware::{extract_real_ip::GovernorIpKeyExtractor, limiter},
     res::{AppJson, AppResult},
 };
 use axum::{Extension, Router, extract::State, routing::post};
-use service::{AppState, dto, handlers::AuthorizationHandler};
+use service::{AppState, dto, handlers::TokenActionHandler};
 use std::{net::IpAddr, time::Duration};
 use utoipa::OpenApi;
 
 #[utoipa::path(
-    post, path = "auth",
+    post, path = "token-actions",
     request_body = dto::request::Token,
     responses(
         (status = OK)
@@ -22,7 +22,7 @@ async fn execute_token_action(
     AppJson(token_dto): AppJson<dto::request::Token>,
 ) -> AppResult<()> {
     Ok(AppJson(
-        AuthorizationHandler(state)
+        TokenActionHandler(state)
             .execute_token_action(token_dto, real_ip)
             .await?,
     ))
@@ -30,8 +30,8 @@ async fn execute_token_action(
 
 pub fn routes(state: AppState) -> Router {
     Router::new()
-        .route("/auth", post(execute_token_action))
-        .layer(limiter::basic::<GovernorIpKeyExtractor>(
+        .route("/token-actions", post(execute_token_action))
+        .route_layer(limiter::basic::<GovernorIpKeyExtractor>(
             2,
             Duration::from_secs(5),
         ))
