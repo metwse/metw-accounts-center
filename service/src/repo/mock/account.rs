@@ -1,9 +1,5 @@
 use super::super::{AccountRepo, AccountRepoTransaction, RepoResult};
-use crate::{
-    checked_now, dto, entity,
-    id::AccountId,
-    repo::{RepoError, limits},
-};
+use crate::{checked_now, dto, entity, id::AccountId, repo::RepoError};
 use async_trait::async_trait;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{Mutex, MutexGuard, OwnedMutexGuard};
@@ -295,16 +291,6 @@ impl AccountRepo for MockAccountRepoImpl {
 
         Ok(email_entity.account_id == account_id)
     }
-
-    async fn count_emails(&self, account_id: AccountId) -> RepoResult<usize> {
-        let state = self.lock_state().await;
-
-        Ok(state
-            .emails
-            .iter()
-            .filter(|(_, email_entity)| email_entity.account_id == account_id)
-            .count())
-    }
 }
 
 struct MockAccountRepoTransactionImpl {
@@ -317,6 +303,11 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
     async fn commit(mut self: Box<Self>) -> RepoResult<()> {
         *self.commit_state = self.state;
 
+        Ok(())
+    }
+
+    async fn lock(&mut self, _account_id: AccountId) -> RepoResult<()> {
+        // The mock implementation already locks entire database.
         Ok(())
     }
 
@@ -346,18 +337,7 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         email: &str,
         is_primary: bool,
     ) -> RepoResult<()> {
-        // If the account has reached the maximum allowed number of emails,
-        // silently skip the insertion.
-        if self
-            .state
-            .emails
-            .iter()
-            .filter(|(_, email_entity)| email_entity.account_id == account_id)
-            .count()
-            >= limits::account_repo::MAXIMUM_EMAIL_COUNT
-        {
-            Ok(())
-        } else if self.state.emails.contains_key(email) {
+        if self.state.emails.contains_key(email) {
             Err(RepoError::Internal("email is taken"))
         } else {
             self.state.emails.insert(
@@ -428,5 +408,14 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         } else {
             Err(RepoError::Internal("account does not exists"))
         }
+    }
+
+    async fn count_emails(&mut self, account_id: AccountId) -> RepoResult<usize> {
+        Ok(self
+            .state
+            .emails
+            .iter()
+            .filter(|(_, email_entity)| email_entity.account_id == account_id)
+            .count())
     }
 }

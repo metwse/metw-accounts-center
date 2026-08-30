@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use service::{
     dto, entity,
     id::AccountId,
-    repo::{AccountRepo, AccountRepoTransaction, RepoResult, limits},
+    repo::{AccountRepo, AccountRepoTransaction, RepoResult},
 };
 use sqlx::{PgPool, PgTransaction, types::Json};
 
@@ -324,17 +324,6 @@ impl AccountRepo for AccountRepoImpl {
 
         Ok(is_email_owned_by)
     }
-
-    async fn count_emails(&self, account_id: AccountId) -> RepoResult<usize> {
-        let count = sqlx::query_scalar!(
-            r#"SELECT COUNT(*) AS "count!" FROM emails WHERE account_id = $1"#,
-            account_id as _
-        )
-        .fetch_one(&self.pool)
-        .await?;
-
-        Ok(count as usize)
-    }
 }
 
 struct AccountRepoTransactionImpl<'a> {
@@ -353,6 +342,18 @@ impl AccountRepoTransactionImpl<'_> {
 impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
     async fn commit(self: Box<Self>) -> RepoResult<()> {
         self.tx.commit().await?;
+
+        Ok(())
+    }
+
+    async fn lock(&mut self, account_id: AccountId) -> RepoResult<()> {
+        sqlx::query!(
+            "SELECT account_id FROM accounts WHERE account_id = $1 FOR UPDATE",
+            account_id as _
+        )
+        .fetch_optional(&mut *self.tx)
+        .await
+        .ok();
 
         Ok(())
     }
@@ -399,12 +400,10 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
     ) -> RepoResult<()> {
         sqlx::query!(
             "INSERT INTO emails (account_id, email, is_primary)
-                SELECT $1, $2, $3
-                WHERE (SELECT COUNT(*) FROM emails WHERE account_id = $1) < $4",
+                VALUES ($1, $2, $3)",
             account_id as _,
             email,
             is_primary,
-            limits::account_repo::MAXIMUM_EMAIL_COUNT as i64
         )
         .execute(&mut *self.tx)
         .await?;
@@ -472,5 +471,16 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
         .await?;
 
         Ok(())
+    }
+
+    async fn count_emails(&mut self, account_id: AccountId) -> RepoResult<usize> {
+        let count = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) AS "count!" FROM emails WHERE account_id = $1"#,
+            account_id as _
+        )
+        .fetch_one(&mut *self.tx)
+        .await?;
+
+        Ok(count as usize)
     }
 }

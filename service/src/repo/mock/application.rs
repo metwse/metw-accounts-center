@@ -82,26 +82,6 @@ impl ApplicationRepo for MockApplicationRepoImpl {
 
         Ok(application_entity.owner_account_id == account_id)
     }
-
-    async fn count_by_owner(&self, account_id: AccountId) -> RepoResult<usize> {
-        let state = self.lock_state().await;
-
-        Ok(state
-            .applications
-            .iter()
-            .filter(|(_, application_entity)| application_entity.owner_account_id == account_id)
-            .count())
-    }
-
-    async fn count_redirect_urls(&self, application_id: ApplicationId) -> RepoResult<usize> {
-        let state = self.lock_state().await;
-
-        Ok(state
-            .application_redirect_urls
-            .get(&application_id)
-            .map(|redirect_urls| redirect_urls.len())
-            .unwrap_or(0))
-    }
 }
 
 struct MockApplicationRepoTransactionImpl {
@@ -114,6 +94,16 @@ impl ApplicationRepoTransaction for MockApplicationRepoTransactionImpl {
     async fn commit(mut self: Box<Self>) -> RepoResult<()> {
         *self.commit_state = self.state;
 
+        Ok(())
+    }
+
+    async fn lock(&mut self, _application_id: ApplicationId) -> RepoResult<()> {
+        // The mock implementation already locks entire database.
+        Ok(())
+    }
+
+    async fn lock_account(&mut self, _account_id: AccountId) -> RepoResult<()> {
+        // The mock implementation already locks entire database.
         Ok(())
     }
 
@@ -212,5 +202,23 @@ impl ApplicationRepoTransaction for MockApplicationRepoTransactionImpl {
         };
 
         Ok(())
+    }
+
+    async fn count_by_owner(&mut self, account_id: AccountId) -> RepoResult<usize> {
+        Ok(self
+            .state
+            .applications
+            .iter()
+            .filter(|(_, application_entity)| application_entity.owner_account_id == account_id)
+            .count())
+    }
+
+    async fn count_redirect_urls(&mut self, application_id: ApplicationId) -> RepoResult<usize> {
+        Ok(self
+            .state
+            .application_redirect_urls
+            .get(&application_id)
+            .map(|redirect_urls| redirect_urls.len())
+            .unwrap_or(0))
     }
 }

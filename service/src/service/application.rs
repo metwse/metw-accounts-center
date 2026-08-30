@@ -24,15 +24,6 @@ impl ApplicationService {
         account_id: AccountId,
         name: &str,
     ) -> ServiceResult<dto::service::CreatedApplication> {
-        // Best-effort early fail: Repository should also check this.
-        if self.repo.count_by_owner(account_id).await?
-            >= limits::application_repo::MAXIMUM_APPLICATION_COUNT
-        {
-            return Err(ServiceError::TooManyApplications(
-                limits::application_repo::MAXIMUM_APPLICATION_COUNT,
-            ));
-        }
-
         let application_id = ApplicationId::unique();
         let client_secret = client_secret::random_client_secret();
         let client_secret_hash = client_secret::hash_client_secret(&client_secret);
@@ -45,7 +36,19 @@ impl ApplicationService {
         };
 
         let mut transaction = self.repo.begin_transaction().await?;
+
+        transaction.lock_account(account_id).await?;
+
+        if transaction.count_by_owner(account_id).await?
+            >= limits::application_repo::MAXIMUM_APPLICATION_COUNT
+        {
+            return Err(ServiceError::TooManyApplications(
+                limits::application_repo::MAXIMUM_APPLICATION_COUNT,
+            ));
+        }
+
         transaction.insert(application).await?;
+
         transaction.commit().await?;
 
         Ok(dto::service::CreatedApplication {
@@ -118,8 +121,11 @@ impl ApplicationService {
         application_id: ApplicationId,
         redirect_url: &str,
     ) -> ServiceResult<()> {
-        // Best-effort early fail: Repository should also check this.
-        if self.repo.count_redirect_urls(application_id).await?
+        let mut transaction = self.repo.begin_transaction().await?;
+
+        transaction.lock(application_id).await?;
+
+        if transaction.count_redirect_urls(application_id).await?
             >= limits::application_repo::MAXIMUM_REDIRECT_URL_COUNT
         {
             return Err(ServiceError::TooManyRedirectUrls(
@@ -127,10 +133,10 @@ impl ApplicationService {
             ));
         }
 
-        let mut transaction = self.repo.begin_transaction().await?;
         transaction
             .insert_redirect_url(application_id, redirect_url)
             .await?;
+
         transaction.commit().await?;
 
         Ok(())

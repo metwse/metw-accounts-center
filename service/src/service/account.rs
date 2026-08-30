@@ -291,18 +291,22 @@ impl AccountService {
         account_id: AccountId,
         email: &str,
     ) -> ServiceResult<()> {
-        // Best-effort early fail: Repository should also check this.
-        if self.repo.count_emails(account_id).await? >= limits::account_repo::MAXIMUM_EMAIL_COUNT {
+        let mut transaction = self.repo.begin_transaction().await?;
+
+        transaction.lock(account_id).await?;
+
+        if transaction.count_emails(account_id).await? >= limits::account_repo::MAXIMUM_EMAIL_COUNT
+        {
             return Err(ServiceError::TooManyEmails(
                 limits::account_repo::MAXIMUM_EMAIL_COUNT,
             ));
         }
 
-        let mut transaction = self.repo.begin_transaction().await?;
         transaction
             .insert_email(account_id, email, false)
             .await
             .map_err(|_| ServiceError::AddEmailFailed)?;
+
         transaction.commit().await?;
 
         Ok(())

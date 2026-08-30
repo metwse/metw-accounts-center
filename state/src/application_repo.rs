@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use service::{
     dto, entity,
     id::{AccountId, ApplicationId},
-    repo::{ApplicationRepo, ApplicationRepoTransaction, RepoResult, limits},
+    repo::{ApplicationRepo, ApplicationRepoTransaction, RepoResult},
 };
 use sqlx::{PgPool, PgTransaction};
 
@@ -72,30 +72,6 @@ impl ApplicationRepo for ApplicationRepoImpl {
 
         Ok(is_owned_by)
     }
-
-    async fn count_by_owner(&self, account_id: AccountId) -> RepoResult<usize> {
-        let count = sqlx::query_scalar!(
-            r#"SELECT COUNT(*) AS "count!" FROM applications
-                WHERE owner_account_id = $1"#,
-            account_id as _
-        )
-        .fetch_one(&self.pool)
-        .await?;
-
-        Ok(count as usize)
-    }
-
-    async fn count_redirect_urls(&self, application_id: ApplicationId) -> RepoResult<usize> {
-        let count = sqlx::query_scalar!(
-            r#"SELECT COUNT(*) AS "count!" FROM application_redirect_urls
-                WHERE application_id = $1"#,
-            application_id as _
-        )
-        .fetch_one(&self.pool)
-        .await?;
-
-        Ok(count as usize)
-    }
 }
 
 struct ApplicationRepoTransactionImpl<'a> {
@@ -118,21 +94,41 @@ impl ApplicationRepoTransaction for ApplicationRepoTransactionImpl<'_> {
         Ok(())
     }
 
+    async fn lock(&mut self, application_id: ApplicationId) -> RepoResult<()> {
+        sqlx::query!(
+            "SELECT application_id FROM applications
+                WHERE application_id = $1 FOR UPDATE",
+            application_id as _
+        )
+        .fetch_optional(&mut *self.tx)
+        .await
+        .ok();
+
+        Ok(())
+    }
+
+    async fn lock_account(&mut self, account_id: AccountId) -> RepoResult<()> {
+        sqlx::query!(
+            "SELECT account_id FROM accounts WHERE account_id = $1 FOR UPDATE",
+            account_id as _
+        )
+        .fetch_optional(&mut *self.tx)
+        .await
+        .ok();
+
+        Ok(())
+    }
+
     async fn insert(&mut self, application_entity: entity::Application) -> RepoResult<()> {
         sqlx::query!(
             "INSERT INTO applications (
                     application_id, owner_account_id,
                     name, client_secret_hash
-                ) SELECT $1, $2, $3, $4
-                WHERE (
-                    SELECT COUNT(*) FROM applications
-                        WHERE owner_account_id = $2
-                ) < $5",
+                ) VALUES ($1, $2, $3, $4)",
             application_entity.application_id as _,
             application_entity.owner_account_id as _,
             application_entity.name,
-            &application_entity.client_secret_hash,
-            limits::application_repo::MAXIMUM_APPLICATION_COUNT as i64
+            &application_entity.client_secret_hash
         )
         .execute(&mut *self.tx)
         .await?;
@@ -188,14 +184,9 @@ impl ApplicationRepoTransaction for ApplicationRepoTransactionImpl<'_> {
         sqlx::query!(
             "INSERT INTO application_redirect_urls
                 (application_id, redirect_url)
-                SELECT $1, $2
-                WHERE (
-                    SELECT COUNT(*) FROM application_redirect_urls
-                        WHERE application_id = $1
-                ) < $3",
+                VALUES ($1, $2)",
             application_id as _,
             redirect_url,
-            limits::application_repo::MAXIMUM_REDIRECT_URL_COUNT as i64
         )
         .execute(&mut *self.tx)
         .await?;
@@ -218,5 +209,29 @@ impl ApplicationRepoTransaction for ApplicationRepoTransactionImpl<'_> {
         .await?;
 
         Ok(())
+    }
+
+    async fn count_by_owner(&mut self, account_id: AccountId) -> RepoResult<usize> {
+        let count = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) AS "count!" FROM applications
+                WHERE owner_account_id = $1"#,
+            account_id as _
+        )
+        .fetch_one(&mut *self.tx)
+        .await?;
+
+        Ok(count as usize)
+    }
+
+    async fn count_redirect_urls(&mut self, application_id: ApplicationId) -> RepoResult<usize> {
+        let count = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) AS "count!" FROM application_redirect_urls
+                WHERE application_id = $1"#,
+            application_id as _
+        )
+        .fetch_one(&mut *self.tx)
+        .await?;
+
+        Ok(count as usize)
     }
 }

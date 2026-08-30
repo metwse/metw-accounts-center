@@ -6,12 +6,13 @@ use service::{
         SessionHandler, TokenActionHandler,
     },
     id::AccountId,
+    repo::limits,
     service::ServiceError,
     testutil::{random_email, random_ipv6, random_username},
     token::TokenScope,
     util::emails,
 };
-use std::{assert_matches, time::Duration};
+use std::{assert_matches, iter, time::Duration};
 
 /// Completes sign up with pending activation session.
 pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
@@ -490,14 +491,75 @@ pub async fn change_primary_email(ctx: &TestState) -> HandlerResult<()> {
     Ok(())
 }
 
+/// Try to excess limits on emails, applications etc.
+pub async fn limits_data_race(test_state: &TestState) -> HandlerResult<()> {
+    let (account_id, _, _) = test_state.signup_and_verify_email("123").await;
+
+    macro_rules! repeat_closure {
+        ($closure:expr, $n:expr, $expect_ok_n:expr) => {
+            assert_eq!(
+                futures_util::future::join_all(iter::repeat_with($closure).take($n))
+                    .await
+                    .iter()
+                    .filter(|res| res.is_ok())
+                    .count(),
+                $expect_ok_n
+            );
+        };
+    }
+
+    repeat_closure!(
+        || {
+            test_state
+                .state
+                .account_service
+                .confirm_email_addition(account_id, random_email())
+        },
+        limits::account_repo::MAXIMUM_EMAIL_COUNT.pow(2),
+        limits::account_repo::MAXIMUM_EMAIL_COUNT - 1
+    );
+
+    repeat_closure!(
+        || {
+            test_state
+                .state
+                .application_service
+                .create(account_id, random_username())
+        },
+        limits::application_repo::MAXIMUM_APPLICATION_COUNT.pow(2),
+        limits::application_repo::MAXIMUM_APPLICATION_COUNT
+    );
+
+    let (account2_id, _, _) = test_state.signup_and_verify_email("123").await;
+    let dto::service::CreatedApplication { application_id, .. } = test_state
+        .state
+        .application_service
+        .create(account2_id, random_username())
+        .await?;
+
+    repeat_closure!(
+        || {
+            test_state
+                .state
+                .application_service
+                .add_redirect_url(application_id, random_username())
+        },
+        limits::application_repo::MAXIMUM_REDIRECT_URL_COUNT.pow(2),
+        limits::application_repo::MAXIMUM_REDIRECT_URL_COUNT
+    );
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        change_primary_email, logout, retry_signup, signup_and_login, taken_username_or_email,
+        change_primary_email, limits_data_race, logout, retry_signup, signup_and_login,
+        taken_username_or_email,
     };
     use crate::util::{TestState, pg_pool_from_env, redis_con_generator_from_env};
     use service::handlers::HandlerResult;
-    use state::{AccountRepoImpl, TokenRepoImpl};
+    use state::{AccountRepoImpl, ApplicationRepoImpl, TokenRepoImpl};
 
     async fn testsuite(ctx: &TestState) -> HandlerResult<()> {
         let run_tests = async || {
@@ -506,7 +568,8 @@ mod tests {
                 signup_and_login(ctx),
                 logout(ctx),
                 taken_username_or_email(ctx),
-                change_primary_email(ctx)
+                change_primary_email(ctx),
+                limits_data_race(ctx),
             )
             .unwrap();
         };
@@ -535,11 +598,13 @@ mod tests {
         let pg_pool = pg_pool_from_env().await;
         let con_generator = redis_con_generator_from_env().await;
 
-        let account_repo = AccountRepoImpl::boxed_new(pg_pool);
+        let account_repo = AccountRepoImpl::boxed_new(pg_pool.clone());
+        let application_repo = ApplicationRepoImpl::boxed_new(pg_pool);
         let token_repo = TokenRepoImpl::boxed_new(&con_generator).await;
 
         let ctx = TestState::new()
             .with_account_repo(account_repo)
+            .with_application_repo(application_repo)
             .with_token_repo(token_repo);
 
         testsuite(&ctx).await

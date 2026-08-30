@@ -147,9 +147,6 @@ pub trait AccountRepo: Send + Sync {
 
     /// Returns true if the email has been taken by the given account.
     async fn is_email_owned_by(&self, account_id: AccountId, email: &str) -> RepoResult<bool>;
-
-    /// Returns count of the emails owned by the account.
-    async fn count_emails(&self, account_id: AccountId) -> RepoResult<usize>;
 }
 
 /// Transactional account repository access wrapper.
@@ -157,6 +154,9 @@ pub trait AccountRepo: Send + Sync {
 pub trait AccountRepoTransaction: Send + Sync {
     /// Commit the changes.
     async fn commit(self: Box<Self>) -> RepoResult<()>;
+
+    /// Lock the account for update.
+    async fn lock(&mut self, account_id: AccountId) -> RepoResult<()>;
 
     /// Register a new account.
     async fn insert(&mut self, account_entity: &entity::Account) -> RepoResult<()>;
@@ -195,6 +195,9 @@ pub trait AccountRepoTransaction: Send + Sync {
         client_password_kdf: &entity::ClientPasswordKdf,
         server_password_hash_algorithm: &entity::ServerPasswordHashAlgorithm,
     ) -> RepoResult<()>;
+
+    /// Returns count of the emails owned by the account.
+    async fn count_emails(&mut self, account_id: AccountId) -> RepoResult<usize>;
 }
 
 /// 3rd party applications - user-registered authorization consent screen.
@@ -218,12 +221,6 @@ pub trait ApplicationRepo: Send + Sync {
         application_id: ApplicationId,
         account_id: AccountId,
     ) -> RepoResult<bool>;
-
-    /// Returns count of the applications owned by the account.
-    async fn count_by_owner(&self, account_id: AccountId) -> RepoResult<usize>;
-
-    /// Number of allowed redirect URLas of the application.
-    async fn count_redirect_urls(&self, application_id: ApplicationId) -> RepoResult<usize>;
 }
 
 /// Transactional application repository access wrapper.
@@ -231,6 +228,12 @@ pub trait ApplicationRepo: Send + Sync {
 pub trait ApplicationRepoTransaction: Send + Sync {
     /// Commit the changes.
     async fn commit(self: Box<Self>) -> RepoResult<()>;
+
+    /// Lock the application for update.
+    async fn lock(&mut self, application_id: ApplicationId) -> RepoResult<()>;
+
+    /// Lock the account for update.
+    async fn lock_account(&mut self, account_id: AccountId) -> RepoResult<()>;
 
     /// Inserts a new application.
     async fn insert(&mut self, application: entity::Application) -> RepoResult<()>;
@@ -261,6 +264,12 @@ pub trait ApplicationRepoTransaction: Send + Sync {
         application_id: ApplicationId,
         redirect_url: &str,
     ) -> RepoResult<()>;
+
+    /// Returns count of the applications owned by the account.
+    async fn count_by_owner(&mut self, account_id: AccountId) -> RepoResult<usize>;
+
+    /// Number of allowed redirect URLs of the application.
+    async fn count_redirect_urls(&mut self, application_id: ApplicationId) -> RepoResult<usize>;
 }
 
 /// Token revocation state.
