@@ -10,11 +10,15 @@ use crate::{
 };
 use axum::{
     Extension, Router,
-    extract::State,
+    extract::{Path, State},
     middleware,
-    routing::{delete, get, post},
+    routing::{delete, get, post, put},
 };
-use service::{AppState, dto, handlers::SessionHandler, id::AccountId};
+use service::{
+    AppState, dto,
+    handlers::SessionHandler,
+    id::{AccountId, ApplicationId},
+};
 use std::{net::IpAddr, time::Duration};
 use utoipa::OpenApi;
 
@@ -149,6 +153,76 @@ async fn create_application(
     ))
 }
 
+#[utoipa::path(
+    get, path = "me/application-consents",
+    params(("after_application_id" = Option<ApplicationId>, Query)),
+    responses(
+        (status = OK, body = Vec<dto::response::ApplicationConsent>)
+    )
+)]
+async fn get_application_consents(
+    State(state): State<AppState>,
+    Extension(account_id): Extension<AccountId>,
+    AppQuery(pagination_dto): AppQuery<dto::request::ConsentPagination>,
+) -> AppResult<Vec<dto::response::ApplicationConsent>> {
+    Ok(AppJson(
+        SessionHandler(state)
+            .get_application_consents(account_id, pagination_dto)
+            .await?,
+    ))
+}
+
+#[utoipa::path(
+    get, path = "me/application-consents/{application_id}",
+    params(("application_id" = ApplicationId, Path)),
+    responses(
+        (status = OK, body = dto::response::ApplicationConsentStatus)
+    )
+)]
+async fn get_application_consent_status(
+    State(state): State<AppState>,
+    Extension(account_id): Extension<AccountId>,
+    Path(application_id): Path<ApplicationId>,
+) -> AppResult<dto::response::ApplicationConsentStatus> {
+    Ok(AppJson(
+        SessionHandler(state)
+            .get_application_consent_status(account_id, application_id)
+            .await?,
+    ))
+}
+
+#[utoipa::path(
+    put, path = "me/application-consents/{application_id}",
+    params(("application_id" = ApplicationId, Path)),
+)]
+async fn authorize_application(
+    State(state): State<AppState>,
+    Extension(account_id): Extension<AccountId>,
+    Path(application_id): Path<ApplicationId>,
+) -> AppResult<()> {
+    Ok(AppJson(
+        SessionHandler(state)
+            .authorize_application(account_id, application_id)
+            .await?,
+    ))
+}
+
+#[utoipa::path(
+    delete, path = "me/application-consents/{application_id}",
+    params(("application_id" = ApplicationId, Path)),
+)]
+async fn unauthorize_application(
+    State(state): State<AppState>,
+    Extension(account_id): Extension<AccountId>,
+    Path(application_id): Path<ApplicationId>,
+) -> AppResult<()> {
+    Ok(AppJson(
+        SessionHandler(state)
+            .unauthorize_application(account_id, application_id)
+            .await?,
+    ))
+}
+
 pub fn routes(state: AppState) -> Router {
     Router::new()
         .route("/me", get(get_current_account))
@@ -158,6 +232,19 @@ pub fn routes(state: AppState) -> Router {
         .route("/me/change-password", post(change_password))
         .route("/me/applications", get(get_owned_applications))
         .route("/me/applications", post(create_application))
+        .route("/me/application-consents", get(get_application_consents))
+        .route(
+            "/me/application-consents/{application_id}",
+            get(get_application_consent_status),
+        )
+        .route(
+            "/me/application-consents/{application_id}",
+            put(authorize_application),
+        )
+        .route(
+            "/me/application-consents/{application_id}",
+            delete(unauthorize_application),
+        )
         .route_layer(limiter::basic::<GovernorAccountIdKeyExtractor>(
             10,
             Duration::from_secs(5),
@@ -178,15 +265,20 @@ pub fn routes(state: AppState) -> Router {
     paths(
         get_current_account, add_email,
         remove_email, change_primary_email, change_password,
-        get_owned_applications, create_application
+        get_owned_applications, create_application,
+        get_application_consents, get_application_consent_status,
+        authorize_application, unauthorize_application
     ),
     components(schemas(
         dto::response::Account,
+        dto::response::ApplicationConsent,
+        dto::response::ApplicationConsentStatus,
         dto::response::ApplicationSummary,
         dto::response::CreatedApplication,
-        dto::request::Email,
-        dto::request::ChangePassword,
         dto::request::ApplicationName,
+        dto::request::ConsentPagination,
+        dto::request::ChangePassword,
+        dto::request::Email,
     )),
     modifiers(&ApiDocSecurityAddon),
     security(("session_jwt" = []))

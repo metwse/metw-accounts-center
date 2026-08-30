@@ -55,3 +55,18 @@ pub struct CreatedApplication {
 pub struct RotatedClientSecret {
     pub client_secret: String,
 }
+
+/// Application consent.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ApplicationConsent {
+    pub application_id: ApplicationId,
+    pub name: String,
+
+    pub created_at_timestamp: String,
+}
+
+/// Authorization status of the application.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ApplicationConsentStatus {
+    pub is_authorized: bool,
+}

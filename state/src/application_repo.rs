@@ -246,7 +246,9 @@ impl ApplicationRepoTransaction for ApplicationRepoTransactionImpl<'_> {
                     account_id, application_id, created_at,
                     key_encryption_algorithm,
                     master_key_encrypted_key, master_key_id
-                ) VALUES ($1, $2, $3, $4, NULL, NULL)",
+                ) SELECT $1, $2, $3, $4, NULL, NULL
+                WHERE EXISTS(SELECT 1 FROM applications WHERE application_id = $2)
+                ON CONFLICT DO NOTHING",
             account_id as _,
             application_id as _,
             checked_now(),

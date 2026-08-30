@@ -114,6 +114,61 @@ impl ApplicationService {
         Ok(())
     }
 
+    /// Authorize the application.
+    #[tracing::instrument(level = "debug", skip(self))]
+    pub async fn add_consent(
+        &self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> ServiceResult<()> {
+        let mut transaction = self.repo.begin_transaction().await?;
+        transaction
+            .insert_consent(account_id, application_id)
+            .await?;
+        transaction.commit().await?;
+
+        Ok(())
+    }
+
+    /// Remove the authorization consent.
+    #[tracing::instrument(level = "debug", skip(self))]
+    pub async fn remove_consent(
+        &self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> ServiceResult<()> {
+        let mut transaction = self.repo.begin_transaction().await?;
+        transaction
+            .delete_consent(account_id, application_id)
+            .await?;
+        transaction.commit().await?;
+
+        Ok(())
+    }
+
+    /// Check whether or not the application has authorized.
+    #[tracing::instrument(level = "debug", skip(self))]
+    pub async fn check_consent(
+        &self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> ServiceResult<bool> {
+        Ok(self.repo.consent_exists(account_id, application_id).await?)
+    }
+
+    /// Remove the authorization consent.
+    #[tracing::instrument(level = "debug", skip(self))]
+    pub async fn list_consents(
+        &self,
+        account_id: AccountId,
+        after_application_id: Option<ApplicationId>,
+    ) -> ServiceResult<Vec<dto::repo::OwnedApplicationAccountConsent>> {
+        Ok(self
+            .repo
+            .list_consents(account_id, after_application_id)
+            .await?)
+    }
+
     /// Add a new allowed redirect URL.
     #[tracing::instrument(level = "debug", skip(self))]
     pub async fn add_redirect_url(

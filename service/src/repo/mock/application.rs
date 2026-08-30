@@ -211,7 +211,8 @@ impl ApplicationRepoTransaction for MockApplicationRepoTransactionImpl {
             .account_application_consents
             .contains_key(&(account_id, application_id))
         {
-            return Err(RepoError::Internal("consent exists"));
+            // Silently ignore if consent already exists.
+            return Ok(());
         }
 
         self.state.account_application_consents.insert(

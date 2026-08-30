@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO account_application_consents (\n                    account_id, application_id, created_at,\n                    key_encryption_algorithm,\n                    master_key_encrypted_key, master_key_id\n                ) SELECT $1, $2, $3, $4, NULL, NULL\n                WHERE EXISTS(SELECT 1 FROM applications WHERE application_id = $2)\n                ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Timestamptz",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "39dc5e4f2e996b03dd871e3c6df51e781d8955fe188693695aa1460ced6ba5b6"
+}

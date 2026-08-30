@@ -1,7 +1,7 @@
 use super::{HandlerError, HandlerResult};
 use crate::{
     dto,
-    id::AccountId,
+    id::{AccountId, ApplicationId},
     service::ServiceError,
     state::AppState,
     token::{Token, TokenScope},
@@ -204,9 +204,9 @@ impl SessionHandler {
         &self,
         account_id: AccountId,
     ) -> HandlerResult<Vec<dto::response::ApplicationSummary>> {
-        let apps = self.0.application_service.list_owned_by(account_id).await?;
+        let applications = self.0.application_service.list_owned_by(account_id).await?;
 
-        Ok(apps
+        Ok(applications
             .into_iter()
             .map(|application| dto::response::ApplicationSummary {
                 application_id: application.application_id,
@@ -244,6 +244,73 @@ impl SessionHandler {
             application_id: application.application_id,
             name: create_app_dto.name,
             client_secret: application.client_secret,
+        })
+    }
+
+    /// Gets list of the applications owned by the account.
+    #[tracing::instrument(level = "debug", skip(self))]
+    pub async fn get_application_consents(
+        &self,
+        account_id: AccountId,
+        pagination_dto: dto::request::ConsentPagination,
+    ) -> HandlerResult<Vec<dto::response::ApplicationConsent>> {
+        let authorized_applications = self
+            .0
+            .application_service
+            .list_consents(account_id, pagination_dto.after_application_id)
+            .await?;
+
+        Ok(authorized_applications
+            .into_iter()
+            .map(|consent| dto::response::ApplicationConsent {
+                application_id: consent.application_id,
+                name: consent.name,
+                created_at_timestamp: consent.created_at.timestamp().to_string(),
+            })
+            .collect())
+    }
+
+    /// Authorize the application.
+    #[tracing::instrument(level = "debug", skip(self))]
+    pub async fn authorize_application(
+        &self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> HandlerResult<()> {
+        Ok(self
+            .0
+            .application_service
+            .add_consent(account_id, application_id)
+            .await?)
+    }
+
+    /// Remove authorization of the application.
+    #[tracing::instrument(level = "debug", skip(self))]
+    pub async fn unauthorize_application(
+        &self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> HandlerResult<()> {
+        Ok(self
+            .0
+            .application_service
+            .remove_consent(account_id, application_id)
+            .await?)
+    }
+
+    /// Check the authorization of the application.
+    #[tracing::instrument(level = "debug", skip(self))]
+    pub async fn get_application_consent_status(
+        &self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> HandlerResult<dto::response::ApplicationConsentStatus> {
+        Ok(dto::response::ApplicationConsentStatus {
+            is_authorized: self
+                .0
+                .application_service
+                .check_consent(account_id, application_id)
+                .await?,
         })
     }
 }

@@ -1,4 +1,4 @@
-use crate::id::AccountId;
+use crate::id::{AccountId, ApplicationId};
 use serde::Deserialize;
 use std::{str::FromStr, sync::LazyLock};
 use utoipa::{IntoParams, PartialSchema, ToSchema};
@@ -147,6 +147,12 @@ pub struct ApplicationName {
 pub struct ApplicationRedirectUrl {
     #[validate(url, regex(path = *REDIRECT_URL_REGEX))]
     pub redirect_url: String,
+}
+
+/// Consent list pagination.
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct ConsentPagination {
+    pub after_application_id: Option<ApplicationId>,
 }
 
 impl Validate for AccountIdentifier {
