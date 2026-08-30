@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["change_primary_email","logout","retry_signup","signup_and_login","taken_username_or_email"]};
+window.SIDEBAR_ITEMS = {"fn":["change_primary_email","limits_data_race","logout","retry_signup","signup_and_login","taken_username_or_email"]};
