@@ -208,15 +208,19 @@ impl SessionHandler {
 
         Ok(apps
             .into_iter()
-            .map(|app| dto::response::ApplicationSummary {
-                application_id: app.application_id,
-                name: app.name,
+            .map(|application| dto::response::ApplicationSummary {
+                application_id: application.application_id,
+                name: application.name,
             })
             .collect())
     }
 
     /// Register a new application.
-    #[tracing::instrument(level = "debug", skip(self, captcha))]
+    #[tracing::instrument(
+        level = "debug",
+        skip(self, captcha),
+        fields(application_id = tracing::field::Empty)
+    )]
     pub async fn create_application(
         &self,
         account_id: AccountId,
@@ -228,16 +232,18 @@ impl SessionHandler {
             return Err(HandlerError::InvalidCaptcha);
         }
 
-        let app = self
+        let application = self
             .0
             .application_service
             .create(account_id, &create_app_dto.name)
             .await?;
 
+        tracing::Span::current().record("application_id", application.application_id.to_string());
+
         Ok(dto::response::CreatedApplication {
-            application_id: app.application_id,
+            application_id: application.application_id,
             name: create_app_dto.name,
-            client_secret: app.client_secret,
+            client_secret: application.client_secret,
         })
     }
 }

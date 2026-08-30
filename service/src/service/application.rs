@@ -18,6 +18,7 @@ impl ApplicationService {
     }
 
     /// Register a new application, and return its client secret and ID.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn create(
         &self,
         account_id: AccountId,
@@ -45,6 +46,7 @@ impl ApplicationService {
     }
 
     /// Delete the application.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn delete(&self, application_id: ApplicationId) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
         transaction.delete(application_id).await?;
@@ -54,6 +56,7 @@ impl ApplicationService {
     }
 
     /// Get the list of registered applications.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn list_owned_by(
         &self,
         account_id: AccountId,
@@ -62,6 +65,7 @@ impl ApplicationService {
     }
 
     /// Check app ownership.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn is_owned_by(
         &self,
         application_id: ApplicationId,
@@ -71,6 +75,7 @@ impl ApplicationService {
     }
 
     /// Randomly change application's client secret, and return it.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn rotate_client_secret(
         &self,
         application_id: ApplicationId,
@@ -88,6 +93,7 @@ impl ApplicationService {
     }
 
     /// Rename the application.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn rename(&self, application_id: ApplicationId, name: &str) -> ServiceResult<()> {
         let mut transaction = self.repo.begin_transaction().await?;
         transaction.set_name(application_id, name).await?;
@@ -97,6 +103,7 @@ impl ApplicationService {
     }
 
     /// Add a new allowed redirect URL.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn add_redirect_url(
         &self,
         application_id: ApplicationId,
@@ -112,6 +119,7 @@ impl ApplicationService {
     }
 
     /// Remove a redirect URL.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn remove_redirect_url(
         &self,
         application_id: ApplicationId,
@@ -127,6 +135,7 @@ impl ApplicationService {
     }
 
     /// Get the list of allowed redirect URLs.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn list_redirect_urls(
         &self,
         application_id: ApplicationId,

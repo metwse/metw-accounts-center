@@ -18,7 +18,7 @@ impl ApplicationManagementHandler {
     /// Checks the application ownership.
     ///
     /// *This handler is intended for middleware.*
-    #[tracing::instrument(level = "debug", skip_all)]
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn authorize_ownership(
         &self,
         application_id: ApplicationId,
@@ -37,6 +37,7 @@ impl ApplicationManagementHandler {
     }
 
     /// Changes the application client secret randomly.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn rotate_client_secret(
         &self,
         application_id: ApplicationId,
@@ -53,6 +54,7 @@ impl ApplicationManagementHandler {
     }
 
     /// Renames the application.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn rename(
         &self,
         application_id: ApplicationId,
@@ -69,6 +71,7 @@ impl ApplicationManagementHandler {
     }
 
     /// Deletes the application.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn delete(&self, application_id: ApplicationId) -> HandlerResult<()> {
         self.0.application_service.delete(application_id).await?;
 
@@ -76,6 +79,7 @@ impl ApplicationManagementHandler {
     }
 
     /// Adds a new redirect URL to the application.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn add_redirect_url(
         &self,
         application_id: ApplicationId,
@@ -92,6 +96,7 @@ impl ApplicationManagementHandler {
     }
 
     /// Removes the redirect URL from the application.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn remove_redirect_url(
         &self,
         application_id: ApplicationId,
@@ -108,6 +113,7 @@ impl ApplicationManagementHandler {
     }
 
     /// Gets redirect URLs registered to the application.
+    #[tracing::instrument(level = "debug", skip(self))]
     pub async fn list_redirect_urls(
         &self,
         application_id: ApplicationId,
