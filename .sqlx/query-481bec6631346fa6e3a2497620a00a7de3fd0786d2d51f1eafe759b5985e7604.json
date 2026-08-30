@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO emails (account_id, email, is_primary)\n                SELECT $1, $2, $3\n                WHERE (SELECT COUNT(*) FROM emails WHERE account_id = $1) < $4",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Varchar",
+        "Bool",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "481bec6631346fa6e3a2497620a00a7de3fd0786d2d51f1eafe759b5985e7604"
+}

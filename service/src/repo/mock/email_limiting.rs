@@ -1,5 +1,5 @@
 use super::super::{EmailLimitingRepo, RepoResult};
-use crate::{dto, repo::rate_limits::email_limiting_repo::*};
+use crate::{dto, repo::limits::email_limiting_repo::*};
 use async_trait::async_trait;
 use std::{
     collections::{HashMap, HashSet},

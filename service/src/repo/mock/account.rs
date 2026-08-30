@@ -1,5 +1,9 @@
 use super::super::{AccountRepo, AccountRepoTransaction, RepoResult};
-use crate::{checked_now, dto, entity, id::AccountId, repo::RepoError};
+use crate::{
+    checked_now, dto, entity,
+    id::AccountId,
+    repo::{RepoError, limits},
+};
 use async_trait::async_trait;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{Mutex, MutexGuard, OwnedMutexGuard};
@@ -291,6 +295,16 @@ impl AccountRepo for MockAccountRepoImpl {
 
         Ok(email_entity.account_id == account_id)
     }
+
+    async fn count_emails(&self, account_id: AccountId) -> RepoResult<usize> {
+        let state = self.lock_state().await;
+
+        Ok(state
+            .emails
+            .iter()
+            .filter(|(_, email_entity)| email_entity.account_id == account_id)
+            .count())
+    }
 }
 
 struct MockAccountRepoTransactionImpl {
@@ -332,7 +346,18 @@ impl AccountRepoTransaction for MockAccountRepoTransactionImpl {
         email: &str,
         is_primary: bool,
     ) -> RepoResult<()> {
-        if self.state.emails.contains_key(email) {
+        // If the account has reached the maximum allowed number of emails,
+        // silently skip the insertion.
+        if self
+            .state
+            .emails
+            .iter()
+            .filter(|(_, email_entity)| email_entity.account_id == account_id)
+            .count()
+            >= limits::account_repo::MAXIMUM_EMAIL_COUNT
+        {
+            Ok(())
+        } else if self.state.emails.contains_key(email) {
             Err(RepoError::Internal("email is taken"))
         } else {
             self.state.emails.insert(

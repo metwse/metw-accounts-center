@@ -45,4 +45,13 @@ pub enum ServiceError {
 
     #[error("email limited: {0:?}")]
     EmailLimited(Duration),
+
+    #[error("cannot have more than {0} emails")]
+    TooManyEmails(usize),
+
+    #[error("cannot have more than {0} applications")]
+    TooManyApplications(usize),
+
+    #[error("cannot have more than {0} redirect URL for an application")]
+    TooManyRedirectUrls(usize),
 }

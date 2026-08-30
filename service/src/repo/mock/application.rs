@@ -2,7 +2,7 @@ use super::super::{ApplicationRepo, ApplicationRepoTransaction, RepoResult};
 use crate::{
     dto, entity,
     id::{AccountId, ApplicationId},
-    repo::RepoError,
+    repo::{RepoError, limits},
 };
 use async_trait::async_trait;
 use std::{collections::HashMap, sync::Arc};
@@ -82,6 +82,26 @@ impl ApplicationRepo for MockApplicationRepoImpl {
 
         Ok(application_entity.owner_account_id == account_id)
     }
+
+    async fn count_by_owner(&self, account_id: AccountId) -> RepoResult<usize> {
+        let state = self.lock_state().await;
+
+        Ok(state
+            .applications
+            .iter()
+            .filter(|(_, application_entity)| application_entity.owner_account_id == account_id)
+            .count())
+    }
+
+    async fn count_redirect_urls(&self, application_id: ApplicationId) -> RepoResult<usize> {
+        let state = self.lock_state().await;
+
+        Ok(state
+            .application_redirect_urls
+            .get(&application_id)
+            .map(|redirect_urls| redirect_urls.len())
+            .unwrap_or(0))
+    }
 }
 
 struct MockApplicationRepoTransactionImpl {
@@ -98,9 +118,22 @@ impl ApplicationRepoTransaction for MockApplicationRepoTransactionImpl {
     }
 
     async fn insert(&mut self, application_entity: entity::Application) -> RepoResult<()> {
-        self.state
+        // Silently skip if the owner reached maximum allowed application
+        // count.
+        if self
+            .state
             .applications
-            .insert(application_entity.application_id, application_entity);
+            .iter()
+            .filter(|(_, db_application_entity)| {
+                db_application_entity.owner_account_id == application_entity.owner_account_id
+            })
+            .count()
+            < limits::application_repo::MAXIMUM_APPLICATION_COUNT
+        {
+            self.state
+                .applications
+                .insert(application_entity.application_id, application_entity);
+        }
 
         Ok(())
     }
@@ -145,7 +178,11 @@ impl ApplicationRepoTransaction for MockApplicationRepoTransactionImpl {
 
         let redirect_url = redirect_url.to_string();
 
-        if redirect_urls.contains(&redirect_url) {
+        // Silently skip if the application has reached maximum redirect URL
+        // count.
+        if redirect_urls.len() >= limits::application_repo::MAXIMUM_REDIRECT_URL_COUNT {
+            Ok(())
+        } else if redirect_urls.contains(&redirect_url) {
             Err(RepoError::Internal(
                 "redirect url exists in the application",
             ))

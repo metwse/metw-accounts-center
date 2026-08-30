@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT EXISTS(SELECT * FROM emails WHERE email = $1)",
+  "query": "SELECT EXISTS(\n                    SELECT * FROM usernames WHERE username = $1\n                ) AS \"exists!\"",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "exists",
+        "name": "exists!",
         "type_info": "Bool",
         "origin": "Expression"
       }
@@ -19,5 +19,5 @@
       null
     ]
   },
-  "hash": "62813c76d69b05926d91f18fab32b9894ff591a6a9373acc994528f6f8ec3d8c"
+  "hash": "7759e133159bf8da08b39d32e62933adc94c5d6bdb12efce01dc7eaec6b712c2"
 }

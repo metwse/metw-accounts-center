@@ -1,5 +1,10 @@
 use super::{ServiceError, ServiceResult};
-use crate::{dto, entity, id::AccountId, repo::AccountRepo, util::password};
+use crate::{
+    dto, entity,
+    id::AccountId,
+    repo::{AccountRepo, limits},
+    util::password,
+};
 
 /// Account state.
 pub struct AccountService {
@@ -286,6 +291,13 @@ impl AccountService {
         account_id: AccountId,
         email: &str,
     ) -> ServiceResult<()> {
+        // Best-effort early fail: Repository should also check this.
+        if self.repo.count_emails(account_id).await? >= limits::account_repo::MAXIMUM_EMAIL_COUNT {
+            return Err(ServiceError::TooManyEmails(
+                limits::account_repo::MAXIMUM_EMAIL_COUNT,
+            ));
+        }
+
         let mut transaction = self.repo.begin_transaction().await?;
         transaction
             .insert_email(account_id, email, false)

@@ -9,8 +9,8 @@ use std::net::IpAddr;
 
 mod error;
 
-/// Rate limits enforced by the repositories.
-pub mod rate_limits;
+/// Limits enforced by the repositories.
+pub mod limits;
 
 /// Mock repository implementations.
 #[cfg(feature = "mock")]
@@ -147,6 +147,9 @@ pub trait AccountRepo: Send + Sync {
 
     /// Returns true if the email has been taken by the given account.
     async fn is_email_owned_by(&self, account_id: AccountId, email: &str) -> RepoResult<bool>;
+
+    /// Returns count of the emails owned by the account.
+    async fn count_emails(&self, account_id: AccountId) -> RepoResult<usize>;
 }
 
 /// Transactional account repository access wrapper.
@@ -215,6 +218,12 @@ pub trait ApplicationRepo: Send + Sync {
         application_id: ApplicationId,
         account_id: AccountId,
     ) -> RepoResult<bool>;
+
+    /// Returns count of the applications owned by the account.
+    async fn count_by_owner(&self, account_id: AccountId) -> RepoResult<usize>;
+
+    /// Number of allowed redirect URLas of the application.
+    async fn count_redirect_urls(&self, application_id: ApplicationId) -> RepoResult<usize>;
 }
 
 /// Transactional application repository access wrapper.

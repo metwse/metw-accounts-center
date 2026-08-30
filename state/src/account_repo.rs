@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use service::{
     dto, entity,
     id::AccountId,
-    repo::{AccountRepo, AccountRepoTransaction, RepoResult},
+    repo::{AccountRepo, AccountRepoTransaction, RepoResult, limits},
 };
 use sqlx::{PgPool, PgTransaction, types::Json};
 
@@ -289,39 +289,51 @@ impl AccountRepo for AccountRepoImpl {
 
     async fn is_username_taken(&self, username: &str) -> RepoResult<bool> {
         let is_username_taken = sqlx::query_scalar!(
-            "SELECT EXISTS(SELECT * FROM usernames WHERE username = $1)",
+            r#"SELECT EXISTS(
+                    SELECT * FROM usernames WHERE username = $1
+                ) AS "exists!""#,
             username
         )
         .fetch_one(&self.pool)
-        .await?
-        .unwrap();
+        .await?;
 
         Ok(is_username_taken)
     }
 
     async fn is_email_taken(&self, email: &str) -> RepoResult<bool> {
         let is_email_taken = sqlx::query_scalar!(
-            "SELECT EXISTS(SELECT * FROM emails WHERE email = $1)",
+            r#"SELECT EXISTS(SELECT * FROM emails WHERE email = $1) AS "exists!""#,
             email
         )
         .fetch_one(&self.pool)
-        .await?
-        .unwrap();
+        .await?;
 
         Ok(is_email_taken)
     }
 
     async fn is_email_owned_by(&self, account_id: AccountId, email: &str) -> RepoResult<bool> {
-        let is_email_taken = sqlx::query_scalar!(
-            "SELECT EXISTS(SELECT * FROM emails WHERE account_id = $1 AND email = $2)",
+        let is_email_owned_by = sqlx::query_scalar!(
+            r#"SELECT EXISTS(
+                    SELECT * FROM emails WHERE account_id = $1 AND email = $2
+                ) AS "exists!""#,
             account_id as _,
             email
         )
         .fetch_one(&self.pool)
-        .await?
-        .unwrap();
+        .await?;
 
-        Ok(is_email_taken)
+        Ok(is_email_owned_by)
+    }
+
+    async fn count_emails(&self, account_id: AccountId) -> RepoResult<usize> {
+        let count = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) AS "count!" FROM emails WHERE account_id = $1"#,
+            account_id as _
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(count as usize)
     }
 }
 
@@ -387,10 +399,12 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
     ) -> RepoResult<()> {
         sqlx::query!(
             "INSERT INTO emails (account_id, email, is_primary)
-                VALUES ($1, $2, $3)",
+                SELECT $1, $2, $3
+                WHERE (SELECT COUNT(*) FROM emails WHERE account_id = $1) < $4",
             account_id as _,
             email,
-            is_primary
+            is_primary,
+            limits::account_repo::MAXIMUM_EMAIL_COUNT as i64
         )
         .execute(&mut *self.tx)
         .await?;

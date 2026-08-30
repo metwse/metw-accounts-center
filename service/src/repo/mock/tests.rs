@@ -3,8 +3,8 @@ use crate::{
     id::AccountId,
     repo::{
         EmailLimitingRepo, RepoResult, TokenRepo,
+        limits::email_limiting_repo::*,
         mock::{MockEmailLimitingRepoImpl, MockTokenRepoImpl},
-        rate_limits::email_limiting_repo::*,
     },
     testutil::{random_email, random_ipv6, random_username},
     token::{DecodedToken, SAFE_EXPIRATION_MARGIN, TokenScope},

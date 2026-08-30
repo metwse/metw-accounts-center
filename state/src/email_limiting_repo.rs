@@ -4,7 +4,7 @@ use service::{
     dto,
     repo::{
         EmailLimitingRepo, RepoResult,
-        rate_limits::email_limiting_repo::{
+        limits::email_limiting_repo::{
             EMAIL_COOLDOWN, EMAIL_QUOTA, EMAIL_QUOTA_REFILL_DURATION, IP_COOLDOWN, IP_QUOTA,
             IP_QUOTA_REFILL_DURATION,
         },

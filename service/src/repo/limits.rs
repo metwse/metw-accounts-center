@@ -20,3 +20,18 @@ pub mod email_limiting_repo {
     /// Time required to fully replenish the IP quota.
     pub static IP_QUOTA_REFILL_DURATION: Duration = Duration::from_hours(24);
 }
+
+/// Account repository limits.
+pub mod account_repo {
+    /// The number of email addresses allowed to be added.
+    pub static MAXIMUM_EMAIL_COUNT: usize = 10;
+}
+
+/// Application repository limits.
+pub mod application_repo {
+    /// The number of applications allowed per account to be created.
+    pub static MAXIMUM_APPLICATION_COUNT: usize = 10;
+
+    /// The number of redirect URLs allowed per application to be added.
+    pub static MAXIMUM_REDIRECT_URL_COUNT: usize = 10;
+}
