@@ -352,8 +352,7 @@ impl AccountRepoTransaction for AccountRepoTransactionImpl<'_> {
             account_id as _
         )
         .fetch_optional(&mut *self.tx)
-        .await
-        .ok();
+        .await?;
 
         Ok(())
     }

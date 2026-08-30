@@ -2,7 +2,7 @@ use super::super::{ApplicationRepo, ApplicationRepoTransaction, RepoResult};
 use crate::{
     dto, entity,
     id::{AccountId, ApplicationId},
-    repo::{RepoError, limits},
+    repo::RepoError,
 };
 use async_trait::async_trait;
 use std::{collections::HashMap, sync::Arc};
@@ -108,22 +108,9 @@ impl ApplicationRepoTransaction for MockApplicationRepoTransactionImpl {
     }
 
     async fn insert(&mut self, application_entity: entity::Application) -> RepoResult<()> {
-        // Silently skip if the owner reached maximum allowed application
-        // count.
-        if self
-            .state
+        self.state
             .applications
-            .iter()
-            .filter(|(_, db_application_entity)| {
-                db_application_entity.owner_account_id == application_entity.owner_account_id
-            })
-            .count()
-            < limits::application_repo::MAXIMUM_APPLICATION_COUNT
-        {
-            self.state
-                .applications
-                .insert(application_entity.application_id, application_entity);
-        }
+            .insert(application_entity.application_id, application_entity);
 
         Ok(())
     }
@@ -168,11 +155,7 @@ impl ApplicationRepoTransaction for MockApplicationRepoTransactionImpl {
 
         let redirect_url = redirect_url.to_string();
 
-        // Silently skip if the application has reached maximum redirect URL
-        // count.
-        if redirect_urls.len() >= limits::application_repo::MAXIMUM_REDIRECT_URL_COUNT {
-            Ok(())
-        } else if redirect_urls.contains(&redirect_url) {
+        if redirect_urls.contains(&redirect_url) {
             Err(RepoError::Internal(
                 "redirect url exists in the application",
             ))

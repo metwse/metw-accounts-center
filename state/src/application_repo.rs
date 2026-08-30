@@ -101,8 +101,7 @@ impl ApplicationRepoTransaction for ApplicationRepoTransactionImpl<'_> {
             application_id as _
         )
         .fetch_optional(&mut *self.tx)
-        .await
-        .ok();
+        .await?;
 
         Ok(())
     }
@@ -113,8 +112,7 @@ impl ApplicationRepoTransaction for ApplicationRepoTransactionImpl<'_> {
             account_id as _
         )
         .fetch_optional(&mut *self.tx)
-        .await
-        .ok();
+        .await?;
 
         Ok(())
     }
