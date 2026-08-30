@@ -148,7 +148,7 @@ pub struct ApplicationRedirectUrl {
 }
 
 /// Authorized application by a user.
-#[derive(Debug, FromRow)]
+#[derive(Debug, Clone, FromRow)]
 pub struct AccountApplicationConsent {
     /// The account that authorized the application.
     pub account_id: AccountId,

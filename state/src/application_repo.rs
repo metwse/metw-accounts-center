@@ -1,10 +1,11 @@
 use async_trait::async_trait;
+use metw_id::checked_now;
 use service::{
     dto, entity,
     id::{AccountId, ApplicationId},
     repo::{ApplicationRepo, ApplicationRepoTransaction, RepoResult},
 };
-use sqlx::{PgPool, PgTransaction};
+use sqlx::{PgPool, PgTransaction, types::Json};
 
 /// Application repository using PostgreSQL.
 pub struct ApplicationRepoImpl {
@@ -54,6 +55,48 @@ impl ApplicationRepo for ApplicationRepoImpl {
         Ok(redirect_urls)
     }
 
+    async fn list_consents(
+        &self,
+        account_id: AccountId,
+        after_application_id: Option<ApplicationId>,
+    ) -> RepoResult<Vec<dto::repo::OwnedApplicationAccountConsent>> {
+        let consents = match after_application_id {
+            Some(after_application_id) => {
+                sqlx::query_as!(
+                    dto::repo::OwnedApplicationAccountConsent,
+                    r#"SELECT application_id AS "application_id: ApplicationId",
+                            created_at, name
+                        FROM account_application_consents
+                        LEFT JOIN applications USING (application_id)
+                        WHERE account_id = $1 AND $2 < application_id
+                        ORDER BY application_id ASC
+                        LIMIT 10"#,
+                    account_id as _,
+                    after_application_id as _
+                )
+                .fetch_all(&self.pool)
+                .await?
+            }
+            None => {
+                sqlx::query_as!(
+                    dto::repo::OwnedApplicationAccountConsent,
+                    r#"SELECT application_id AS "application_id: ApplicationId",
+                            created_at, name
+                        FROM account_application_consents
+                        LEFT JOIN applications USING (application_id)
+                        WHERE account_id = $1
+                        ORDER BY application_id ASC
+                        LIMIT 10"#,
+                    account_id as _
+                )
+                .fetch_all(&self.pool)
+                .await?
+            }
+        };
+
+        Ok(consents)
+    }
+
     async fn is_owned_by(
         &self,
         application_id: ApplicationId,
@@ -71,6 +114,25 @@ impl ApplicationRepo for ApplicationRepoImpl {
         .await?;
 
         Ok(is_owned_by)
+    }
+
+    async fn consent_exists(
+        &self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> RepoResult<bool> {
+        let consent_exists = sqlx::query_scalar!(
+            r#"SELECT EXISTS(
+                    SELECT 1 FROM account_application_consents
+                        WHERE account_id = $1 AND application_id = $2
+                ) AS "exists!""#,
+            account_id as _,
+            application_id as _
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(consent_exists)
     }
 }
 
@@ -134,6 +196,17 @@ impl ApplicationRepoTransaction for ApplicationRepoTransactionImpl<'_> {
         Ok(())
     }
 
+    async fn delete(&mut self, application_id: ApplicationId) -> RepoResult<()> {
+        sqlx::query!(
+            "DELETE FROM applications WHERE application_id = $1",
+            application_id as _
+        )
+        .execute(&mut *self.tx)
+        .await?;
+
+        Ok(())
+    }
+
     async fn set_client_secret_hash(
         &mut self,
         application_id: ApplicationId,
@@ -163,9 +236,37 @@ impl ApplicationRepoTransaction for ApplicationRepoTransactionImpl<'_> {
         Ok(())
     }
 
-    async fn delete(&mut self, application_id: ApplicationId) -> RepoResult<()> {
+    async fn insert_consent(
+        &mut self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> RepoResult<()> {
         sqlx::query!(
-            "DELETE FROM applications WHERE application_id = $1",
+            "INSERT INTO account_application_consents (
+                    account_id, application_id, created_at,
+                    key_encryption_algorithm,
+                    master_key_encrypted_key, master_key_id
+                ) VALUES ($1, $2, $3, $4, NULL, NULL)",
+            account_id as _,
+            application_id as _,
+            checked_now(),
+            Json(entity::KeyEncryptionAlgorithm::None) as _
+        )
+        .execute(&mut *self.tx)
+        .await?;
+
+        Ok(())
+    }
+
+    async fn delete_consent(
+        &mut self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> RepoResult<()> {
+        sqlx::query!(
+            "DELETE FROM account_application_consents
+                WHERE account_id = $1 AND application_id = $2",
+            account_id as _,
             application_id as _
         )
         .execute(&mut *self.tx)

@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO account_application_consents (\n                    account_id, application_id, created_at,\n                    key_encryption_algorithm,\n                    master_key_encrypted_key, master_key_id\n                ) VALUES ($1, $2, $3, $4, NULL, NULL)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Timestamptz",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bb241ddfa1da238eb8f71e14f60bd31475702230442240c5de7ca8a1a9ad84ee"
+}

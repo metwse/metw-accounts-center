@@ -6,7 +6,7 @@ members = ["_docs", "app", "service", "state", "tests"]
 metw-id = {
     git = "https://github.com/metwse/metw-backend-crates",
     package = "metw-id",
-    tag = "metw-id-v0.1.0",
+    tag = "metw-id-v0.1.1",
 }
 metw-server = {
     git = "https://github.com/metwse/metw-backend-crates",

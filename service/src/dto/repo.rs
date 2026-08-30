@@ -2,6 +2,7 @@ use crate::{
     entity,
     id::{AccountId, ApplicationId},
 };
+use chrono::{DateTime, Utc};
 use sqlx::prelude::FromRow;
 use std::time::Duration;
 
@@ -24,4 +25,12 @@ pub enum EmailLimitingResult {
 pub struct OwnedApplicationSummary {
     pub application_id: ApplicationId,
     pub name: String,
+}
+
+#[derive(Debug)]
+pub struct OwnedApplicationAccountConsent {
+    pub application_id: ApplicationId,
+    pub name: String,
+
+    pub created_at: DateTime<Utc>,
 }

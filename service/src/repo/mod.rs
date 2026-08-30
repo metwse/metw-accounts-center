@@ -215,11 +215,25 @@ pub trait ApplicationRepo: Send + Sync {
     /// Gets list of the redirect URLs of the application.
     async fn list_redirect_urls(&self, application_id: ApplicationId) -> RepoResult<Vec<String>>;
 
+    /// Lists application consents granted by an account
+    async fn list_consents(
+        &self,
+        account_id: AccountId,
+        after_application_id: Option<ApplicationId>,
+    ) -> RepoResult<Vec<dto::repo::OwnedApplicationAccountConsent>>;
+
     /// Whether or not the application is owned by given account.
     async fn is_owned_by(
         &self,
         application_id: ApplicationId,
         account_id: AccountId,
+    ) -> RepoResult<bool>;
+
+    /// Checks the existence of consent.
+    async fn consent_exists(
+        &self,
+        account_id: AccountId,
+        application_id: ApplicationId,
     ) -> RepoResult<bool>;
 }
 
@@ -250,6 +264,20 @@ pub trait ApplicationRepoTransaction: Send + Sync {
 
     /// Change name of the application.
     async fn set_name(&mut self, application_id: ApplicationId, name: &str) -> RepoResult<()>;
+
+    /// Inserts a consent entity into repository.
+    async fn insert_consent(
+        &mut self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> RepoResult<()>;
+
+    /// Deletes the consent entity.
+    async fn delete_consent(
+        &mut self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> RepoResult<()>;
 
     /// Adds a new redirect URL.
     async fn insert_redirect_url(

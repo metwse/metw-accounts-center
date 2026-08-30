@@ -5,6 +5,7 @@ use crate::{
     repo::RepoError,
 };
 use async_trait::async_trait;
+use metw_id::checked_now;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{Mutex, MutexGuard, OwnedMutexGuard};
 
@@ -18,6 +19,8 @@ pub struct MockApplicationRepoImpl {
 pub struct ApplicationRepoState {
     pub applications: HashMap<ApplicationId, entity::Application>,
     pub application_redirect_urls: HashMap<ApplicationId, Vec<String>>,
+    pub account_application_consents:
+        HashMap<(AccountId, ApplicationId), entity::AccountApplicationConsent>,
 }
 
 impl MockApplicationRepoImpl {
@@ -69,6 +72,38 @@ impl ApplicationRepo for MockApplicationRepoImpl {
             .unwrap_or(Vec::new()))
     }
 
+    async fn list_consents(
+        &self,
+        account_id: AccountId,
+        after_application_id: Option<ApplicationId>,
+    ) -> RepoResult<Vec<dto::repo::OwnedApplicationAccountConsent>> {
+        let state = self.lock_state().await;
+
+        let mut consents: Vec<dto::repo::OwnedApplicationAccountConsent> = state
+            .account_application_consents
+            .iter()
+            .filter(|((db_account_id, db_application_id), _)| {
+                *db_account_id == account_id
+                    && after_application_id
+                        .map(|after| *db_application_id > after)
+                        .unwrap_or(true)
+            })
+            .map(|((_, application_id), consent_entity)| {
+                dto::repo::OwnedApplicationAccountConsent {
+                    application_id: *application_id,
+                    name: state.applications[application_id].name.clone(),
+
+                    created_at: consent_entity.created_at,
+                }
+            })
+            .collect();
+
+        consents.sort_by_key(|consent| consent.application_id);
+        consents.truncate(10);
+
+        Ok(consents)
+    }
+
     async fn is_owned_by(
         &self,
         application_id: ApplicationId,
@@ -81,6 +116,18 @@ impl ApplicationRepo for MockApplicationRepoImpl {
         };
 
         Ok(application_entity.owner_account_id == account_id)
+    }
+
+    async fn consent_exists(
+        &self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> RepoResult<bool> {
+        let state = self.lock_state().await;
+
+        Ok(state
+            .account_application_consents
+            .contains_key(&(account_id, application_id)))
     }
 }
 
@@ -119,6 +166,18 @@ impl ApplicationRepoTransaction for MockApplicationRepoTransactionImpl {
         self.state.applications.remove(&application_id);
         self.state.application_redirect_urls.remove(&application_id);
 
+        let keys_to_remove: Vec<_> = self
+            .state
+            .account_application_consents
+            .keys()
+            .filter(|(_, db_application_id)| *db_application_id != application_id)
+            .cloned()
+            .collect();
+
+        for key in keys_to_remove {
+            self.state.account_application_consents.remove_entry(&key);
+        }
+
         Ok(())
     }
 
@@ -138,6 +197,46 @@ impl ApplicationRepoTransaction for MockApplicationRepoTransactionImpl {
         if let Some(application_entity) = self.state.applications.get_mut(&application_id) {
             application_entity.name = name.to_owned();
         }
+
+        Ok(())
+    }
+
+    async fn insert_consent(
+        &mut self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> RepoResult<()> {
+        if self
+            .state
+            .account_application_consents
+            .contains_key(&(account_id, application_id))
+        {
+            return Err(RepoError::Internal("consent exists"));
+        }
+
+        self.state.account_application_consents.insert(
+            (account_id, application_id),
+            entity::AccountApplicationConsent {
+                account_id,
+                application_id,
+                created_at: checked_now(),
+                key_encryption_algorithm: entity::KeyEncryptionAlgorithm::None,
+                master_key_encrypted_key: None,
+                master_key_id: None,
+            },
+        );
+
+        Ok(())
+    }
+
+    async fn delete_consent(
+        &mut self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> RepoResult<()> {
+        self.state
+            .account_application_consents
+            .remove(&(account_id, application_id));
 
         Ok(())
     }

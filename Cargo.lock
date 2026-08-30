@@ -1868,8 +1868,8 @@ checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 
 [[package]]
 name = "metw-id"
-version = "0.1.0"
-source = "git+https://github.com/metwse/metw-backend-crates?tag=metw-id-v0.1.0#bc6ede9698b39bedce65b85c2d9ffad8ef000d53"
+version = "0.1.1"
+source = "git+https://github.com/metwse/metw-backend-crates?tag=metw-id-v0.1.1#eb2e32816e65f4eba0ab59de80391ec6b3cd8a5c"
 dependencies = [
  "chrono",
  "pastey 0.2.2",
