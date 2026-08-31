@@ -31,7 +31,7 @@ impl AuthorizationCodeRepo for AuthorizationCodeRepoImpl {
         let key = to_authorization_code_key(application_id, &authorization_code);
 
         let mut con = self.con.clone();
-        con.set_ex::<'_, _, _, usize>(&key, account_id.to_string(), 60)
+        con.set_ex::<'_, _, _, ()>(&key, account_id.to_string(), 60)
             .await?;
 
         Ok(authorization_code)

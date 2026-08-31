@@ -72,15 +72,15 @@ impl ApplicationAccessHandler {
     ) -> HandlerResult<dto::response::Account> {
         let account = self.0.account_service.get(account_id).await?;
 
-        if !self
+        if self
             .0
             .application_service
             .check_consent(account_id, application_id)
             .await?
         {
-            Err(ServiceError::InvalidAuthorizationCode)?;
+            Ok(account)
+        } else {
+            Err(HandlerError::Unauthorized)
         }
-
-        Ok(account)
     }
 }

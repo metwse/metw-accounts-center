@@ -22,7 +22,8 @@ use utoipa::OpenApi;
     request_body = dto::request::AuthorizationCode,
     responses(
         (status = OK, body = dto::response::AuthorizationCodeExchangeResult)
-    )
+    ),
+    security(("application_basic" = [])),
 )]
 async fn exchange_authorization_code(
     State(state): State<AppState>,
@@ -41,7 +42,8 @@ async fn exchange_authorization_code(
     params(("account_id" = AccountId, Path)),
     responses(
         (status = OK, body = dto::response::Account)
-    )
+    ),
+    security(("application_basic" = [])),
 )]
 async fn get_account(
     State(state): State<AppState>,

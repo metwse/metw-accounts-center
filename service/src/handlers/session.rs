@@ -284,6 +284,31 @@ impl SessionHandler {
             .await?)
     }
 
+    /// Create an authorization code for application.
+    #[tracing::instrument(level = "debug", skip(self))]
+    pub async fn create_authorization_code(
+        &self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> HandlerResult<dto::response::AuthorizationCode> {
+        if !self
+            .0
+            .application_service
+            .check_consent(account_id, application_id)
+            .await?
+        {
+            return Err(HandlerError::Unauthorized);
+        }
+
+        let authorization_code = self
+            .0
+            .authorization_code_service
+            .create(account_id, application_id)
+            .await?;
+
+        Ok(dto::response::AuthorizationCode { authorization_code })
+    }
+
     /// Remove authorization of the application.
     #[tracing::instrument(level = "debug", skip(self))]
     pub async fn unauthorize_application(

@@ -20,9 +20,8 @@ use utoipa::OpenApi;
     security(("email_verification_session_jwt" = [])),
     request_body = dto::request::RetrySignup,
     params(("captcha" = dto::request::Captcha, Query)),
-    responses(
-        (status = OK)
-    )
+    responses((status = OK)),
+    security(("email_verification_session_jwt" = []))
 )]
 async fn retry_signup(
     State(state): State<AppState>,
@@ -61,6 +60,5 @@ pub fn routes(state: AppState) -> Router {
     paths(retry_signup),
     components(schemas(dto::request::RetrySignup)),
     modifiers(&ApiDocSecurityAddon),
-    security(("email_verification_session_jwt" = []))
 )]
 pub struct ApiDoc;

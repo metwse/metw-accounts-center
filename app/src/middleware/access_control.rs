@@ -157,6 +157,15 @@ impl Modify for ApiDocSecurityAddon {
                         .build(),
                 ),
             );
+
+            components.add_security_scheme(
+                "application_basic",
+                openapi::security::SecurityScheme::Http(
+                    openapi::security::HttpBuilder::new()
+                        .scheme(openapi::security::HttpAuthScheme::Basic)
+                        .build(),
+                ),
+            );
         }
     }
 }

@@ -26,7 +26,8 @@ use utoipa::OpenApi;
     params(("application_id" = ApplicationId, Path)),
     responses(
         (status = OK, body = dto::response::RotatedClientSecret)
-    )
+    ),
+    security(("session_jwt" = [])),
 )]
 async fn rotate_client_secret(
     State(state): State<AppState>,
@@ -43,7 +44,8 @@ async fn rotate_client_secret(
     patch, path = "me/applications/{application_id}/name",
     request_body = dto::request::ApplicationName,
     params(("application_id" = ApplicationId, Path)),
-    responses((status = OK))
+    responses((status = OK)),
+    security(("session_jwt" = [])),
 )]
 async fn rename_application(
     State(state): State<AppState>,
@@ -60,7 +62,8 @@ async fn rename_application(
 #[utoipa::path(
     delete, path = "me/applications/{application_id}",
     params(("application_id" = ApplicationId, Path)),
-    responses((status = OK))
+    responses((status = OK)),
+    security(("session_jwt" = [])),
 )]
 async fn delete_application(
     State(state): State<AppState>,
@@ -77,7 +80,8 @@ async fn delete_application(
     post, path = "me/applications/{application_id}/redirect-urls",
     request_body = dto::request::ApplicationRedirectUrl,
     params(("application_id" = ApplicationId, Path)),
-    responses((status = OK))
+    responses((status = OK)),
+    security(("session_jwt" = [])),
 )]
 async fn add_redirect_url(
     State(state): State<AppState>,
@@ -95,7 +99,8 @@ async fn add_redirect_url(
     delete, path = "me/applications/{application_id}/redirect-urls",
     request_body = dto::request::ApplicationRedirectUrl,
     params(("application_id" = ApplicationId, Path)),
-    responses((status = OK))
+    responses((status = OK)),
+    security(("session_jwt" = [])),
 )]
 async fn remove_redirect_url(
     State(state): State<AppState>,
@@ -112,7 +117,8 @@ async fn remove_redirect_url(
 #[utoipa::path(
     get, path = "me/applications/{application_id}/redirect-urls",
     params(("application_id" = ApplicationId, Path)),
-    responses((status = OK, body = Vec<String>))
+    responses((status = OK, body = Vec<String>)),
+    security(("session_jwt" = [])),
 )]
 async fn get_redirect_urls(
     State(state): State<AppState>,
@@ -182,6 +188,5 @@ pub fn routes(state: AppState) -> Router {
         dto::request::ApplicationRedirectUrl,
     )),
     modifiers(&ApiDocSecurityAddon),
-    security(("session_jwt" = []))
 )]
 pub struct ApiDoc;

@@ -76,3 +76,9 @@ pub struct ApplicationConsentStatus {
 pub struct AuthorizationCodeExchangeResult {
     pub account_id: AccountId,
 }
+
+/// Authorization code.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct AuthorizationCode {
+    pub authorization_code: String,
+}
