@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO application_redirect_urls\n                (application_id, redirect_url)\n                VALUES ($1, $2)\n                ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3bf18e850278bedbe4f3a6c5e9a80fddc961c01ee47d3a3d34c76227b8388a12"
+}

@@ -2,7 +2,6 @@ use super::super::{ApplicationRepo, ApplicationRepoTransaction, RepoResult};
 use crate::{
     dto, entity,
     id::{AccountId, ApplicationId},
-    repo::RepoError,
 };
 use async_trait::async_trait;
 use metw_id::checked_now;
@@ -128,6 +127,20 @@ impl ApplicationRepo for MockApplicationRepoImpl {
         };
 
         Ok(application_entity.owner_account_id == account_id)
+    }
+
+    async fn redirect_url_exists(
+        &self,
+        application_id: ApplicationId,
+        redirect_url: &str,
+    ) -> RepoResult<bool> {
+        let state = self.lock_state().await;
+
+        Ok(state
+            .application_redirect_urls
+            .get(&application_id)
+            .map(|redirect_urls| redirect_urls.contains(&redirect_url.to_string()))
+            .unwrap_or(false))
     }
 
     async fn consent_exists(
@@ -269,15 +282,12 @@ impl ApplicationRepoTransaction for MockApplicationRepoTransactionImpl {
 
         let redirect_url = redirect_url.to_string();
 
-        if redirect_urls.contains(&redirect_url) {
-            Err(RepoError::Internal(
-                "redirect url exists in the application",
-            ))
-        } else {
+        // Silently ignore if the redirect URL already exists.
+        if !redirect_urls.contains(&redirect_url) {
             redirect_urls.push(redirect_url);
-
-            Ok(())
         }
+
+        Ok(())
     }
 
     async fn delete_redirect_url(

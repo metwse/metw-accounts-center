@@ -174,6 +174,19 @@ impl ApplicationService {
         Ok(self.repo.consent_exists(account_id, application_id).await?)
     }
 
+    /// Check whether or not the application has the redirect URL.
+    #[tracing::instrument(level = "debug", skip(self))]
+    pub async fn has_redirect_url(
+        &self,
+        application_id: ApplicationId,
+        redirect_url: &str,
+    ) -> ServiceResult<bool> {
+        Ok(self
+            .repo
+            .redirect_url_exists(application_id, redirect_url)
+            .await?)
+    }
+
     /// Remove the authorization consent.
     #[tracing::instrument(level = "debug", skip(self))]
     pub async fn list_consents(
@@ -194,6 +207,15 @@ impl ApplicationService {
         application_id: ApplicationId,
         redirect_url: &str,
     ) -> ServiceResult<()> {
+        // Best-effort error reporting
+        if self
+            .repo
+            .redirect_url_exists(application_id, redirect_url)
+            .await?
+        {
+            return Err(ServiceError::DuplicateRedirectUrl);
+        }
+
         let mut transaction = self.repo.begin_transaction().await?;
 
         transaction.lock(application_id).await?;

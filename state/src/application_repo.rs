@@ -131,6 +131,25 @@ impl ApplicationRepo for ApplicationRepoImpl {
         Ok(is_owned_by)
     }
 
+    async fn redirect_url_exists(
+        &self,
+        application_id: ApplicationId,
+        redirect_url: &str,
+    ) -> RepoResult<bool> {
+        let redirect_url_exists = sqlx::query_scalar!(
+            r#"SELECT EXISTS(
+                    SELECT 1 FROM application_redirect_urls
+                        WHERE application_id = $1 AND redirect_url = $2
+                ) AS "exists!""#,
+            application_id as _,
+            redirect_url
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(redirect_url_exists)
+    }
+
     async fn consent_exists(
         &self,
         account_id: AccountId,
@@ -300,7 +319,8 @@ impl ApplicationRepoTransaction for ApplicationRepoTransactionImpl<'_> {
         sqlx::query!(
             "INSERT INTO application_redirect_urls
                 (application_id, redirect_url)
-                VALUES ($1, $2)",
+                VALUES ($1, $2)
+                ON CONFLICT DO NOTHING",
             application_id as _,
             redirect_url,
         )

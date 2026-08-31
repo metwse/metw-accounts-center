@@ -15,7 +15,7 @@ use axum::{
     routing::{delete, get, post, put},
 };
 use service::{
-    AppState, dto,
+    AppState, dto::{self, request::ApplicationRedirectUrl},
     handlers::SessionHandler,
     id::{AccountId, ApplicationId},
 };
@@ -194,6 +194,7 @@ async fn get_application_consent_status(
 
 #[utoipa::path(
     put, path = "me/application-consents/{application_id}",
+    request_body = dto::request::ApplicationRedirectUrl,
     params(("application_id" = ApplicationId, Path)),
     security(("session_jwt" = [])),
 )]
@@ -201,10 +202,11 @@ async fn authorize_application(
     State(state): State<AppState>,
     Extension(account_id): Extension<AccountId>,
     Path(application_id): Path<ApplicationId>,
+    AppJson(reidrect_url_dto): AppJson<ApplicationRedirectUrl>
 ) -> AppResult<()> {
     Ok(AppJson(
         SessionHandler(state)
-            .authorize_application(account_id, application_id)
+            .authorize_application(account_id, application_id, reidrect_url_dto)
             .await?,
     ))
 }
@@ -304,6 +306,7 @@ pub fn routes(state: AppState) -> Router {
         dto::response::ApplicationSummary,
         dto::response::CreatedApplication,
         dto::request::ApplicationName,
+        dto::request::ApplicationRedirectUrl,
         dto::request::ConsentPagination,
         dto::request::ChangePassword,
         dto::request::Email,

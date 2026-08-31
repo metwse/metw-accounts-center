@@ -235,6 +235,13 @@ pub trait ApplicationRepo: Send + Sync {
         account_id: AccountId,
     ) -> RepoResult<bool>;
 
+    /// Checks the existence of redirect URL.
+    async fn redirect_url_exists(
+        &self,
+        application_id: ApplicationId,
+        redirect_url: &str,
+    ) -> RepoResult<bool>;
+
     /// Checks the existence of consent.
     async fn consent_exists(
         &self,
