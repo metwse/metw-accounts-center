@@ -70,3 +70,9 @@ pub struct ApplicationConsent {
 pub struct ApplicationConsentStatus {
     pub is_authorized: bool,
 }
+
+/// Response for a successful authorization code exchange.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct AuthorizationCodeExchangeResult {
+    pub account_id: AccountId,
+}

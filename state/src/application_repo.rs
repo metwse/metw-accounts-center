@@ -43,6 +43,21 @@ impl ApplicationRepo for ApplicationRepoImpl {
         Ok(applications)
     }
 
+    async fn get_client_secret_hash(
+        &self,
+        application_id: ApplicationId,
+    ) -> RepoResult<Option<Vec<u8>>> {
+        let client_secret_hash = sqlx::query_scalar!(
+            "SELECT client_secret_hash FROM applications
+                WHERE application_id = $1",
+            application_id as _
+        )
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(client_secret_hash)
+    }
+
     async fn list_redirect_urls(&self, application_id: ApplicationId) -> RepoResult<Vec<String>> {
         let redirect_urls = sqlx::query_scalar!(
             r"SELECT redirect_url

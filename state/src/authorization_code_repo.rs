@@ -47,7 +47,7 @@ impl AuthorizationCodeRepo for AuthorizationCodeRepoImpl {
         let mut con = self.con.clone();
 
         Ok(con
-            .get::<'_, _, Option<String>>(&key)
+            .get_del::<'_, _, Option<String>>(&key)
             .await?
             .map(|id_str| id_str.parse().ok())
             .unwrap_or(None))

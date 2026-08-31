@@ -1,5 +1,3 @@
-use validator::Validate;
-
 use super::HandlerResult;
 use crate::{
     dto,
@@ -7,6 +5,7 @@ use crate::{
     id::{AccountId, ApplicationId},
     state::AppState,
 };
+use validator::Validate;
 
 /// Application management handlers.
 ///

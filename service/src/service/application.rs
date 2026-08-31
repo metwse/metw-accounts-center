@@ -57,6 +57,24 @@ impl ApplicationService {
         })
     }
 
+    /// Check the client secret.
+    #[tracing::instrument(level = "debug", skip(self))]
+    pub async fn check_client_secret(
+        &self,
+        application_id: ApplicationId,
+        input_client_secret: &str,
+    ) -> ServiceResult<bool> {
+        let Some(client_secret_hash) = self.repo.get_client_secret_hash(application_id).await?
+        else {
+            return Ok(false);
+        };
+
+        Ok(client_secret::validate_client_secret(
+            input_client_secret,
+            &client_secret_hash,
+        ))
+    }
+
     /// Delete the application.
     #[tracing::instrument(level = "debug", skip(self))]
     pub async fn delete(&self, application_id: ApplicationId) -> ServiceResult<()> {

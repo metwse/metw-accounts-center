@@ -212,6 +212,12 @@ pub trait ApplicationRepo: Send + Sync {
         account_id: AccountId,
     ) -> RepoResult<Vec<dto::repo::OwnedApplicationSummary>>;
 
+    /// Gets client secret hash of the application.
+    async fn get_client_secret_hash(
+        &self,
+        application_id: ApplicationId,
+    ) -> RepoResult<Option<Vec<u8>>>;
+
     /// Gets list of the redirect URLs of the application.
     async fn list_redirect_urls(&self, application_id: ApplicationId) -> RepoResult<Vec<String>>;
 

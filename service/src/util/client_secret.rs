@@ -22,7 +22,11 @@ pub fn hash_client_secret(client_secret: &str) -> [u8; 32] {
 }
 
 /// Validates the client secret's hash.
-pub fn validate_client_secret(client_secret: &str, client_secret_hash: &[u8; 32]) -> bool {
+pub fn validate_client_secret(client_secret: &str, client_secret_hash: &[u8]) -> bool {
+    if client_secret_hash.len() != 32 {
+        return false;
+    }
+
     let calculated_client_secret_hash = hash_client_secret(client_secret);
 
     let mut difference: u8 = 0;
@@ -37,6 +41,8 @@ pub fn validate_client_secret(client_secret: &str, client_secret_hash: &[u8; 32]
 #[cfg(test)]
 #[test]
 fn test() {
+    assert!(!validate_client_secret("123", &[0]));
+
     for _ in 0..256 {
         let mut client_secret = random_client_secret();
         let mut client_secret_hash = hash_client_secret(&client_secret);

@@ -1,3 +1,4 @@
+mod application_access;
 mod application_management;
 mod authentication;
 mod email_verification_session;
@@ -6,6 +7,7 @@ mod token_action;
 
 mod error;
 
+pub use application_access::ApplicationAccessHandler;
 pub use application_management::ApplicationManagementHandler;
 pub use authentication::AuthenticationHandler;
 pub use email_verification_session::EmailVerificationSessionHandler;

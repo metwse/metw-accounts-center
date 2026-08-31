@@ -6,9 +6,12 @@ use axum::{
     middleware::Next,
     response::Response,
 };
+use base64::{Engine, engine::general_purpose::STANDARD as BASE64_STANDARD};
 use service::{
     AppState,
-    handlers::{ApplicationManagementHandler, AuthenticationHandler, HandlerError},
+    handlers::{
+        ApplicationAccessHandler, ApplicationManagementHandler, AuthenticationHandler, HandlerError,
+    },
     id::{AccountId, ApplicationId},
 };
 use tower_governor::key_extractor::KeyExtractor;
@@ -20,6 +23,23 @@ fn extract_bearer_token(req: &Request) -> Option<String> {
         .and_then(|header| header.to_str().ok())
         .and_then(|bearer_token| bearer_token.trim().strip_prefix("Bearer "))
         .map(|token_str| token_str.to_string())
+}
+
+fn parse_basic_credentials(req: &Request) -> Option<(ApplicationId, String)> {
+    let token_str = req
+        .headers()
+        .get(header::AUTHORIZATION)
+        .and_then(|header| header.to_str().ok())
+        .and_then(|basic_token| basic_token.trim().strip_prefix("Basic "))
+        .and_then(|token_base64| BASE64_STANDARD.decode(token_base64).ok())
+        .and_then(|token_bytes| String::from_utf8(token_bytes).ok())?;
+
+    let (application_id_str, client_secret_str) = token_str.split_once(':')?;
+
+    Some((
+        application_id_str.parse().ok()?,
+        client_secret_str.to_string(),
+    ))
 }
 
 /// Authenticate a login session.
@@ -68,6 +88,26 @@ pub async fn require_email_verification_session(
         }
         Err(_) => Err(HandlerError::Unauthorized)?,
     }
+}
+
+/// Authenticate application.
+#[tracing::instrument(level = "debug", skip_all)]
+pub async fn require_application_credentials(
+    State(state): State<AppState>,
+    mut req: Request,
+    next: Next,
+) -> AppMiddlewareResult<Response> {
+    let Some((application_id, client_secret)) = parse_basic_credentials(&req) else {
+        return Err(HandlerError::Unauthorized)?;
+    };
+
+    ApplicationAccessHandler(state)
+        .authenticate(application_id, client_secret)
+        .await?;
+
+    req.extensions_mut().insert(application_id);
+
+    Ok(next.run(req).await)
 }
 
 /// Authenticate the login session before email verification.

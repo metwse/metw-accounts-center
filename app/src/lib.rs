@@ -29,6 +29,7 @@ pub mod res;
     external_docs(url = "https://metwse.github.io/metw-accounts-center/", description = "Crate documentation"),
     paths(get_status),
     nest(
+        (path = "/", api = routes::application_access::ApiDoc, tags = ["application_access"]),
         (path = "/", api = routes::application_management::ApiDoc, tags = ["application_management"]),
         (path = "/", api = routes::authentication::ApiDoc, tags = ["authentication"]),
         (path = "/", api = routes::session::ApiDoc, tags = ["session"]),
@@ -73,6 +74,7 @@ pub fn app(state: AppState) -> Router {
         .route("/", get(get_status))
         .route("/openapi.json", get(async || Json(ApiDoc::openapi())))
         .with_state(state.clone())
+        .merge(routes::application_access::routes(state.clone()))
         .merge(routes::application_management::routes(state.clone()))
         .merge(routes::authentication::routes(state.clone()))
         .merge(routes::email_verification_session::routes(state.clone()))

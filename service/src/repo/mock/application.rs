@@ -72,6 +72,18 @@ impl ApplicationRepo for MockApplicationRepoImpl {
             .unwrap_or(Vec::new()))
     }
 
+    async fn get_client_secret_hash(
+        &self,
+        application_id: ApplicationId,
+    ) -> RepoResult<Option<Vec<u8>>> {
+        let state = self.lock_state().await;
+
+        Ok(state
+            .applications
+            .get(&application_id)
+            .map(|application_entity| application_entity.client_secret_hash.to_vec()))
+    }
+
     async fn list_consents(
         &self,
         account_id: AccountId,

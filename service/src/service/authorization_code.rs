@@ -26,7 +26,11 @@ impl AuthorizationCodeService {
     }
 
     /// Consumes the authorization code.
-    #[tracing::instrument(level = "debug", skip(self))]
+    #[tracing::instrument(
+        level = "debug",
+        skip(self, authorization_code),
+        fields(account_id = tracing::field::Empty)
+    )]
     pub async fn consume(
         &self,
         application_id: ApplicationId,
@@ -36,5 +40,8 @@ impl AuthorizationCodeService {
             .consume(application_id, authorization_code)
             .await?
             .ok_or(ServiceError::InvalidAuthorizationCode)
+            .inspect(|account_id| {
+                tracing::Span::current().record("account_id", account_id.to_string());
+            })
     }
 }

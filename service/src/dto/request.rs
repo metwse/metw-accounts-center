@@ -155,6 +155,13 @@ pub struct ConsentPagination {
     pub after_application_id: Option<ApplicationId>,
 }
 
+/// Authorization code for account ID exchange.
+#[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
+pub struct AuthorizationCode {
+    #[validate(length(max = 32))]
+    pub authorization_code: String,
+}
+
 impl Validate for AccountIdentifier {
     fn validate(&self) -> Result<(), validator::ValidationErrors> {
         match self {

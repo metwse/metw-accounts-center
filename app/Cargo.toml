@@ -21,6 +21,7 @@ thiserror = { workspace = true }
 dotenvy = { workspace = true }
 
 serde = { workspace = true, features = ["derive"] }
+base64 = { workspace = true }
 
 state = { path = "../state/" }
 service = { path = "../service/", features = ["email-templates"] }
