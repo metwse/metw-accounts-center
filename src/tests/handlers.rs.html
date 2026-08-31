@@ -559,7 +559,7 @@
 <a href=#559 id=559 data-nosnippet>559</a>    };
 <a href=#560 id=560 data-nosnippet>560</a>    <span class="kw">use </span><span class="kw">crate</span>::util::{TestState, pg_pool_from_env, redis_con_generator_from_env};
 <a href=#561 id=561 data-nosnippet>561</a>    <span class="kw">use </span>service::handlers::HandlerResult;
-<a href=#562 id=562 data-nosnippet>562</a>    <span class="kw">use </span>state::{AccountRepoImpl, ApplicationRepoImpl, TokenRepoImpl};
+<a href=#562 id=562 data-nosnippet>562</a>    <span class="kw">use </span>state::{AccountRepoImpl, ApplicationRepoImpl, EmailLimitingRepoImpl, TokenRepoImpl};
 <a href=#563 id=563 data-nosnippet>563</a>
 <a href=#564 id=564 data-nosnippet>564</a>    <span class="kw">async fn </span>testsuite(ctx: <span class="kw-2">&amp;</span>TestState) -&gt; HandlerResult&lt;()&gt; {
 <a href=#565 id=565 data-nosnippet>565</a>        <span class="kw">let </span>run_tests = <span class="kw">async </span>|| {
@@ -600,14 +600,16 @@
 <a href=#600 id=600 data-nosnippet>600</a>
 <a href=#601 id=601 data-nosnippet>601</a>        <span class="kw">let </span>account_repo = AccountRepoImpl::boxed_new(pg_pool.clone());
 <a href=#602 id=602 data-nosnippet>602</a>        <span class="kw">let </span>application_repo = ApplicationRepoImpl::boxed_new(pg_pool);
-<a href=#603 id=603 data-nosnippet>603</a>        <span class="kw">let </span>token_repo = TokenRepoImpl::boxed_new(<span class="kw-2">&amp;</span>con_generator).<span class="kw">await</span>;
-<a href=#604 id=604 data-nosnippet>604</a>
-<a href=#605 id=605 data-nosnippet>605</a>        <span class="kw">let </span>ctx = TestState::new()
-<a href=#606 id=606 data-nosnippet>606</a>            .with_account_repo(account_repo)
-<a href=#607 id=607 data-nosnippet>607</a>            .with_application_repo(application_repo)
-<a href=#608 id=608 data-nosnippet>608</a>            .with_token_repo(token_repo);
-<a href=#609 id=609 data-nosnippet>609</a>
-<a href=#610 id=610 data-nosnippet>610</a>        testsuite(<span class="kw-2">&amp;</span>ctx).<span class="kw">await
-<a href=#611 id=611 data-nosnippet>611</a>    </span>}
-<a href=#612 id=612 data-nosnippet>612</a>}
+<a href=#603 id=603 data-nosnippet>603</a>        <span class="kw">let </span>email_limiting_repo = EmailLimitingRepoImpl::boxed_new(<span class="kw-2">&amp;</span>con_generator).<span class="kw">await</span>;
+<a href=#604 id=604 data-nosnippet>604</a>        <span class="kw">let </span>token_repo = TokenRepoImpl::boxed_new(<span class="kw-2">&amp;</span>con_generator).<span class="kw">await</span>;
+<a href=#605 id=605 data-nosnippet>605</a>
+<a href=#606 id=606 data-nosnippet>606</a>        <span class="kw">let </span>ctx = TestState::new()
+<a href=#607 id=607 data-nosnippet>607</a>            .with_account_repo(account_repo)
+<a href=#608 id=608 data-nosnippet>608</a>            .with_application_repo(application_repo)
+<a href=#609 id=609 data-nosnippet>609</a>            .with_email_limiting_repo(email_limiting_repo)
+<a href=#610 id=610 data-nosnippet>610</a>            .with_token_repo(token_repo);
+<a href=#611 id=611 data-nosnippet>611</a>
+<a href=#612 id=612 data-nosnippet>612</a>        testsuite(<span class="kw-2">&amp;</span>ctx).<span class="kw">await
+<a href=#613 id=613 data-nosnippet>613</a>    </span>}
+<a href=#614 id=614 data-nosnippet>614</a>}
 </code></pre></div></section></main></body></html>

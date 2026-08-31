@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["client_secret","emails","id","password","token"],"struct":["JsonWebSignature"]};
+window.SIDEBAR_ITEMS = {"fn":["random_authorization_code"],"mod":["client_secret","emails","id","password","token"],"struct":["JsonWebSignature"]};

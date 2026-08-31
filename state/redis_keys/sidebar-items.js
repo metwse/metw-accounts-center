@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["email_limiting_repo","token_repo"]};
+window.SIDEBAR_ITEMS = {"mod":["authorization_code_repo","email_limiting_repo","token_repo"]};
