@@ -70,7 +70,7 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
                 account_id,
                 dto::request::RetrySignup {
                     email: taken_email.to_string(),
-                    redirect_url: None
+                    application: None
                 },
                 random_ipv6(),
                 dto::request::Captcha {
@@ -88,7 +88,7 @@ pub async fn retry_signup(ctx: &TestState) -> HandlerResult<()> {
             account_id,
             dto::request::RetrySignup {
                 email: email.to_string(),
-                redirect_url: None,
+                application: None,
             },
             random_ipv6(),
             dto::request::Captcha {
@@ -292,7 +292,7 @@ pub async fn taken_username_or_email(ctx: &TestState) -> HandlerResult<()> {
             pbkdf2_iterations: 500_000,
             pbkdf2_length: 256,
         },
-        redirect_url: None,
+        application: None,
     };
 
     assert_matches!(

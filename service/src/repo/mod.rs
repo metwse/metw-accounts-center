@@ -212,6 +212,9 @@ pub trait ApplicationRepo: Send + Sync {
         account_id: AccountId,
     ) -> RepoResult<Vec<dto::repo::OwnedApplicationSummary>>;
 
+    /// Gets the application name.
+    async fn get_name(&self, application_id: ApplicationId) -> RepoResult<Option<String>>;
+
     /// Gets client secret hash of the application.
     async fn get_client_secret_hash(
         &self,

@@ -43,6 +43,17 @@ impl ApplicationRepo for ApplicationRepoImpl {
         Ok(applications)
     }
 
+    async fn get_name(&self, application_id: ApplicationId) -> RepoResult<Option<String>> {
+        let name = sqlx::query_scalar!(
+            "SELECT name FROM applications WHERE application_id = $1",
+            application_id as _
+        )
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(name)
+    }
+
     async fn get_client_secret_hash(
         &self,
         application_id: ApplicationId,

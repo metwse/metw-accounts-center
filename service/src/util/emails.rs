@@ -1,3 +1,4 @@
+use crate::id::ApplicationId;
 use serde::Serialize;
 
 /// Email templates.
@@ -19,7 +20,7 @@ pub enum Template {
     ConfirmSignup {
         username: String,
         token: String,
-        redirect_url: Option<String>,
+        application: Option<(ApplicationId, String)>,
     },
 
     /// See [`AddEmail`].
@@ -76,11 +77,18 @@ macro_rules! build_email {
             let callback_url = $callback_url;
 
             match $template {
-                Self::ConfirmSignup { username, token, redirect_url } => {
-                    let callback_parameters = if let Some(redirect_url) = redirect_url {
-                        format!("redirect_url={}&auth={}", redirect_url, token)
+                Self::ConfirmSignup { username, token, application } => {
+                    let callback_parameters = if let Some(application) = application {
+                        let url_encoded_redirect_url = urlencoding::encode(&application.1);
+
+                        format!(
+                            "application_id={}&redirect_url={}&token={}",
+                            application.0,
+                            url_encoded_redirect_url,
+                            token
+                        )
                     } else {
-                        format!("auth={}", token)
+                        format!("token={}", token)
                     };
 
                     format!(

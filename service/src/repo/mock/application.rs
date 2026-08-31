@@ -61,6 +61,16 @@ impl ApplicationRepo for MockApplicationRepoImpl {
             .collect())
     }
 
+    async fn get_name(&self, application_id: ApplicationId) -> RepoResult<Option<String>> {
+        let state = self.lock_state().await;
+
+        Ok(state
+            .applications
+            .get(&application_id)
+            .cloned()
+            .map(|application_entity| application_entity.name))
+    }
+
     async fn list_redirect_urls(&self, application_id: ApplicationId) -> RepoResult<Vec<String>> {
         let state = self.lock_state().await;
 

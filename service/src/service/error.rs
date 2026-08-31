@@ -49,6 +49,9 @@ pub enum ServiceError {
     #[error("cannot have more than {0} emails")]
     TooManyEmails(usize),
 
+    #[error("application not found")]
+    ApplicationNotFound,
+
     #[error("cannot have more than {0} applications")]
     TooManyApplications(usize),
 

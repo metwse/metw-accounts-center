@@ -57,8 +57,14 @@ impl ApplicationService {
         })
     }
 
-    /// Check the client secret.
+    /// Gets the application name.
     #[tracing::instrument(level = "debug", skip(self))]
+    pub async fn get_name(&self, application_id: ApplicationId) -> ServiceResult<Option<String>> {
+        Ok(self.repo.get_name(application_id).await?)
+    }
+
+    /// Check the client secret.
+    #[tracing::instrument(level = "debug", skip(self, input_client_secret))]
     pub async fn check_client_secret(
         &self,
         application_id: ApplicationId,

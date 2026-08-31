@@ -41,6 +41,9 @@ argon2 = "0.5"
 # feature
 rand_core = { version = "0.6", features = ["getrandom"] }
 
+# email templates
+urlencoding = { version = "2.1", optional = true }
+
 [dev-dependencies]
 tokio = { workspace = true, features = ["full", "test-util"] }
 
@@ -61,7 +64,7 @@ minify-html = { version = "0.18", optional = true }
 # tokio/time requred for time outs in mock token service.
 mock = ["tokio/time"]
 testutil = []
-email-templates = ["dep:toml", "dep:strfmt", "dep:minify-html"]
+email-templates = ["dep:toml", "dep:strfmt", "dep:minify-html", "dep:urlencoding"]
 
 [lints]
 workspace = true

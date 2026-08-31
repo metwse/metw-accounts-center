@@ -343,12 +343,20 @@ impl SessionHandler {
         account_id: AccountId,
         application_id: ApplicationId,
     ) -> HandlerResult<dto::response::ApplicationConsentStatus> {
-        Ok(dto::response::ApplicationConsentStatus {
-            is_authorized: self
-                .0
+        let (is_authorized, name) = tokio::try_join!(
+            self.0
                 .application_service
-                .check_consent(account_id, application_id)
-                .await?,
+                .check_consent(account_id, application_id),
+            self.0.application_service.get_name(application_id)
+        )?;
+
+        let Some(name) = name else {
+            return Err(ServiceError::ApplicationNotFound)?;
+        };
+
+        Ok(dto::response::ApplicationConsentStatus {
+            is_authorized,
+            name,
         })
     }
 }

@@ -68,6 +68,7 @@ pub struct ApplicationConsent {
 /// Authorization status of the application.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct ApplicationConsentStatus {
+    pub name: String,
     pub is_authorized: bool,
 }
 

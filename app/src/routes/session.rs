@@ -15,7 +15,8 @@ use axum::{
     routing::{delete, get, post, put},
 };
 use service::{
-    AppState, dto::{self, request::ApplicationRedirectUrl},
+    AppState,
+    dto::{self, request::ApplicationRedirectUrl},
     handlers::SessionHandler,
     id::{AccountId, ApplicationId},
 };
@@ -202,7 +203,7 @@ async fn authorize_application(
     State(state): State<AppState>,
     Extension(account_id): Extension<AccountId>,
     Path(application_id): Path<ApplicationId>,
-    AppJson(reidrect_url_dto): AppJson<ApplicationRedirectUrl>
+    AppJson(reidrect_url_dto): AppJson<ApplicationRedirectUrl>,
 ) -> AppResult<()> {
     Ok(AppJson(
         SessionHandler(state)

@@ -37,9 +37,9 @@ pub struct Signup {
     #[validate(nested)]
     pub password: ClientDerivedPassword,
 
-    /// URL to redirect after a successful signup.
-    #[validate(regex(path = *REDIRECT_URL_REGEX))]
-    pub redirect_url: Option<String>,
+    /// Application to redirect after a successful signup.
+    #[validate(nested)]
+    pub application: Option<Application>,
 }
 
 /// Resend signup email.
@@ -49,9 +49,18 @@ pub struct RetrySignup {
     #[validate(email, custom(function = validate_lowercase))]
     pub email: String,
 
-    /// URL to redirect after a successful signup.
-    #[validate(regex(path = *REDIRECT_URL_REGEX))]
-    pub redirect_url: Option<String>,
+    /// Application to redirect after a successful signup.
+    #[validate(nested)]
+    pub application: Option<Application>,
+}
+
+/// Request containing redirect URL.
+#[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
+pub struct Application {
+    pub application_id: ApplicationId,
+
+    #[validate(url, regex(path = *REDIRECT_URL_REGEX), length(max = 512))]
+    pub redirect_url: String,
 }
 
 /// Password hashed client-side, with PBKDF2-SHA256 parameters.
@@ -145,7 +154,7 @@ pub struct ApplicationName {
 /// Request containing redirect URL.
 #[derive(Validate, Debug, Clone, Deserialize, ToSchema)]
 pub struct ApplicationRedirectUrl {
-    #[validate(url, regex(path = *REDIRECT_URL_REGEX))]
+    #[validate(url, regex(path = *REDIRECT_URL_REGEX), length(max = 512))]
     pub redirect_url: String,
 }
 
