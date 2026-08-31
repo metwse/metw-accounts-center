@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["AccountIdentifier","PublicAccountIdentifier"],"struct":["ApplicationName","ApplicationRedirectUrl","Captcha","ChangePassword","ClientDerivedPassword","ConsentPagination","Email","Login","RetrySignup","Signup","Token","Username"]};
+window.SIDEBAR_ITEMS = {"enum":["AccountIdentifier","PublicAccountIdentifier"],"struct":["ApplicationName","ApplicationRedirectUrl","AuthorizationCode","Captcha","ChangePassword","ClientDerivedPassword","ConsentPagination","Email","Login","RetrySignup","Signup","Token","Username"]};

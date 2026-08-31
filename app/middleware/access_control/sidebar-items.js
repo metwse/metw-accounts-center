@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["require_application_ownership","require_email_verification_session","require_session"],"struct":["ApiDocSecurityAddon","GovernorAccountIdKeyExtractor"]};
+window.SIDEBAR_ITEMS = {"fn":["require_application_credentials","require_application_ownership","require_email_verification_session","require_session"],"struct":["ApiDocSecurityAddon","GovernorAccountIdKeyExtractor"]};

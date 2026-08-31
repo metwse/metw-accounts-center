@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Account","AccountKdf","ApplicationConsent","ApplicationConsentStatus","ApplicationSummary","CreatedApplication","RotatedClientSecret","Token"]};
+window.SIDEBAR_ITEMS = {"struct":["Account","AccountKdf","ApplicationConsent","ApplicationConsentStatus","ApplicationSummary","AuthorizationCodeExchangeResult","CreatedApplication","RotatedClientSecret","Token"]};

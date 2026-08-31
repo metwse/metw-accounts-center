@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["HandlerError"],"struct":["ApplicationManagementHandler","AuthenticationHandler","EmailVerificationSessionHandler","SessionHandler","TokenActionHandler"],"type":["HandlerResult"]};
+window.SIDEBAR_ITEMS = {"enum":["HandlerError"],"struct":["ApplicationAccessHandler","ApplicationManagementHandler","AuthenticationHandler","EmailVerificationSessionHandler","SessionHandler","TokenActionHandler"],"type":["HandlerResult"]};
