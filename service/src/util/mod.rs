@@ -1,3 +1,5 @@
+use rand::RngExt;
+
 /// Password utilities.
 pub mod password;
 
@@ -16,3 +18,12 @@ pub mod client_secret;
 mod jsonwebsignature;
 
 pub use jsonwebsignature::JsonWebSignature;
+
+/// Creates a new authorization code.
+pub fn random_authorization_code() -> String {
+    rand::rng()
+        .sample_iter(rand::distr::Alphanumeric)
+        .take(22)
+        .map(char::from)
+        .collect()
+}

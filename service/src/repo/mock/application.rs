@@ -170,7 +170,7 @@ impl ApplicationRepoTransaction for MockApplicationRepoTransactionImpl {
             .state
             .account_application_consents
             .keys()
-            .filter(|(_, db_application_id)| *db_application_id != application_id)
+            .filter(|(_, db_application_id)| *db_application_id == application_id)
             .cloned()
             .collect();
 
@@ -210,8 +210,10 @@ impl ApplicationRepoTransaction for MockApplicationRepoTransactionImpl {
             .state
             .account_application_consents
             .contains_key(&(account_id, application_id))
+            || !self.state.applications.contains_key(&application_id)
         {
-            // Silently ignore if consent already exists.
+            // Silently ignore if consent already exists or application does
+            // not exists.
             return Ok(());
         }
 

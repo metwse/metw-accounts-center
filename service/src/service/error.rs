@@ -54,4 +54,7 @@ pub enum ServiceError {
 
     #[error("cannot have more than {0} redirect URL for an application")]
     TooManyRedirectUrls(usize),
+
+    #[error("invalid authorization code")]
+    InvalidAuthorizationCode,
 }

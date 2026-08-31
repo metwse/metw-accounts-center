@@ -559,7 +559,7 @@ mod tests {
     };
     use crate::util::{TestState, pg_pool_from_env, redis_con_generator_from_env};
     use service::handlers::HandlerResult;
-    use state::{AccountRepoImpl, ApplicationRepoImpl, TokenRepoImpl};
+    use state::{AccountRepoImpl, ApplicationRepoImpl, EmailLimitingRepoImpl, TokenRepoImpl};
 
     async fn testsuite(ctx: &TestState) -> HandlerResult<()> {
         let run_tests = async || {
@@ -600,11 +600,13 @@ mod tests {
 
         let account_repo = AccountRepoImpl::boxed_new(pg_pool.clone());
         let application_repo = ApplicationRepoImpl::boxed_new(pg_pool);
+        let email_limiting_repo = EmailLimitingRepoImpl::boxed_new(&con_generator).await;
         let token_repo = TokenRepoImpl::boxed_new(&con_generator).await;
 
         let ctx = TestState::new()
             .with_account_repo(account_repo)
             .with_application_repo(application_repo)
+            .with_email_limiting_repo(email_limiting_repo)
             .with_token_repo(token_repo);
 
         testsuite(&ctx).await

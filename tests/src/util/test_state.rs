@@ -8,13 +8,16 @@ use service::{
     handlers::{AuthenticationHandler, HandlerResult, TokenActionHandler},
     id::AccountId,
     repo::{
-        AccountRepo, ApplicationRepo, TokenRepo,
+        AccountRepo, ApplicationRepo, AuthorizationCodeRepo, EmailLimitingRepo, TokenRepo,
         mock::{
-            MockAccountRepoImpl, MockApplicationRepoImpl, MockEmailLimitingRepoImpl,
-            MockTokenRepoImpl,
+            MockAccountRepoImpl, MockApplicationRepoImpl, MockAuthorizationCodeRepoImpl,
+            MockEmailLimitingRepoImpl, MockTokenRepoImpl,
         },
     },
-    service::{AccountService, ApplicationService, EmailLimitingService, TokenService},
+    service::{
+        AccountService, ApplicationService, AuthorizationCodeService, EmailLimitingService,
+        TokenService,
+    },
     testutil::{random_email, random_ipv6, random_username},
     util::emails,
 };
@@ -31,6 +34,8 @@ pub struct TestState {
 impl Default for TestState {
     fn default() -> Self {
         let account_service = AccountService::new(MockAccountRepoImpl::boxed_new());
+        let authorization_code_service =
+            AuthorizationCodeService::new(MockAuthorizationCodeRepoImpl::boxed_new());
         let application_service = ApplicationService::new(MockApplicationRepoImpl::boxed_new());
         let token_service =
             TokenService::new(MockTokenRepoImpl::boxed_new(), b"secret123".to_vec());
@@ -45,8 +50,9 @@ impl Default for TestState {
             state: AppState {
                 account_service: account_service.into(),
                 application_service: application_service.into(),
-                token_service: token_service.into(),
+                authorization_code_service: authorization_code_service.into(),
                 email_limiting_service: email_limiting_service.into(),
+                token_service: token_service.into(),
                 email_client: (email_client as Box<dyn EmailClient>).into(),
                 captcha_client: (captcha_client as Box<dyn CaptchaClient>).into(),
             },
@@ -59,6 +65,27 @@ impl TestState {
     /// Creates a new test context.
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Set the email limiting repository.
+    pub fn with_authorization_code_repo(
+        mut self,
+        authorization_code_repo: Box<dyn AuthorizationCodeRepo>,
+    ) -> Self {
+        self.state.authorization_code_service =
+            AuthorizationCodeService::new(authorization_code_repo).into();
+
+        self
+    }
+
+    /// Set the email limiting repository.
+    pub fn with_email_limiting_repo(
+        mut self,
+        email_limiting_repo: Box<dyn EmailLimitingRepo>,
+    ) -> Self {
+        self.state.email_limiting_service = EmailLimitingService::new(email_limiting_repo).into();
+
+        self
     }
 
     /// Set the token repository.

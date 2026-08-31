@@ -22,6 +22,7 @@ mod email_client;
 
 mod account_repo;
 mod application_repo;
+mod authorization_code_repo;
 mod email_limiting_repo;
 mod token_repo;
 
@@ -30,6 +31,7 @@ pub use email_client::EmailClientImpl;
 
 pub use account_repo::AccountRepoImpl;
 pub use application_repo::ApplicationRepoImpl;
+pub use authorization_code_repo::AuthorizationCodeRepoImpl;
 pub use email_limiting_repo::EmailLimitingRepoImpl;
 pub use token_repo::TokenRepoImpl;
 
@@ -37,16 +39,19 @@ use serde::Deserialize;
 use service::{
     AppState,
     client::{CaptchaClient, EmailClient},
-    service::{AccountService, ApplicationService, EmailLimitingService, TokenService},
+    service::{
+        AccountService, ApplicationService, AuthorizationCodeService, EmailLimitingService,
+        TokenService,
+    },
 };
 
 /// Redis keys used with repositories.
 #[cfg(any(feature = "testutil", test))]
 #[cfg_attr(docsrs, doc(cfg(feature = "testutil")))]
 pub mod redis_keys {
-    /// Keys used in token repository.
-    pub mod token_repo {
-        pub use crate::token_repo::{to_account_key, to_scope_key, to_token_key};
+    /// Keys used in authorization code repository.
+    pub mod authorization_code_repo {
+        pub use crate::authorization_code_repo::to_authorization_code_key;
     }
 
     /// Keys used in email limiting repository.
@@ -54,6 +59,11 @@ pub mod redis_keys {
         pub use crate::email_limiting_repo::{
             to_block_email_key, to_block_ip_key, to_used_email_quota_key, to_used_ip_quota_key,
         };
+    }
+
+    /// Keys used in token repository.
+    pub mod token_repo {
+        pub use crate::token_repo::{to_account_key, to_scope_key, to_token_key};
     }
 }
 
@@ -110,13 +120,17 @@ impl Config {
                 .unwrap()
         });
 
-        let token_service = TokenService::new(
-            TokenRepoImpl::boxed_new(&redis_con_generator).await,
-            self.jwt_secret.into(),
+        let authorization_code_service = AuthorizationCodeService::new(
+            AuthorizationCodeRepoImpl::boxed_new(&redis_con_generator).await,
         );
 
         let email_limiting_service =
             EmailLimitingService::new(EmailLimitingRepoImpl::boxed_new(&redis_con_generator).await);
+
+        let token_service = TokenService::new(
+            TokenRepoImpl::boxed_new(&redis_con_generator).await,
+            self.jwt_secret.into(),
+        );
 
         let email_client = {
             use lettre::{
@@ -138,6 +152,7 @@ impl Config {
         AppState {
             account_service: account_service.into(),
             application_service: application_service.into(),
+            authorization_code_service: authorization_code_service.into(),
             token_service: token_service.into(),
             email_limiting_service: email_limiting_service.into(),
             email_client: (email_client as Box<dyn EmailClient>).into(),

@@ -4,7 +4,7 @@ use sha2::Digest;
 /// Creates a new client secret.
 pub fn random_client_secret() -> String {
     rand::rng()
-        .sample_iter(rand::distr::Alphabetic)
+        .sample_iter(rand::distr::Alphanumeric)
         .take(22)
         .map(char::from)
         .collect()

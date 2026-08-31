@@ -398,3 +398,21 @@ pub trait EmailLimitingRepo: Send + Sync {
     /// Removes all rate limiting state associated with the email address.
     async fn clear_email_limit(&self, email: &str) -> RepoResult<()>;
 }
+
+/// One-time authorization code repository.
+#[async_trait]
+pub trait AuthorizationCodeRepo: Send + Sync {
+    /// Creates a new authorization code.
+    async fn create(
+        &self,
+        account_id: AccountId,
+        application_id: ApplicationId,
+    ) -> RepoResult<String>;
+
+    /// Consumes authorization code, returning account ID.
+    async fn consume(
+        &self,
+        application_id: ApplicationId,
+        authorization_code: &str,
+    ) -> RepoResult<Option<AccountId>>;
+}
