@@ -195,7 +195,6 @@ async fn get_application_consent_status(
 
 #[utoipa::path(
     put, path = "me/application-consents/{application_id}",
-    request_body = dto::request::ApplicationRedirectUrl,
     params(("application_id" = ApplicationId, Path)),
     security(("session_jwt" = [])),
 )]
@@ -203,11 +202,10 @@ async fn authorize_application(
     State(state): State<AppState>,
     Extension(account_id): Extension<AccountId>,
     Path(application_id): Path<ApplicationId>,
-    AppJson(reidrect_url_dto): AppJson<ApplicationRedirectUrl>,
 ) -> AppResult<()> {
     Ok(AppJson(
         SessionHandler(state)
-            .authorize_application(account_id, application_id, reidrect_url_dto)
+            .authorize_application(account_id, application_id)
             .await?,
     ))
 }
@@ -231,6 +229,7 @@ async fn unauthorize_application(
 
 #[utoipa::path(
     post, path = "me/application-consents/{application_id}/authorization-code",
+    request_body = dto::request::ApplicationRedirectUrl,
     params(("application_id" = ApplicationId, Path)),
     responses(
         (status = OK, body = dto::response::AuthorizationCode)
@@ -241,10 +240,11 @@ async fn create_authorization_code(
     State(state): State<AppState>,
     Extension(account_id): Extension<AccountId>,
     Path(application_id): Path<ApplicationId>,
+    AppJson(redirect_url_dto): AppJson<ApplicationRedirectUrl>,
 ) -> AppResult<dto::response::AuthorizationCode> {
     Ok(AppJson(
         SessionHandler(state)
-            .create_authorization_code(account_id, application_id)
+            .create_authorization_code(account_id, application_id, redirect_url_dto)
             .await?,
     ))
 }

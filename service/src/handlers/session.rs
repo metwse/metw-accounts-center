@@ -276,20 +276,7 @@ impl SessionHandler {
         &self,
         account_id: AccountId,
         application_id: ApplicationId,
-        redirect_url_dto: dto::request::ApplicationRedirectUrl,
     ) -> HandlerResult<()> {
-        redirect_url_dto.validate()?;
-        let redirect_url = redirect_url_dto.redirect_url;
-
-        if !self
-            .0
-            .application_service
-            .has_redirect_url(application_id, &redirect_url)
-            .await?
-        {
-            Err(ServiceError::InvalidRedirectUrl)?;
-        }
-
         Ok(self
             .0
             .application_service
@@ -303,7 +290,20 @@ impl SessionHandler {
         &self,
         account_id: AccountId,
         application_id: ApplicationId,
+        redirect_url_dto: dto::request::ApplicationRedirectUrl,
     ) -> HandlerResult<dto::response::AuthorizationCode> {
+        redirect_url_dto.validate()?;
+        let redirect_url = redirect_url_dto.redirect_url;
+
+        if !self
+            .0
+            .application_service
+            .has_redirect_url(application_id, &redirect_url)
+            .await?
+        {
+            Err(ServiceError::InvalidRedirectUrl)?;
+        }
+
         if !self
             .0
             .application_service
