@@ -276,34 +276,34 @@
 <a href=#276 id=276 data-nosnippet>276</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#277 id=277 data-nosnippet>277</a>        account_id: AccountId,
 <a href=#278 id=278 data-nosnippet>278</a>        application_id: ApplicationId,
-<a href=#279 id=279 data-nosnippet>279</a>        redirect_url_dto: dto::request::ApplicationRedirectUrl,
-<a href=#280 id=280 data-nosnippet>280</a>    ) -&gt; HandlerResult&lt;()&gt; {
-<a href=#281 id=281 data-nosnippet>281</a>        redirect_url_dto.validate()<span class="question-mark">?</span>;
-<a href=#282 id=282 data-nosnippet>282</a>        <span class="kw">let </span>redirect_url = redirect_url_dto.redirect_url;
-<a href=#283 id=283 data-nosnippet>283</a>
-<a href=#284 id=284 data-nosnippet>284</a>        <span class="kw">if </span>!<span class="self">self
-<a href=#285 id=285 data-nosnippet>285</a>            </span>.<span class="number">0
-<a href=#286 id=286 data-nosnippet>286</a>            </span>.application_service
-<a href=#287 id=287 data-nosnippet>287</a>            .has_redirect_url(application_id, <span class="kw-2">&amp;</span>redirect_url)
-<a href=#288 id=288 data-nosnippet>288</a>            .<span class="kw">await</span><span class="question-mark">?
-<a href=#289 id=289 data-nosnippet>289</a>        </span>{
-<a href=#290 id=290 data-nosnippet>290</a>            <span class="prelude-val">Err</span>(ServiceError::InvalidRedirectUrl)<span class="question-mark">?</span>;
-<a href=#291 id=291 data-nosnippet>291</a>        }
-<a href=#292 id=292 data-nosnippet>292</a>
-<a href=#293 id=293 data-nosnippet>293</a>        <span class="prelude-val">Ok</span>(<span class="self">self
-<a href=#294 id=294 data-nosnippet>294</a>            </span>.<span class="number">0
-<a href=#295 id=295 data-nosnippet>295</a>            </span>.application_service
-<a href=#296 id=296 data-nosnippet>296</a>            .add_consent(account_id, application_id)
-<a href=#297 id=297 data-nosnippet>297</a>            .<span class="kw">await</span><span class="question-mark">?</span>)
-<a href=#298 id=298 data-nosnippet>298</a>    }
-<a href=#299 id=299 data-nosnippet>299</a>
-<a href=#300 id=300 data-nosnippet>300</a>    <span class="doccomment">/// Create an authorization code for application.
-<a href=#301 id=301 data-nosnippet>301</a>    </span><span class="attr">#[tracing::instrument(level = <span class="string">"debug"</span>, skip(<span class="self">self</span>))]
-<a href=#302 id=302 data-nosnippet>302</a>    </span><span class="kw">pub async fn </span>create_authorization_code(
-<a href=#303 id=303 data-nosnippet>303</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#304 id=304 data-nosnippet>304</a>        account_id: AccountId,
-<a href=#305 id=305 data-nosnippet>305</a>        application_id: ApplicationId,
-<a href=#306 id=306 data-nosnippet>306</a>    ) -&gt; HandlerResult&lt;dto::response::AuthorizationCode&gt; {
+<a href=#279 id=279 data-nosnippet>279</a>    ) -&gt; HandlerResult&lt;()&gt; {
+<a href=#280 id=280 data-nosnippet>280</a>        <span class="prelude-val">Ok</span>(<span class="self">self
+<a href=#281 id=281 data-nosnippet>281</a>            </span>.<span class="number">0
+<a href=#282 id=282 data-nosnippet>282</a>            </span>.application_service
+<a href=#283 id=283 data-nosnippet>283</a>            .add_consent(account_id, application_id)
+<a href=#284 id=284 data-nosnippet>284</a>            .<span class="kw">await</span><span class="question-mark">?</span>)
+<a href=#285 id=285 data-nosnippet>285</a>    }
+<a href=#286 id=286 data-nosnippet>286</a>
+<a href=#287 id=287 data-nosnippet>287</a>    <span class="doccomment">/// Create an authorization code for application.
+<a href=#288 id=288 data-nosnippet>288</a>    </span><span class="attr">#[tracing::instrument(level = <span class="string">"debug"</span>, skip(<span class="self">self</span>))]
+<a href=#289 id=289 data-nosnippet>289</a>    </span><span class="kw">pub async fn </span>create_authorization_code(
+<a href=#290 id=290 data-nosnippet>290</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#291 id=291 data-nosnippet>291</a>        account_id: AccountId,
+<a href=#292 id=292 data-nosnippet>292</a>        application_id: ApplicationId,
+<a href=#293 id=293 data-nosnippet>293</a>        redirect_url_dto: dto::request::ApplicationRedirectUrl,
+<a href=#294 id=294 data-nosnippet>294</a>    ) -&gt; HandlerResult&lt;dto::response::AuthorizationCode&gt; {
+<a href=#295 id=295 data-nosnippet>295</a>        redirect_url_dto.validate()<span class="question-mark">?</span>;
+<a href=#296 id=296 data-nosnippet>296</a>        <span class="kw">let </span>redirect_url = redirect_url_dto.redirect_url;
+<a href=#297 id=297 data-nosnippet>297</a>
+<a href=#298 id=298 data-nosnippet>298</a>        <span class="kw">if </span>!<span class="self">self
+<a href=#299 id=299 data-nosnippet>299</a>            </span>.<span class="number">0
+<a href=#300 id=300 data-nosnippet>300</a>            </span>.application_service
+<a href=#301 id=301 data-nosnippet>301</a>            .has_redirect_url(application_id, <span class="kw-2">&amp;</span>redirect_url)
+<a href=#302 id=302 data-nosnippet>302</a>            .<span class="kw">await</span><span class="question-mark">?
+<a href=#303 id=303 data-nosnippet>303</a>        </span>{
+<a href=#304 id=304 data-nosnippet>304</a>            <span class="prelude-val">Err</span>(ServiceError::InvalidRedirectUrl)<span class="question-mark">?</span>;
+<a href=#305 id=305 data-nosnippet>305</a>        }
+<a href=#306 id=306 data-nosnippet>306</a>
 <a href=#307 id=307 data-nosnippet>307</a>        <span class="kw">if </span>!<span class="self">self
 <a href=#308 id=308 data-nosnippet>308</a>            </span>.<span class="number">0
 <a href=#309 id=309 data-nosnippet>309</a>            </span>.application_service
