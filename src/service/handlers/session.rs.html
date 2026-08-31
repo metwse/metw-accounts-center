@@ -284,34 +284,59 @@
 <a href=#284 id=284 data-nosnippet>284</a>            .<span class="kw">await</span><span class="question-mark">?</span>)
 <a href=#285 id=285 data-nosnippet>285</a>    }
 <a href=#286 id=286 data-nosnippet>286</a>
-<a href=#287 id=287 data-nosnippet>287</a>    <span class="doccomment">/// Remove authorization of the application.
+<a href=#287 id=287 data-nosnippet>287</a>    <span class="doccomment">/// Create an authorization code for application.
 <a href=#288 id=288 data-nosnippet>288</a>    </span><span class="attr">#[tracing::instrument(level = <span class="string">"debug"</span>, skip(<span class="self">self</span>))]
-<a href=#289 id=289 data-nosnippet>289</a>    </span><span class="kw">pub async fn </span>unauthorize_application(
+<a href=#289 id=289 data-nosnippet>289</a>    </span><span class="kw">pub async fn </span>create_authorization_code(
 <a href=#290 id=290 data-nosnippet>290</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#291 id=291 data-nosnippet>291</a>        account_id: AccountId,
 <a href=#292 id=292 data-nosnippet>292</a>        application_id: ApplicationId,
-<a href=#293 id=293 data-nosnippet>293</a>    ) -&gt; HandlerResult&lt;()&gt; {
-<a href=#294 id=294 data-nosnippet>294</a>        <span class="prelude-val">Ok</span>(<span class="self">self
+<a href=#293 id=293 data-nosnippet>293</a>    ) -&gt; HandlerResult&lt;dto::response::AuthorizationCode&gt; {
+<a href=#294 id=294 data-nosnippet>294</a>        <span class="kw">if </span>!<span class="self">self
 <a href=#295 id=295 data-nosnippet>295</a>            </span>.<span class="number">0
 <a href=#296 id=296 data-nosnippet>296</a>            </span>.application_service
-<a href=#297 id=297 data-nosnippet>297</a>            .remove_consent(account_id, application_id)
-<a href=#298 id=298 data-nosnippet>298</a>            .<span class="kw">await</span><span class="question-mark">?</span>)
-<a href=#299 id=299 data-nosnippet>299</a>    }
-<a href=#300 id=300 data-nosnippet>300</a>
-<a href=#301 id=301 data-nosnippet>301</a>    <span class="doccomment">/// Check the authorization of the application.
-<a href=#302 id=302 data-nosnippet>302</a>    </span><span class="attr">#[tracing::instrument(level = <span class="string">"debug"</span>, skip(<span class="self">self</span>))]
-<a href=#303 id=303 data-nosnippet>303</a>    </span><span class="kw">pub async fn </span>get_application_consent_status(
-<a href=#304 id=304 data-nosnippet>304</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#305 id=305 data-nosnippet>305</a>        account_id: AccountId,
-<a href=#306 id=306 data-nosnippet>306</a>        application_id: ApplicationId,
-<a href=#307 id=307 data-nosnippet>307</a>    ) -&gt; HandlerResult&lt;dto::response::ApplicationConsentStatus&gt; {
-<a href=#308 id=308 data-nosnippet>308</a>        <span class="prelude-val">Ok</span>(dto::response::ApplicationConsentStatus {
-<a href=#309 id=309 data-nosnippet>309</a>            is_authorized: <span class="self">self
-<a href=#310 id=310 data-nosnippet>310</a>                </span>.<span class="number">0
-<a href=#311 id=311 data-nosnippet>311</a>                </span>.application_service
-<a href=#312 id=312 data-nosnippet>312</a>                .check_consent(account_id, application_id)
-<a href=#313 id=313 data-nosnippet>313</a>                .<span class="kw">await</span><span class="question-mark">?</span>,
-<a href=#314 id=314 data-nosnippet>314</a>        })
-<a href=#315 id=315 data-nosnippet>315</a>    }
-<a href=#316 id=316 data-nosnippet>316</a>}
+<a href=#297 id=297 data-nosnippet>297</a>            .check_consent(account_id, application_id)
+<a href=#298 id=298 data-nosnippet>298</a>            .<span class="kw">await</span><span class="question-mark">?
+<a href=#299 id=299 data-nosnippet>299</a>        </span>{
+<a href=#300 id=300 data-nosnippet>300</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(HandlerError::Unauthorized);
+<a href=#301 id=301 data-nosnippet>301</a>        }
+<a href=#302 id=302 data-nosnippet>302</a>
+<a href=#303 id=303 data-nosnippet>303</a>        <span class="kw">let </span>authorization_code = <span class="self">self
+<a href=#304 id=304 data-nosnippet>304</a>            </span>.<span class="number">0
+<a href=#305 id=305 data-nosnippet>305</a>            </span>.authorization_code_service
+<a href=#306 id=306 data-nosnippet>306</a>            .create(account_id, application_id)
+<a href=#307 id=307 data-nosnippet>307</a>            .<span class="kw">await</span><span class="question-mark">?</span>;
+<a href=#308 id=308 data-nosnippet>308</a>
+<a href=#309 id=309 data-nosnippet>309</a>        <span class="prelude-val">Ok</span>(dto::response::AuthorizationCode { authorization_code })
+<a href=#310 id=310 data-nosnippet>310</a>    }
+<a href=#311 id=311 data-nosnippet>311</a>
+<a href=#312 id=312 data-nosnippet>312</a>    <span class="doccomment">/// Remove authorization of the application.
+<a href=#313 id=313 data-nosnippet>313</a>    </span><span class="attr">#[tracing::instrument(level = <span class="string">"debug"</span>, skip(<span class="self">self</span>))]
+<a href=#314 id=314 data-nosnippet>314</a>    </span><span class="kw">pub async fn </span>unauthorize_application(
+<a href=#315 id=315 data-nosnippet>315</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#316 id=316 data-nosnippet>316</a>        account_id: AccountId,
+<a href=#317 id=317 data-nosnippet>317</a>        application_id: ApplicationId,
+<a href=#318 id=318 data-nosnippet>318</a>    ) -&gt; HandlerResult&lt;()&gt; {
+<a href=#319 id=319 data-nosnippet>319</a>        <span class="prelude-val">Ok</span>(<span class="self">self
+<a href=#320 id=320 data-nosnippet>320</a>            </span>.<span class="number">0
+<a href=#321 id=321 data-nosnippet>321</a>            </span>.application_service
+<a href=#322 id=322 data-nosnippet>322</a>            .remove_consent(account_id, application_id)
+<a href=#323 id=323 data-nosnippet>323</a>            .<span class="kw">await</span><span class="question-mark">?</span>)
+<a href=#324 id=324 data-nosnippet>324</a>    }
+<a href=#325 id=325 data-nosnippet>325</a>
+<a href=#326 id=326 data-nosnippet>326</a>    <span class="doccomment">/// Check the authorization of the application.
+<a href=#327 id=327 data-nosnippet>327</a>    </span><span class="attr">#[tracing::instrument(level = <span class="string">"debug"</span>, skip(<span class="self">self</span>))]
+<a href=#328 id=328 data-nosnippet>328</a>    </span><span class="kw">pub async fn </span>get_application_consent_status(
+<a href=#329 id=329 data-nosnippet>329</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#330 id=330 data-nosnippet>330</a>        account_id: AccountId,
+<a href=#331 id=331 data-nosnippet>331</a>        application_id: ApplicationId,
+<a href=#332 id=332 data-nosnippet>332</a>    ) -&gt; HandlerResult&lt;dto::response::ApplicationConsentStatus&gt; {
+<a href=#333 id=333 data-nosnippet>333</a>        <span class="prelude-val">Ok</span>(dto::response::ApplicationConsentStatus {
+<a href=#334 id=334 data-nosnippet>334</a>            is_authorized: <span class="self">self
+<a href=#335 id=335 data-nosnippet>335</a>                </span>.<span class="number">0
+<a href=#336 id=336 data-nosnippet>336</a>                </span>.application_service
+<a href=#337 id=337 data-nosnippet>337</a>                .check_consent(account_id, application_id)
+<a href=#338 id=338 data-nosnippet>338</a>                .<span class="kw">await</span><span class="question-mark">?</span>,
+<a href=#339 id=339 data-nosnippet>339</a>        })
+<a href=#340 id=340 data-nosnippet>340</a>    }
+<a href=#341 id=341 data-nosnippet>341</a>}
 </code></pre></div></section></main></body></html>

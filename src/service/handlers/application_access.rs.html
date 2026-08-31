@@ -72,16 +72,16 @@
 <a href=#72 id=72 data-nosnippet>72</a>    ) -&gt; HandlerResult&lt;dto::response::Account&gt; {
 <a href=#73 id=73 data-nosnippet>73</a>        <span class="kw">let </span>account = <span class="self">self</span>.<span class="number">0</span>.account_service.get(account_id).<span class="kw">await</span><span class="question-mark">?</span>;
 <a href=#74 id=74 data-nosnippet>74</a>
-<a href=#75 id=75 data-nosnippet>75</a>        <span class="kw">if </span>!<span class="self">self
+<a href=#75 id=75 data-nosnippet>75</a>        <span class="kw">if </span><span class="self">self
 <a href=#76 id=76 data-nosnippet>76</a>            </span>.<span class="number">0
 <a href=#77 id=77 data-nosnippet>77</a>            </span>.application_service
 <a href=#78 id=78 data-nosnippet>78</a>            .check_consent(account_id, application_id)
 <a href=#79 id=79 data-nosnippet>79</a>            .<span class="kw">await</span><span class="question-mark">?
 <a href=#80 id=80 data-nosnippet>80</a>        </span>{
-<a href=#81 id=81 data-nosnippet>81</a>            <span class="prelude-val">Err</span>(ServiceError::InvalidAuthorizationCode)<span class="question-mark">?</span>;
-<a href=#82 id=82 data-nosnippet>82</a>        }
-<a href=#83 id=83 data-nosnippet>83</a>
-<a href=#84 id=84 data-nosnippet>84</a>        <span class="prelude-val">Ok</span>(account)
+<a href=#81 id=81 data-nosnippet>81</a>            <span class="prelude-val">Ok</span>(account)
+<a href=#82 id=82 data-nosnippet>82</a>        } <span class="kw">else </span>{
+<a href=#83 id=83 data-nosnippet>83</a>            <span class="prelude-val">Err</span>(HandlerError::Unauthorized)
+<a href=#84 id=84 data-nosnippet>84</a>        }
 <a href=#85 id=85 data-nosnippet>85</a>    }
 <a href=#86 id=86 data-nosnippet>86</a>}
 </code></pre></div></section></main></body></html>
