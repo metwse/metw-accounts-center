@@ -22,7 +22,7 @@ async fn main() -> Result<(), Error> {
     io::stdin().read_line(&mut authorization_code).unwrap();
 
     let account_id = client.exchange(authorization_code.trim()).await?;
-    let account = client.get_account(account_id).await?;
+    let account = client.get_account(&account_id).await?;
 
     println!("{account:#?}");
 

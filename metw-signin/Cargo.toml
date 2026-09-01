@@ -2,6 +2,10 @@
 name = "metw-signin"
 version = "0.0.0"
 edition = "2024"
+description = "Rust client for metw accounts center application authentication."
+repository = "https://github.com/metwse/metw-accounts-center"
+homepage = "https://accounts.metw.cc"
+readme = "README.md"
 
 [dependencies]
 reqwest = { version = "0.13", features = ["json"] }
@@ -12,6 +16,8 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 
 secrecy = "0.10"
+
+tracing = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["full"] }

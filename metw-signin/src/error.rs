@@ -1,3 +1,5 @@
+use reqwest::StatusCode;
+
 /// Error types for the metw account center API.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -10,8 +12,8 @@ pub enum Error {
     InvalidAuthorizationCode,
 
     /// API returned an unexpected error.
-    #[error("API returned an unexpected error.")]
-    UnknownError,
+    #[error("API returned an unexpected status {0}.")]
+    UnexpectedStatus(StatusCode),
 
     /// The error originated from reqwest.
     #[error("The error originated from reqwest.")]

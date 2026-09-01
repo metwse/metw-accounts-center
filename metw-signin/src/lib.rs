@@ -8,13 +8,16 @@ use reqwest::{Client as ReqwestClient, StatusCode};
 use secrecy::{ExposeSecret, SecretBox};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::fmt;
+use std::time::Duration;
+
+static DEFAULT_BASE_URL: &str = "https://accounts.metw.cc/api";
 
 /// A client for metw accounts center applications.
 pub struct Client {
     client_secret: SecretBox<String>,
     application_id: String,
     http: ReqwestClient,
+    base_url: Option<String>,
 }
 
 /// Represents a successful accounts response from the API.
@@ -29,9 +32,9 @@ pub struct Account {
     pub email: Option<String>,
 
     /// Username aliases.
-    pub username_aliases: Vec<String>,
+    pub username_aliases: Option<Vec<String>>,
     /// Secondary emails.
-    pub secondary_emails: Vec<String>,
+    pub secondary_emails: Option<Vec<String>>,
 }
 
 #[derive(Deserialize)]
@@ -41,28 +44,47 @@ struct ExchangeResponse {
 
 impl Client {
     /// Create a new metw client.
-    pub fn new<T: fmt::Display, U: fmt::Display>(application_id: T, client_secret: U) -> Self {
+    pub fn new(application_id: impl Into<String>, client_secret: impl Into<String>) -> Self {
         Self {
-            application_id: format!("{application_id}"),
-            client_secret: SecretBox::new(Box::new(format!("{client_secret}"))),
+            application_id: application_id.into(),
+            client_secret: SecretBox::new(Box::new(client_secret.into())),
             http: ReqwestClient::builder()
-                .user_agent(concat!(
-                    "metw-signin (",
-                    env!("CARGO_PKG_HOMEPAGE"),
-                    ", ",
-                    env!("CARGO_PKG_VERSION"),
-                    ")",
-                ))
+                .connect_timeout(Duration::from_secs(10))
+                .timeout(Duration::from_secs(10))
+                .user_agent(concat!("metw-signin/", env!("CARGO_PKG_VERSION"),))
                 .build()
                 .unwrap(),
+            base_url: None,
         }
     }
 
+    /// Set the API base URL.
+    ///
+    /// Optional, defaults to `https://accounts.metw.cc/api`.
+    pub fn with_base_url(mut self, base_url: Option<String>) -> Self {
+        self.base_url = base_url;
+
+        self
+    }
+
+    fn get_base_url(&self) -> &str {
+        self.base_url.as_deref().unwrap_or(DEFAULT_BASE_URL)
+    }
+
     /// Exchange authorization code with account ID.
-    pub async fn exchange<T: Serialize>(&self, authorization_code: T) -> Result<String, Error> {
+    #[tracing::instrument(
+        level = "debug",
+        skip_all,
+        fields(
+            application_id = %self.application_id,
+            account_id = tracing::field::Empty
+        ),
+        err(level = "trace"),
+    )]
+    pub async fn exchange(&self, authorization_code: &str) -> Result<String, Error> {
         let res = self
             .http
-            .post("https://accounts.metw.cc/api/application/exchange")
+            .post(format!("{}/application/exchange", self.get_base_url()))
             .basic_auth(
                 &self.application_id,
                 Some(self.client_secret.expose_secret()),
@@ -71,24 +93,31 @@ impl Client {
             .send()
             .await?;
 
-        match res.status() {
-            StatusCode::BAD_REQUEST => return Err(Error::InvalidAuthorizationCode),
-            StatusCode::UNAUTHORIZED => return Err(Error::Unauthorized),
-            status if status != StatusCode::OK => return Err(Error::UnknownError),
-            _ => (),
-        };
+        let account_id = match res.status() {
+            StatusCode::BAD_REQUEST => Err(Error::InvalidAuthorizationCode),
+            StatusCode::UNAUTHORIZED => Err(Error::Unauthorized),
+            StatusCode::OK => Ok(res.json::<ExchangeResponse>().await?.account_id),
+            status => Err(Error::UnexpectedStatus(status)),
+        }?;
 
-        let res: ExchangeResponse = res.json().await?;
+        tracing::Span::current().record("account_id", &account_id);
 
-        Ok(res.account_id)
+        Ok(account_id)
     }
 
     /// Get account by its ID.
-    pub async fn get_account<T: fmt::Display>(&self, account_id: T) -> Result<Account, Error> {
+    #[tracing::instrument(
+        level = "debug",
+        skip(self),
+        fields(application_id = %self.application_id),
+        err(level = "trace"),
+    )]
+    pub async fn get_account(&self, account_id: &str) -> Result<Account, Error> {
         let res = self
             .http
             .get(format!(
-                "https://accounts.metw.cc/api/application/accounts/{account_id}"
+                "{}/application/accounts/{account_id}",
+                self.get_base_url()
             ))
             .basic_auth(
                 &self.application_id,
@@ -97,10 +126,10 @@ impl Client {
             .send()
             .await?;
 
-        if res.status() != StatusCode::OK {
-            return Err(Error::Unauthorized);
+        match res.status() {
+            StatusCode::UNAUTHORIZED => Err(Error::Unauthorized),
+            StatusCode::OK => Ok(res.json().await?),
+            status => Err(Error::UnexpectedStatus(status)),
         }
-
-        Ok(res.json().await?)
     }
 }
