@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["_docs", "app", "service", "state", "tests"]
+members = ["_docs", "app", "metw-signin", "service", "state", "tests"]
 
 [workspace.dependencies]
 metw-id = {
