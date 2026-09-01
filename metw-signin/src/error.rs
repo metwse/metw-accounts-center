@@ -16,6 +16,6 @@ pub enum Error {
     UnexpectedStatus(StatusCode),
 
     /// The error originated from reqwest.
-    #[error("The error originated from reqwest.")]
+    #[error("Accounts center request failed: {0}")]
     ReqwestError(#[from] reqwest::Error),
 }

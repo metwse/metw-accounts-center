@@ -1,6 +1,6 @@
 [package]
 name = "metw-signin"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2024"
 description = "Rust client for metw accounts center application authentication."
 repository = "https://github.com/metwse/metw-accounts-center"

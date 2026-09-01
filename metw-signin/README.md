@@ -15,5 +15,5 @@ let client = Client::new(my_application_id, my_client_secret);
 let authorization_code = "hijklm";
 
 let account_id = client.exchange(authorization_code).await?;
-let account = client.get_account(account_id).await?;
+let account = client.get_account(&account_id).await?;
 ```
