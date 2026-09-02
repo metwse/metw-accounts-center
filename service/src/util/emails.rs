@@ -106,7 +106,7 @@ macro_rules! build_email {
                     get_template!($ty "confirm-new-email"),
                     callback_url = callback_url,
                     username = username,
-                    callback_parameters = format!("auth={}", token)
+                    callback_parameters = format!("token={}", token)
                 ),
                 Self::ConfirmPrimaryEmailChange {
                     username,
@@ -119,7 +119,7 @@ macro_rules! build_email {
                     username = username,
                     current_primary_email = current_primary_email,
                     new_primary_email = new_primary_email,
-                    callback_parameters = format!("auth={}", token)
+                    callback_parameters = format!("token={}", token)
                 ),
             }
         }
